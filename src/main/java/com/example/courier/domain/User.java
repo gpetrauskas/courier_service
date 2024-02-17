@@ -1,6 +1,7 @@
 package com.example.courier.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -17,6 +18,7 @@ public class User {
 
     @Column
     @NotBlank
+    @Email
     private String email;
 
     @Column
