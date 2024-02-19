@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.service.UserService;
 import jakarta.validation.Valid;
@@ -30,6 +31,11 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred during registration");
         }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
+
     }
 
 }
