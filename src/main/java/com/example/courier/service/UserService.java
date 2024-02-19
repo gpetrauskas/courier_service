@@ -20,6 +20,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtService jwtService;
 
     @Transactional
     public void registerUser(UserDTO userDTO) {
@@ -58,14 +60,20 @@ public class UserService {
         return newUser;
     }
 
-    public void login(LoginDTO loginDTO) {
+    public String login(LoginDTO loginDTO) {
         try {
             User user = userRepository.findByEmail(loginDTO.email());
             if (user != null) {
                 if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-
+                    return jwtService.createToken(loginDTO.email());
+                } else {
+                    throw new RuntimeException("Password do not match");
                 }
+            } else {
+                throw new RuntimeException("Email not found");
             }
+        } catch (Exception e) {
+            throw e;
         }
     }
 
