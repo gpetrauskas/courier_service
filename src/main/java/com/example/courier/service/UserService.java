@@ -1,6 +1,7 @@
 package com.example.courier.service;
 
 import com.example.courier.domain.User;
+import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.repository.UserRepository;
 import jakarta.validation.ValidationException;
@@ -55,6 +56,17 @@ public class UserService {
         newUser.setPassword(encodedPass);
         logger.info("all good");
         return newUser;
+    }
+
+    public void login(LoginDTO loginDTO) {
+        try {
+            User user = userRepository.findByEmail(loginDTO.email());
+            if (user != null) {
+                if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
+
+                }
+            }
+        }
     }
 
 
