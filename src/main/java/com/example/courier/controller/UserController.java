@@ -43,6 +43,7 @@ public class UserController {
     public ResponseEntity<String> login(@Valid @RequestBody LoginDTO loginDTO, HttpServletResponse response) {
         String token = userService.login(loginDTO);
         Cookie cookie = new Cookie("jwt", token);
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
         return ResponseEntity.ok("Login successful.");
