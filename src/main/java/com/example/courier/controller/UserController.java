@@ -1,7 +1,9 @@
 package com.example.courier.controller;
 
+import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
+import com.example.courier.repository.UserRepository;
 import com.example.courier.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +25,8 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO) {
@@ -45,7 +51,11 @@ public class UserController {
     @GetMapping("/test")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> test() {
-        return ResponseEntity.ok("Hello, world!");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+        User user = userRepository.findByEmail(userEmail);
+        String fullName = user.getName();
+        return ResponseEntity.ok("Hello, " + fullName + "!");
     }
 
 }
