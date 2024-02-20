@@ -1,6 +1,7 @@
 package com.example.courier.service;
 
 import com.example.courier.domain.Order;
+import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,11 @@ public class TrackingService {
             Order trackedOrder = orderRepository.findByTrackingNumber(trackingNumber);
             if (trackedOrder != null) {
                 return trackedOrder.getPackageDetails().getStatus();
+            } else {
+                throw new OrderNotFoundException("Order with tracking number: " + trackingNumber + " not found.");
             }
         } catch (Exception e) {
+            throw new RuntimeException("Error occurred while fetching package status", e);
         }
     }
 
