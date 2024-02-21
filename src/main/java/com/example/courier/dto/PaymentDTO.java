@@ -1,4 +1,8 @@
 package com.example.courier.dto;
 
-public record PaymentDTO() {
+import com.example.courier.domain.Order;
+
+import java.math.BigDecimal;
+
+public record PaymentDTO(Order order, String paymentMethod, BigDecimal amount, String status) {
 }
