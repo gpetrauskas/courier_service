@@ -1,6 +1,7 @@
 package com.example.courier.service;
 
 import com.example.courier.domain.Order;
+import com.example.courier.domain.Package;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,7 @@ public class TrackingService {
 
     public String getPackageStatus(String trackingNumber) {
         try {
-            Order trackedOrder = orderRepository.findByTrackingNumber(trackingNumber);
+            Order trackedOrder = orderRepository.findByPackageDetails_TrackingNumber(trackingNumber);
             if (trackedOrder != null) {
                 return trackedOrder.getPackageDetails().getStatus();
             } else {
