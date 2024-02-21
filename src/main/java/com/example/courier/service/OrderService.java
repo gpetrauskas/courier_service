@@ -41,7 +41,7 @@ public class OrderService {
         packageDetails.setDimensions(orderDTO.packageDetails().getDimensions());
         packageDetails.setContents(orderDTO.packageDetails().getContents());
         packageDetails.setTrackingNumber(UUID.randomUUID().toString());
-        packageDetails.setStatus("Not Shipped");
+        packageDetails.setStatus("WAITING_FOR_PAYMENT");
 
         order.setPackageDetails(packageDetails);
 
