@@ -25,6 +25,8 @@ public class Payment {
     @Column(nullable = false)
     private String status;
 
+    public Payment() {}
+
     public Payment(Order order, String paymentMethod, BigDecimal amount, String status) {
         this.order = order;
         this.paymentMethod = paymentMethod;
