@@ -1,11 +1,13 @@
 package com.example.courier.repository;
 
 import com.example.courier.domain.Order;
+import com.example.courier.domain.Package;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
-    Order findByTrackingNumber(String trackingNumber);
+    Order findByPackageDetails_TrackingNumber(String trackingNumber);
+
 }
