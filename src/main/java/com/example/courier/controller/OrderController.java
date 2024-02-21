@@ -6,6 +6,7 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
+import com.example.courier.service.TrackingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,8 @@ public class OrderController {
     private UserRepository userRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private TrackingService trackingService;
 
     @GetMapping("/getAllOrders")
     @PreAuthorize("isAuthenticated()")
@@ -68,6 +71,13 @@ public class OrderController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
         }
+    }
+
+    @GetMapping("/trackOrder/{trackingNumber}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> trackOrder(@PathVariable String trackingNumber) {
+        String orderStatus = trackingService.getPackageStatus(trackingNumber);
+        return ResponseEntity.ok(orderStatus);
     }
 
 }
