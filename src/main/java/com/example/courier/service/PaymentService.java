@@ -32,19 +32,27 @@ public class PaymentService {
         payment.setOrder(order);
         payment.setPaymentMethod(paymentDTO.paymentMethod());
         payment.setAmount(paymentDTO.amount());
-        payment.setStatus("Waiting");
+        payment.setStatus("WAITING");
 
-        if (paymentDTO.paymentMethod().equals("credit_card")) {
-            /// logic
-            payment.setStatus("Paid");
-        } else if (paymentDTO.paymentMethod().equals("online_banking")) {
-            /// logic
-            payment.setStatus("Paid");
+        try {
+            if (paymentDTO.paymentMethod().equals("credit_card")) {
+                /// logic
+                payment.setStatus("PAID");
+                order.setStatus("CONFIRMED");
+                order.getPackageDetails().setStatus("PICKING_UP");
+            } else if (paymentDTO.paymentMethod().equals("online_banking")) {
+                /// logic
+                payment.setStatus("PAID");
+                order.setStatus("CONFIRMED");
+                order.getPackageDetails().setStatus("PICKING_UP");
+            }
+        } catch (Exception e) {
+            // fail
+            payment.setStatus("FAILED");
+            order.setStatus("PAYMENT_FAILED");
         }
 
         paymentRepository.save(payment);
-        order.setStatus("Confirmed");
-        order.getPackageDetails().setStatus("PICKING_UP");
         orderRepository.save(order);
     }
 }
