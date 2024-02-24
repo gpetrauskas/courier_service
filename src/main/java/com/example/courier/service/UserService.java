@@ -1,8 +1,10 @@
 package com.example.courier.service;
 
+import com.example.courier.domain.Administrator;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
+import com.example.courier.repository.AdministratorRepository;
 import com.example.courier.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -22,6 +24,8 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private AdministratorRepository administratorRepository;
 
     @Transactional
     public void registerUser(UserDTO userDTO) {
@@ -60,12 +64,39 @@ public class UserService {
         return newUser;
     }
 
-    public String login(LoginDTO loginDTO) {
+    public String login (LoginDTO loginDTO) {
+        if (loginDTO.email() != null) {
+            return loginUser(loginDTO);
+        } else if (loginDTO.username() != null) {
+            return loginAdministrator(loginDTO);
+        } else {
+            throw new RuntimeException("Bad credentials.");
+        }
+    }
+
+    public String loginAdministrator(LoginDTO loginDTO) {
+        try {
+            Administrator administrator = administratorRepository.findByUsername(loginDTO.username());
+            if (administrator != null) {
+                if (passwordEncoder.matches(loginDTO.password(), administrator.getPassword())) {
+                    return jwtService.createToken(loginDTO.username(), "ADMIN");
+                } else {
+                    throw new RuntimeException("Password do not match.");
+                }
+            } else {
+                throw new RuntimeException("Email not found.");
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public String loginUser(LoginDTO loginDTO) {
         try {
             User user = userRepository.findByEmail(loginDTO.email());
             if (user != null) {
                 if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-                    return jwtService.createToken(loginDTO.email());
+                    return jwtService.createToken(loginDTO.email(), "USER");
                 } else {
                     throw new RuntimeException("Password do not match");
                 }
