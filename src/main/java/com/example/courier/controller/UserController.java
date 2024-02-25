@@ -1,10 +1,8 @@
 package com.example.courier.controller;
 
-import com.example.courier.domain.Administrator;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
-import com.example.courier.repository.AdministratorRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.UserService;
 import jakarta.servlet.http.Cookie;
@@ -29,8 +27,6 @@ public class UserController {
     private UserService userService;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private AdministratorRepository administratorRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO) {
@@ -44,9 +40,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO, HttpServletResponse response) {
+    public ResponseEntity<String> login(@RequestBody @Valid LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            String token = userService.login(loginDTO);
+            String token = userService.loginUser(loginDTO);
             Cookie cookie = new Cookie("jwt", token);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
@@ -66,5 +62,4 @@ public class UserController {
         String fullName = user.getName();
         return ResponseEntity.ok("Hello, " + fullName + "!");
     }
-
 }
