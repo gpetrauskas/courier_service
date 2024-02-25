@@ -1,10 +1,9 @@
 package com.example.courier.service;
 
-import com.example.courier.domain.Administrator;
+import com.example.courier.common.Role;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
-import com.example.courier.repository.AdministratorRepository;
 import com.example.courier.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -24,8 +23,6 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtService jwtService;
-    @Autowired
-    private AdministratorRepository administratorRepository;
 
     @Transactional
     public void registerUser(UserDTO userDTO) {
@@ -37,7 +34,7 @@ public class UserService {
             logger.info("before saving user");
             userRepository.save(newUser);
         } catch (RuntimeException e) {
-            System.out.println("Error during registration: User already registered with email: " + userDTO.email() );
+            System.out.println("Error during registration: User already registered with email: " + userDTO.email());
             throw e;
         }
     }
@@ -60,54 +57,20 @@ public class UserService {
         newUser.setAddress(userDTO.address());
         String encodedPass = passwordEncoder.encode(userDTO.password());
         newUser.setPassword(encodedPass);
+        newUser.setRole(Role.USER);
         logger.info("all good");
         return newUser;
-    }
-
-    public String login (LoginDTO loginDTO) {
-        if (loginDTO.email() != null) {
-            return loginUser(loginDTO);
-        } else if (loginDTO.username() != null) {
-            return loginAdministrator(loginDTO);
-        } else {
-            throw new RuntimeException("Bad credentials.");
-        }
-    }
-
-    public String loginAdministrator(LoginDTO loginDTO) {
-        try {
-            Administrator administrator = administratorRepository.findByUsername(loginDTO.username());
-            if (administrator != null) {
-                if (passwordEncoder.matches(loginDTO.password(), administrator.getPassword())) {
-                    return jwtService.createToken(loginDTO.username(), "ADMIN");
-                } else {
-                    throw new RuntimeException("Password do not match.");
-                }
-            } else {
-                throw new RuntimeException("Email not found.");
-            }
-        } catch (Exception e) {
-            throw e;
-        }
     }
 
     public String loginUser(LoginDTO loginDTO) {
         try {
             User user = userRepository.findByEmail(loginDTO.email());
-            if (user != null) {
-                if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-                    return jwtService.createToken(loginDTO.email(), "USER");
-                } else {
-                    throw new RuntimeException("Password do not match");
-                }
-            } else {
-                throw new RuntimeException("Email not found");
+            if (user != null && passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
+                return jwtService.createToken(loginDTO.email(), user.getRole().toString());
             }
         } catch (Exception e) {
-            throw e;
+            logger.error("Error occurred during login", e);
         }
+        throw new RuntimeException("Invalid credentials.");
     }
-
-
-
 }
