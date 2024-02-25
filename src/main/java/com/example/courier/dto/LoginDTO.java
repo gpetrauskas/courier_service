@@ -6,6 +6,5 @@ import jakarta.validation.constraints.Size;
 
 public record LoginDTO(
         @Email @NotBlank String email,
-        String username,
         @NotBlank @Size(min = 8, max = 16) String password) {
 }
