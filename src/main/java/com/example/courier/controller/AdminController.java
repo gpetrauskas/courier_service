@@ -1,17 +1,17 @@
 package com.example.courier.controller;
 
+import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Package;
 import com.example.courier.repository.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -20,18 +20,34 @@ public class AdminController {
     @Autowired
     private PackageRepository packageRepository;
 
-    @PostMapping("/updateOrderStatus/{trackingNumber}")
+    @PostMapping("/updateProductStatus/{trackingNumber}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable String trackingNumber, String newStatus) {
+    public ResponseEntity<?> updateProductStatus(@PathVariable String trackingNumber, @RequestParam String newStatus) {
         try {
+            if (!PackageStatus.isValidStatus(newStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status.");
+            }
+
             Package packageDetails = packageRepository.findByTrackingNumber(trackingNumber).orElseThrow(() ->
-                    new RuntimeException("Package not found."));
+                    new NoSuchElementException("Package not found."));
+
             packageDetails.setStatus(newStatus);
             packageRepository.save(packageDetails);
 
             return ResponseEntity.ok("Package status updated successfully.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred during package status update;");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Problem occurred during package status update;");
         }
+    }
+
+    @GetMapping("/test")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> testAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(authentication.getAuthorities());
+
+        return ResponseEntity.ok(authentication.getAuthorities());
     }
 }
