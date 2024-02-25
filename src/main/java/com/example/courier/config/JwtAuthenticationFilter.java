@@ -1,12 +1,16 @@
 package com.example.courier.config;
 
 import com.example.courier.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,6 +26,7 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private JwtService jwtService;
+    private Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
@@ -41,13 +46,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         if (token != null && !token.isEmpty()) {
-            Map<String, String> authDetails = jwtService.validateToken(token);
-            String subject = authDetails.get("subject");
-            String role = authDetails.get("role");
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
-            Authentication auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            try {
+                Map<String, String> authDetails = jwtService.validateToken(token);
+                String subject = authDetails.get("subject");
+                String role = authDetails.get("role");
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                Authentication auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (SignatureException e) {
+                logger.warn("Invalid JWT signature: {}", e.getMessage());
+            } catch (ExpiredJwtException e) {
+                logger.warn("JWT token is expired: {}", e.getMessage());
+            } catch (Exception e) {
+                logger.error("Could not set user authentication in security context.", e);
+            }
         }
         filterChain.doFilter(request, response);
     }
