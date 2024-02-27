@@ -96,4 +96,21 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Where was an error during registration: " + e.getMessage());
         }
     }
+
+    @PostMapping("/updateUser/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+        try {
+            logger.info("Admin controller: before userUpdate");
+            adminService.updateUser(id, userDTO);
+            logger.info("User updated successfully.");
+            return ResponseEntity.ok("User was updated successfully.");
+        } catch (UserNotFoundException e) {
+            logger.info("User was not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found.");
+        } catch (Exception e) {
+            logger.info("Unexpected error occurred: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during user update.");
+        }
+    }
 }
