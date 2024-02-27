@@ -33,20 +33,25 @@ public class UserService {
             User newUser = createUserFromDTO(userDTO);
             logger.info("before saving user");
             userRepository.save(newUser);
+            logger.info("user saved");
         } catch (RuntimeException e) {
-            System.out.println("Error during registration: User already registered with email: " + userDTO.email());
+            logger.info("Error during registration: {}", e.getMessage());
             throw e;
         }
     }
 
     private void validateUserRegistration(UserDTO userDTO) {
         User user = userRepository.findByEmail(userDTO.email());
+        logger.info("Validating user: {}", userDTO.email());
         if (userDTO.password().length() < 8 || userDTO.password().length() > 16) {
             logger.info("Password length");
             throw new ValidationException("Password length must be between 8-16 characters.");
         } else if (user != null) {
             logger.info("User not null");
             throw new RuntimeException("User already exist.");
+        } else if (!userDTO.email().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            logger.info("email validation");
+            throw new ValidationException("Email is not valid.");
         }
     }
 
