@@ -2,6 +2,8 @@ package com.example.courier.controller;
 
 import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Package;
+import com.example.courier.dto.AdminOrderDTO;
+import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.exception.UserNotFoundException;
@@ -126,5 +128,11 @@ public class AdminController {
             logger.warn("deleteUser: Error occurred: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while deleting user.");
         }
+    }
+
+    @GetMapping("/orders")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AdminOrderDTO> getAllOrders() {
+        return adminService.getAllOrders();
     }
 }
