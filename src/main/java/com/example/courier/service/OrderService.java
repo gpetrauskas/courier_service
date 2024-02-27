@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -58,5 +60,25 @@ public class OrderService {
             shippingCost.add(new BigDecimal(5));
         }
         return shippingCost;
+    }
+
+    public List<OrderDTO> findUserOrders(User user) {
+        List<Order> orders = orderRepository.findByUserId(user.getId());
+        List<OrderDTO> orderDTOs = orders.stream()
+                .map(order -> mapToOrderDTO(order))
+                .collect(Collectors.toList());
+        return orderDTOs;
+    }
+
+    public OrderDTO mapToOrderDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO(order.getUser().getId(),
+                order.getSenderAddress(),
+                order.getRecipientAddress(),
+                order.getPackageDetails(),
+                order.getDeliveryPreferences(),
+                order.getStatus(),
+                order.getCreateDate());
+
+        return orderDTO;
     }
 }
