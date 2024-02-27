@@ -3,6 +3,7 @@ package com.example.courier.controller;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
@@ -37,23 +38,8 @@ public class OrderController {
     public ResponseEntity<List<OrderDTO>> getOrders() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userRepository.findByEmail(auth.getName());
-        List<Order> orders = orderRepository.findByUserId(user.getId());
-        List<OrderDTO> orderDTOs = orders.stream()
-                .map(order -> mapToOrderDTO(order))
-                .collect(Collectors.toList());
+        List<OrderDTO> orderDTOs = orderService.findUserOrders(user);
         return ResponseEntity.ok(orderDTOs);
-    }
-
-    private OrderDTO mapToOrderDTO(Order order) {
-        OrderDTO orderDTO = new OrderDTO(order.getUser().getId(),
-                order.getSenderAddress(),
-                order.getRecipientAddress(),
-                order.getPackageDetails(),
-                order.getDeliveryPreferences(),
-                order.getStatus(),
-                order.getCreateDate());
-
-        return orderDTO;
     }
 
     @PostMapping("/placeOrder")
