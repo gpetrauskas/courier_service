@@ -2,12 +2,10 @@ package com.example.courier.controller;
 
 import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Package;
-import com.example.courier.domain.User;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PackageRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.AdminService;
 import com.example.courier.service.UserService;
 import org.slf4j.Logger;
@@ -111,6 +109,22 @@ public class AdminController {
         } catch (Exception e) {
             logger.info("Unexpected error occurred: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during user update.");
+        }
+    }
+
+    @DeleteMapping("/deleteUser/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        try {
+            logger.info("Request to delete user with id: {}", id);
+            adminService.deleteUser(id);
+            return ResponseEntity.ok("User deleted successfully.");
+        } catch (UserNotFoundException e) {
+            logger.warn("deleteUser: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found");
+        } catch (Exception e) {
+            logger.warn("deleteUser: Error occurred: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while deleting user.");
         }
     }
 }
