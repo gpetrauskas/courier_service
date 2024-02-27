@@ -1,15 +1,17 @@
 package com.example.courier.service;
 
+import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
+import com.example.courier.dto.AdminOrderDTO;
+import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.exception.UserNotFoundException;
+import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,8 @@ public class AdminService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private OrderRepository orderRepository;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
     public List<UserResponseDTO> findAllUsers() {
@@ -84,5 +88,17 @@ public class AdminService {
                     new UserNotFoundException("User was not found."));
             logger.info("User was found for deletion");
             userRepository.delete(user);
+    }
+
+    public List<AdminOrderDTO> getAllOrders() {
+        try {
+            List<Order> allOrders = orderRepository.findAll();
+            List<AdminOrderDTO> allOrderDTOs = allOrders.stream()
+                    .map(AdminOrderDTO::fromOrder)
+                    .collect(Collectors.toList());
+            return allOrderDTOs;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 }
