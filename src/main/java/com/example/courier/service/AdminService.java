@@ -7,8 +7,9 @@ import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -76,5 +77,12 @@ public class AdminService {
             String encodedPass = passwordEncoder.encode(updatedUser.password());
             existingUse.setPassword(encodedPass);
         }
+    }
+
+    public void deleteUser(Long id) {
+            User user = userRepository.findById(id).orElseThrow(() ->
+                    new UserNotFoundException("User was not found."));
+            logger.info("User was found for deletion");
+            userRepository.delete(user);
     }
 }
