@@ -2,6 +2,7 @@ package com.example.courier.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
@@ -19,7 +20,7 @@ public class PricingOption {
     @NotBlank
     private String description;
     @Column
-    @NotBlank
+    @NotNull
     private BigDecimal price;
 
     public PricingOption() {}
