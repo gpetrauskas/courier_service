@@ -194,5 +194,11 @@ public class AdminController {
         }
     }
 
+    @DeleteMapping("/deletePricingOption/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deletePricingOption(@PathVariable Long id) {
+        return adminService.deletePricingOption(id);
+    }
+
 }
 
