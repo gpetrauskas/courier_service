@@ -2,12 +2,10 @@ package com.example.courier.controller;
 
 import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Package;
-import com.example.courier.domain.User;
+import com.example.courier.domain.PricingOption;
 import com.example.courier.dto.AdminOrderDTO;
-import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserResponseDTO;
-import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PackageRepository;
 import com.example.courier.service.AdminService;
@@ -15,14 +13,12 @@ import com.example.courier.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -164,7 +160,39 @@ public class AdminController {
         return ResponseEntity.ok(report);
     }
 
+    @GetMapping("/pricing-options/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getPricingOptionById(@PathVariable Long id) {
+        Optional<PricingOption> option = adminService.getPricingOptionById(id);
+        if (option != null) {
+            return ResponseEntity.ok(option);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pricing option was not found");
+        }
+    }
 
+    @PostMapping("/create-pricing-option")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> createPricingOption(@RequestBody PricingOption pricingOption) {
+        try {
+            adminService.createPricingOption(pricingOption);
+            return ResponseEntity.ok("New pricing option was added successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/updatePricingOption/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> updatePricingOption(@PathVariable Long id,
+                                                      @RequestBody PricingOption pricingOption) {
+        try {
+            adminService.updatePricingOption(id, pricingOption);
+            return ResponseEntity.ok("Pricing option was updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
+        }
+    }
 
 }
 
