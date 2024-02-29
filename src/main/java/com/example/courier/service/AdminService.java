@@ -1,25 +1,26 @@
 package com.example.courier.service;
 
-import com.example.courier.domain.Order;
+import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.domain.Payment;
-import com.example.courier.domain.User;
 import com.example.courier.dto.AdminOrderDTO;
-import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.exception.OrderNotFoundException;
+import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PaymentRepository;
+import com.example.courier.repository.PricingOptionRepository;
 import com.example.courier.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,6 +36,8 @@ public class AdminService {
     private OrderRepository orderRepository;
     @Autowired
     private PaymentRepository paymentRepository;
+    @Autowired
+    private PricingOptionRepository pricingOptionRepository;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
     public List<UserResponseDTO> findAllUsers() {
@@ -178,5 +181,45 @@ public class AdminService {
         return report.toString();
     }
 
+    public Optional<PricingOption> getPricingOptionById(Long id) {
+            return Optional.ofNullable(pricingOptionRepository.findById(id).orElseThrow(() ->
+                    new PricingOptionNotFoundException("Pricing option not found")));
+    }
+
+    public void createPricingOption(PricingOption pricingOption) {
+        try {
+            PricingOption newPricingOption = new PricingOption();
+            newPricingOption.setName(pricingOption.getName());
+            newPricingOption.setDescription(pricingOption.getDescription());
+            newPricingOption.setPrice(pricingOption.getPrice());
+
+            pricingOptionRepository.save(newPricingOption);
+            logger.info("New pricing option was added successfully. {}", newPricingOption.getName());
+            ResponseEntity.ok("New pricing option was added successfully.");
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public void updatePricingOption(Long id, PricingOption newValues) {
+        try {
+            PricingOption pricingOption = pricingOptionRepository.findById(id).orElseThrow(() ->
+                    new PricingOptionNotFoundException("Pricing option with id: " + id + " was not found."));
+
+            if (newValues.getName() != null) {
+                pricingOption.setName(newValues.getName());
+            }
+            if (newValues.getDescription() != null) {
+                pricingOption.setDescription(newValues.getDescription());
+            }
+            if (newValues.getPrice() != null) {
+                pricingOption.setPrice(newValues.getPrice());
+            }
+
+            pricingOptionRepository.save(pricingOption);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
