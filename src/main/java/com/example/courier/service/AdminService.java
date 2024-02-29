@@ -222,4 +222,16 @@ public class AdminService {
         }
     }
 
+    public ResponseEntity<String> deletePricingOption(Long id) {
+        if (!pricingOptionRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pricing Option was not found.");
+        }
+
+        try {
+            pricingOptionRepository.deleteById(id);
+            return ResponseEntity.ok("Pricing Option deleted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e);
+        }
+    }
 }
