@@ -11,7 +11,7 @@ public class Package {
     private Long id;
 
     @Column(nullable = false)
-    private double weight;
+    private String weight;
 
     @Column(nullable = false)
     private String dimensions;
@@ -27,7 +27,7 @@ public class Package {
 
     public Package() {}
 
-    public Package(double weight, String dimensions, String contents, String trackingNumber, String status) {
+    public Package(String weight, String dimensions, String contents, String trackingNumber, String status) {
         this.weight = weight;
         this.dimensions = dimensions;
         this.contents = contents;
@@ -35,11 +35,11 @@ public class Package {
         this.status = status;
     }
 
-    public double getWeight() {
+    public String getWeight() {
         return weight;
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(String weight) {
         this.weight = weight;
     }
 
