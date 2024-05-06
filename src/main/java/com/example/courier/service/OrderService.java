@@ -2,10 +2,12 @@ package com.example.courier.service;
 
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Package;
+import com.example.courier.domain.PricingOption;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PackageRepository;
+import com.example.courier.repository.PricingOptionRepository;
 import com.example.courier.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class OrderService {
     private UserRepository userRepository;
     @Autowired
     private PackageRepository packageRepository;
+    @Autowired
+    private PricingOptionRepository pricingOptionRepository;
 
     public void placeOrder(Long id, OrderDTO orderDTO, BigDecimal shippingPrice) {
         // fetch user  from the database
@@ -34,13 +38,24 @@ public class OrderService {
         order.setUser(user);
         order.setSenderAddress(orderDTO.senderAddress());
         order.setRecipientAddress(orderDTO.recipientAddress());
-        order.setDeliveryPreferences(orderDTO.deliveryPreferences());
+
+        PricingOption deliveryPreferenceOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.deliveryPreferences()))
+                        .orElseThrow(() -> new RuntimeException("Delivery preference option not found."));
+        order.setDeliveryPreferences(deliveryPreferenceOption.getDescription());
+
         order.setStatus("Pending");
         order.setCreateDate(LocalDateTime.now());
 
         Package packageDetails = new Package();
-        packageDetails.setWeight(orderDTO.packageDetails().getWeight());
-        packageDetails.setDimensions(orderDTO.packageDetails().getDimensions());
+
+        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getWeight()))
+                        .orElseThrow(() -> new RuntimeException("Weight option not found."));
+        packageDetails.setWeight(weightPricingOption.getDescription());
+
+        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getDimensions()))
+                        .orElseThrow(() -> new RuntimeException("Size option not found."));
+        packageDetails.setDimensions(sizePricingOption.getDescription());
+
         packageDetails.setContents(orderDTO.packageDetails().getContents());
         packageDetails.setTrackingNumber(UUID.randomUUID().toString());
         packageDetails.setStatus("WAITING_FOR_PAYMENT");
@@ -53,12 +68,18 @@ public class OrderService {
 
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) {
         BigDecimal shippingCost = new BigDecimal(0);
-        if (orderDTO.deliveryPreferences().equals("express")) {
-            shippingCost = shippingCost.add(new BigDecimal(10));
-        }
-        if (orderDTO.packageDetails().getWeight() > 10) {
-            shippingCost.add(new BigDecimal(5));
-        }
+
+        PricingOption deliveryPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.deliveryPreferences()))
+                .orElseThrow(() -> new RuntimeException("Delivery preference option was not found."));
+        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getWeight()))
+                .orElseThrow(() -> new RuntimeException("Weight option was not found"));
+        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getDimensions()))
+                .orElseThrow(() -> new RuntimeException("Size option was not found."));
+
+        shippingCost.add(deliveryPricingOption.getPrice());
+        shippingCost.add(weightPricingOption.getPrice());
+        shippingCost.add(sizePricingOption.getPrice());
+
         return shippingCost;
     }
 
