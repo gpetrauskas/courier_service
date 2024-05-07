@@ -92,7 +92,7 @@ public class OrderService {
     }
 
     public OrderDTO mapToOrderDTO(Order order) {
-        OrderDTO orderDTO = new OrderDTO(order.getUser().getId(),
+        OrderDTO orderDTO = new OrderDTO(order.getId(),
                 order.getSenderAddress(),
                 order.getRecipientAddress(),
                 order.getPackageDetails(),
