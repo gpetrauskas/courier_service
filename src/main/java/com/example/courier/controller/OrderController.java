@@ -9,6 +9,8 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
 import com.example.courier.service.TrackingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/orders")
 public class OrderController {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
     @Autowired
     private OrderService orderService;
     @Autowired
@@ -87,8 +90,15 @@ public class OrderController {
 
     @GetMapping("/trackOrder/{trackingNumber}")
     public ResponseEntity<String> trackOrder(@PathVariable String trackingNumber) {
-        String orderStatus = trackingService.getPackageStatus(trackingNumber);
-        return ResponseEntity.ok(orderStatus);
+        try {
+            logger.info("Tracking package info with tracking id: " + trackingNumber);
+            String orderStatus = trackingService.getPackageStatus(trackingNumber);
+            logger.info("Package status with tracking id: " + trackingNumber + " was found.");
+            return ResponseEntity.ok(orderStatus);
+        } catch (Exception e) {
+            logger.error("Package with tracking number: " + trackingNumber + " was not found");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 }
