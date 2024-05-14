@@ -16,8 +16,9 @@ public class Payment {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @Column(nullable = false)
-    private String paymentMethod;
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id", nullable = false)
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -27,18 +28,18 @@ public class Payment {
 
     public Payment() {}
 
-    public Payment(Order order, String paymentMethod, BigDecimal amount, String status) {
+    public Payment(Order order, PaymentMethod paymentMethod, BigDecimal amount, String status) {
         this.order = order;
         this.paymentMethod = paymentMethod;
         this.amount = amount;
         this.status = status;
     }
 
-    public String getPaymentMethod() {
+    public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 
