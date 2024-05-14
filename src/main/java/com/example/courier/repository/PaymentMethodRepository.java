@@ -1,4 +1,7 @@
 package com.example.courier.repository;
 
-public interface PaymentMethodRepository {
+import com.example.courier.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PaymentMethodRepository extends JpaRepository<User, Long> {
 }
