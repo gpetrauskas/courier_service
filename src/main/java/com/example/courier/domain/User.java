@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -34,7 +37,12 @@ public class User {
     @Column
     private Role role;
 
-    public User() {}
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<PaymentMethod> paymentMethods;
+
+    public User() {
+        this.paymentMethods = new ArrayList<>();
+    }
 
     public User(String name, String email, String address, String password) {
         this.name = name;
