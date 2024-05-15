@@ -1,4 +1,11 @@
 package com.example.courier.dto;
 
-public record PaymentDetailsDTO() {
+import com.example.courier.domain.Payment;
+
+import java.math.BigDecimal;
+
+public record PaymentDetailsDTO(BigDecimal amount, String status) {
+    public static PaymentDetailsDTO fromPayment(Payment payment) {
+        return new PaymentDetailsDTO(payment.getAmount(), payment.getStatus());
+    }
 }
