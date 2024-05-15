@@ -1,14 +1,9 @@
 package com.example.courier.service;
 
-import com.example.courier.domain.Order;
+import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.domain.PricingOption;
-import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.repository.OrderRepository;
-import com.example.courier.repository.PackageRepository;
-import com.example.courier.repository.PricingOptionRepository;
-import com.example.courier.repository.UserRepository;
+import com.example.courier.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +24,8 @@ public class OrderService {
     private PackageRepository packageRepository;
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     public void placeOrder(Long id, OrderDTO orderDTO, BigDecimal shippingPrice) {
         // fetch user  from the database
@@ -62,7 +59,13 @@ public class OrderService {
 
         order.setPackageDetails(packageDetails);
 
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(calculateShippingCost(orderDTO));
+        payment.setStatus("NOT_PAID");
+
         orderRepository.save(order);
+        paymentRepository.save(payment);
 
     }
 
