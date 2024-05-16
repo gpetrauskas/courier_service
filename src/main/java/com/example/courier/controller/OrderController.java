@@ -2,9 +2,7 @@ package com.example.courier.controller;
 
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
-import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
@@ -17,9 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -81,7 +77,7 @@ public class OrderController {
 
             BigDecimal shippingCost = orderService.calculateShippingCost(orderDTO);
 
-            orderService.placeOrder(user.getId(), orderDTO, shippingCost);
+            orderService.placeOrder(user.getId(), orderDTO);
             return ResponseEntity.ok("Order placed successfully. Shipping cost: " + shippingCost);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
