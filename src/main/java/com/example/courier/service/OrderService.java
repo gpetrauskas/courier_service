@@ -4,6 +4,8 @@ import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,18 +18,17 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private PackageRepository packageRepository;
-    @Autowired
     private PricingOptionRepository pricingOptionRepository;
     @Autowired
     private PaymentRepository paymentRepository;
 
-    public void placeOrder(Long id, OrderDTO orderDTO, BigDecimal shippingPrice) {
+    public void placeOrder(Long id, OrderDTO orderDTO) {
         // fetch user  from the database
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
 
@@ -72,16 +73,17 @@ public class OrderService {
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) {
         BigDecimal shippingCost = new BigDecimal(0);
 
-        PricingOption deliveryPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.deliveryPreferences()))
+        PricingOption deliveryPricingOption = pricingOptionRepository.findById(Long.valueOf(orderDTO.deliveryPreferences()))
                 .orElseThrow(() -> new RuntimeException("Delivery preference option was not found."));
         PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getWeight()))
                 .orElseThrow(() -> new RuntimeException("Weight option was not found"));
         PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getDimensions()))
                 .orElseThrow(() -> new RuntimeException("Size option was not found."));
 
-        shippingCost.add(deliveryPricingOption.getPrice());
-        shippingCost.add(weightPricingOption.getPrice());
-        shippingCost.add(sizePricingOption.getPrice());
+        BigDecimal deliveryPrice = deliveryPricingOption.getPrice();
+        BigDecimal weightPrice = weightPricingOption.getPrice();
+        BigDecimal sizePricing = sizePricingOption.getPrice();
+        shippingCost = shippingCost.add(deliveryPrice).add(weightPrice).add(sizePricing);
 
         return shippingCost;
     }
