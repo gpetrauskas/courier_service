@@ -15,6 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+
 @Service
 public class PaymentService {
 
@@ -33,23 +37,27 @@ public class PaymentService {
                 new RuntimeException("Order not found."));
 
         try {
-            System.out.println("1");
             if (paymentDTO.newPaymentMethod() != null) {
                 PaymentMethodDTO paymentMethodDTO = paymentDTO.newPaymentMethod();
-                System.out.println("2");
+                System.out.println("1");
                 if (paymentMethodDTO instanceof CreditCardDTO) {
-                    CreditCardDTO creditCard = (CreditCardDTO) paymentMethodDTO;
+                    CreditCard card = setupCreditCard(paymentMethodDTO, payment);
+                    String cvc = ((CreditCardDTO) paymentMethodDTO).cvc();
+                    System.out.println("2");
 
-                    CreditCard card = new CreditCard();
-                    card.setUser(payment.getOrder().getUser());
-                    card.setCardHolderName(creditCard.cardHolderName());
-                    card.setCardNumber(creditCard.cardNumber());
-                    card.setExpiryDate(creditCard.expiryDate());
+                    ResponseEntity<?> responseEntity = testingPayment(card, cvc);
+                    System.out.println(responseEntity);
+                    if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                        payment.setStatus("FAILED");
+                        paymentRepository.save(payment);
+                        System.out.println("3");
+                        return responseEntity;
+                    }
 
-                    System.out.println("3");
                     paymentMethodRepository.saveAndFlush(card);
                     payment.setPaymentMethod(card);
                 }
+
             } else if (paymentDTO.paymentMethodId() != null) {
                 PaymentMethod pm = paymentMethodRepository.findById(paymentDTO.paymentMethodId())
                         .orElseThrow(() -> new RuntimeException("Payment method not found."));
@@ -57,14 +65,22 @@ public class PaymentService {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment was nor found.");
                 } else {
                     Long paymentMethodId = paymentDTO.paymentMethodId();
-                    System.out.println("4");
                     PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() ->
                             new RuntimeException("Payment method not found."));
+                    if (paymentMethod instanceof CreditCard) {
+                        CreditCard card = (CreditCard) paymentMethod;
+
+                        ResponseEntity responseEntity = testingPayment(card, paymentDTO.cvc());
+                        if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                            payment.setStatus("FAILED");
+                            paymentRepository.save(payment);
+                            return responseEntity;
+                        }
+                    }
                     payment.setPaymentMethod(paymentMethod);
                 }
             }
 
-            System.out.println("5");
             payment.setStatus("PAID");
             order.setStatus("CONFIRMED");
             order.getPackageDetails().setStatus("PICKING_UP");
@@ -76,7 +92,44 @@ public class PaymentService {
             return ResponseEntity.ok("Payment made successfully.");
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during payment.");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during payment. " + e.getMessage());
         }
+    }
+
+    public CreditCard setupCreditCard(PaymentMethodDTO paymentMethodDTO, Payment payment) {
+        CreditCardDTO creditCardDTO = (CreditCardDTO) paymentMethodDTO;
+
+        CreditCard creditCard = new CreditCard();
+        creditCard.setUser(payment.getOrder().getUser());
+        creditCard.setCardHolderName(creditCardDTO.cardHolderName());
+        creditCard.setCardNumber(creditCardDTO.cardNumber());
+        creditCard.setExpiryDate(creditCardDTO.expiryDate());
+
+        return creditCard;
+    }
+
+    public ResponseEntity<?> testingPayment(CreditCard card, String cvc) {
+        boolean isCardExpired = cardExpired(card);
+        if (isCardExpired) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CARD EXPIRED");
+        } else if (card.getCardNumber().endsWith("00")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DECLINED");
+        } else if (cvc.endsWith("3")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
+        } else {
+            return ResponseEntity.ok("APPROVED");
+        }
+    }
+
+    public boolean cardExpired(CreditCard card) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        YearMonth expiryDate = YearMonth.parse(card.getExpiryDate(), formatter);
+        YearMonth currentDate = YearMonth.now();
+
+        if (expiryDate.isBefore(currentDate)) {
+            return true;
+        }
+        return false;
     }
 }
