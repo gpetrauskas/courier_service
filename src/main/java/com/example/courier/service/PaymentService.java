@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 
@@ -32,21 +31,18 @@ public class PaymentService {
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
 
-    public ResponseEntity<?> processPayment(PaymentDTO paymentDTO, Payment payment) {
+    public ResponseEntity<String> processPayment(PaymentDTO paymentDTO, Payment payment) {
         Order order = orderRepository.findById(payment.getOrder().getId()).orElseThrow(() ->
                 new RuntimeException("Order not found."));
 
         try {
             if (paymentDTO.newPaymentMethod() != null) {
                 PaymentMethodDTO paymentMethodDTO = paymentDTO.newPaymentMethod();
-                System.out.println("1");
                 if (paymentMethodDTO instanceof CreditCardDTO) {
                     CreditCard card = setupCreditCard(paymentMethodDTO, payment);
                     String cvc = ((CreditCardDTO) paymentMethodDTO).cvc();
-                    System.out.println("2");
 
-                    ResponseEntity<?> responseEntity = testingPayment(card, cvc);
-                    System.out.println(responseEntity);
+                    ResponseEntity<String> responseEntity = testingPayment(card, cvc);
                     if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
                         payment.setStatus("FAILED");
                         paymentRepository.save(payment);
@@ -109,17 +105,17 @@ public class PaymentService {
         return creditCard;
     }
 
-    public ResponseEntity<?> testingPayment(CreditCard card, String cvc) {
-        boolean isCardExpired = cardExpired(card);
-        if (isCardExpired) {
+    public ResponseEntity<String> testingPayment(CreditCard card, String cvc) {
+        if (cardExpired(card)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CARD EXPIRED");
-        } else if (card.getCardNumber().endsWith("00")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DECLINED");
-        } else if (cvc.endsWith("3")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
-        } else {
-            return ResponseEntity.ok("APPROVED");
         }
+        if (card.getCardNumber().endsWith("00")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DECLINED");
+        }
+        if (cvc.endsWith("3")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
+        }
+            return ResponseEntity.ok("APPROVED");
     }
 
     public boolean cardExpired(CreditCard card) {
@@ -127,9 +123,6 @@ public class PaymentService {
         YearMonth expiryDate = YearMonth.parse(card.getExpiryDate(), formatter);
         YearMonth currentDate = YearMonth.now();
 
-        if (expiryDate.isBefore(currentDate)) {
-            return true;
-        }
-        return false;
+        return expiryDate.isBefore(currentDate);
     }
 }
