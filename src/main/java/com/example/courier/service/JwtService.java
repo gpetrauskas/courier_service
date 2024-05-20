@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,13 +20,19 @@ public class JwtService {
     private SecretKey secretKey = generateKey();
 
     public String createToken(String email, String role) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiry = now.plusHours(1);
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
-                .issuedAt(new Date())
-                .expiration(new Date((new Date()).getTime() + 3600000))
+                .issuedAt(convertToDateViaInstant(now))
+                .expiration(convertToDateViaInstant(expiry))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    private Date convertToDateViaInstant(LocalDateTime dateToConvert) {
+        return Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public Map<String, String> validateToken(String token) {
