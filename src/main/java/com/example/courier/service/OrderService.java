@@ -1,5 +1,8 @@
 package com.example.courier.service;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.PackageStatus;
+import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
 import com.example.courier.dto.OrderDTO;
@@ -7,7 +10,9 @@ import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +33,7 @@ public class OrderService {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Transactional
     public void placeOrder(Long id, OrderDTO orderDTO) {
         // fetch user  from the database
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
@@ -41,7 +47,7 @@ public class OrderService {
                         .orElseThrow(() -> new RuntimeException("Delivery preference option not found."));
         order.setDeliveryPreferences(deliveryPreferenceOption.getDescription());
 
-        order.setStatus("Pending");
+        order.setStatus(OrderStatus.PENDING);
         order.setCreateDate(LocalDateTime.now());
 
         Package packageDetails = new Package();
@@ -56,14 +62,14 @@ public class OrderService {
 
         packageDetails.setContents(orderDTO.packageDetails().getContents());
         packageDetails.setTrackingNumber(UUID.randomUUID().toString());
-        packageDetails.setStatus("WAITING_FOR_PAYMENT");
+        packageDetails.setStatus(PackageStatus.WAITING_FOR_PAYMENT);
 
         order.setPackageDetails(packageDetails);
 
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setAmount(calculateShippingCost(orderDTO));
-        payment.setStatus("NOT_PAID");
+        payment.setStatus(PaymentStatus.NOT_PAID);
 
         orderRepository.save(order);
         paymentRepository.save(payment);
@@ -106,5 +112,17 @@ public class OrderService {
                 order.getCreateDate());
 
         return orderDTO;
+    }
+
+    @Transactional
+    public void cancelOrder(Order order) {
+        Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
+                new RuntimeException("Payment not found."));
+        order.setStatus(OrderStatus.CANCELED);
+        order.getPackageDetails().setStatus(PackageStatus.CANCELED);
+        payment.setStatus(PaymentStatus.CANCELED);
+
+        orderRepository.save(order);
+        paymentRepository.save(payment);
     }
 }
