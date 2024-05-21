@@ -38,9 +38,9 @@ public class AdminController {
 
     @PostMapping("/updateProductStatus/{trackingNumber}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateProductStatus(@PathVariable String trackingNumber, @RequestParam String newStatus) {
+    public ResponseEntity<?> updateProductStatus(@PathVariable String trackingNumber, @RequestParam PackageStatus newStatus) {
         try {
-            if (!PackageStatus.isValidStatus(newStatus)) {
+            if (!PackageStatus.isValidStatus(newStatus.name())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status.");
             }
 

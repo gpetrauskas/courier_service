@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -34,6 +33,7 @@ public class PaymentController {
 
     @PostMapping("/pay/{paymentId}")
     @PreAuthorize("isAuthenticated()")
+    @Transactional
     public ResponseEntity<?> makePayment(@PathVariable Long paymentId, @RequestBody PaymentDTO paymentDTO, Principal principal) {
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(() ->
                 new RuntimeException("payment not found."));
@@ -41,7 +41,6 @@ public class PaymentController {
         if (!principal.getName().equals(payment.getOrder().getUser().getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No payment with such id for this user.");
         }
-        
         try {
             ResponseEntity response = paymentService.processPayment(paymentDTO, payment);
             return ResponseEntity.ok(response);
@@ -52,6 +51,7 @@ public class PaymentController {
 
     @PostMapping("/processPayment")
     @PreAuthorize("isAuthenticated()")
+    @Transactional
     public ResponseEntity<?> processPayment(@RequestBody PaymentDTO paymentDTO) {
         try {
           //  paymentService.processPayment(paymentDTO);
