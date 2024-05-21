@@ -1,5 +1,6 @@
 package com.example.courier.service;
 
+import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Package;
 import com.example.courier.exception.OrderNotFoundException;
@@ -13,7 +14,7 @@ public class TrackingService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public String getPackageStatus(String trackingNumber) {
+    public PackageStatus getPackageStatus(String trackingNumber) {
         try {
             Order trackedOrder = orderRepository.findByPackageDetails_TrackingNumber(trackingNumber);
             if (trackedOrder != null) {

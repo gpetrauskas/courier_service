@@ -1,5 +1,8 @@
 package com.example.courier.service;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.PackageStatus;
+import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentDTO;
@@ -17,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentService {
@@ -33,25 +37,26 @@ public class PaymentService {
     @Autowired
     private CreditCardService creditCardService;
 
+    @Transactional
     public ResponseEntity<String> processPayment(PaymentDTO paymentDTO, Payment payment) {
-        Order order = orderRepository.findById(payment.getOrder().getId()).orElseThrow(() ->
-                new RuntimeException("Order not found."));
-        User user = userRepository.findById(payment.getOrder().getUser().getId()).orElseThrow(() ->
-                new RuntimeException("user not found"));
-        if (payment.getStatus().equals("PAID")) {
-            throw new RuntimeException("No active payment for this order.");
-        }
-
         try {
+            Order order = orderRepository.findById(payment.getOrder().getId()).orElseThrow(() ->
+                    new RuntimeException("Order not found."));
+            User user = userRepository.findById(payment.getOrder().getUser().getId()).orElseThrow(() ->
+                    new RuntimeException("user not found"));
+            if (payment.getStatus().equals(PaymentStatus.PAID) || payment.getStatus().equals(PaymentStatus.CANCELED)) {
+                throw new RuntimeException("No active payment for this order.");
+            }
+
             if (paymentDTO.newPaymentMethod() != null) {
                 handleNewPaymentMethod(paymentDTO, payment, user);
             } else if (paymentDTO.paymentMethodId() != null) {
                 handleExistingPaymentMethod(paymentDTO, payment);
             }
 
-            payment.setStatus("PAID");
-            order.setStatus("CONFIRMED");
-            order.getPackageDetails().setStatus("PICKING_UP");
+            payment.setStatus(PaymentStatus.PAID);
+            order.setStatus(OrderStatus.CONFIRMED);
+            order.getPackageDetails().setStatus(PackageStatus.PICKING_UP);
 
             orderRepository.save(order);
             paymentRepository.save(payment);
@@ -59,8 +64,8 @@ public class PaymentService {
 
             return ResponseEntity.ok("Payment made successfully.");
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (PaymentFailedException e) {
+            log.error("Error occurred during payment: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during payment. " + e.getMessage());
         }
     }
@@ -70,9 +75,9 @@ public class PaymentService {
         if (paymentMethodDTO instanceof CreditCardDTO) {
             CreditCard card = creditCardService.setupCreditCard((CreditCardDTO) paymentMethodDTO, user);
 
-            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentDTO.cvc());
+            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, ((CreditCardDTO) paymentMethodDTO).cvc());
             if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-                payment.setStatus("FAILED");
+                payment.setStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
                 throw new PaymentFailedException(responseEntity.getBody());
             }
@@ -95,7 +100,7 @@ public class PaymentService {
 
             ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentDTO.cvc());
             if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-                payment.setStatus("FAILED");
+                payment.setStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
                 throw new PaymentFailedException(responseEntity.getBody());
             }
