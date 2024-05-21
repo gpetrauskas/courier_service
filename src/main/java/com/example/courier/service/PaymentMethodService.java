@@ -16,20 +16,15 @@ public class PaymentMethodService {
     private UserRepository userRepository;
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
+    @Autowired
+    private CreditCardService creditCardService;
 
     public void addPaymentMethod(Long userId, PaymentMethodDTO paymentMethodDTO) {
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new RuntimeException("User not found."));
 
         if (paymentMethodDTO instanceof CreditCardDTO) {
-            CreditCardDTO creditCardDTO = (CreditCardDTO) paymentMethodDTO;
-
-            CreditCard card = new CreditCard();
-            card.setUser(user);
-            card.setCardNumber(creditCardDTO.cardNumber());
-            card.setExpiryDate(creditCardDTO.expiryDate());
-            card.setCardHolderName(creditCardDTO.cardHolderName());
-
+            CreditCard card = creditCardService.setupCreditCard((CreditCardDTO) paymentMethodDTO, user);
             paymentMethodRepository.save(card);
         }
     }
