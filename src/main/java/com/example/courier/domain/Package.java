@@ -1,5 +1,6 @@
 package com.example.courier.domain;
 
+import com.example.courier.common.PackageStatus;
 import jakarta.persistence.*;
 
 @Entity
@@ -22,12 +23,13 @@ public class Package {
     @Column(nullable = false)
     private String trackingNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private PackageStatus status;
 
     public Package() {}
 
-    public Package(String weight, String dimensions, String contents, String trackingNumber, String status) {
+    public Package(String weight, String dimensions, String contents, String trackingNumber, PackageStatus status) {
         this.weight = weight;
         this.dimensions = dimensions;
         this.contents = contents;
@@ -67,11 +69,11 @@ public class Package {
         this.trackingNumber = trackingNumber;
     }
 
-    public String getStatus() {
+    public PackageStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(PackageStatus status) {
         this.status = status;
     }
 

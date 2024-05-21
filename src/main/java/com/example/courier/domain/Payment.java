@@ -1,5 +1,6 @@
 package com.example.courier.domain;
 
+import com.example.courier.common.PaymentStatus;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -23,12 +24,13 @@ public class Payment {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private PaymentStatus status;
 
     public Payment() {}
 
-    public Payment(Order order, PaymentMethod paymentMethod, BigDecimal amount, String status) {
+    public Payment(Order order, PaymentMethod paymentMethod, BigDecimal amount, PaymentStatus status) {
         this.order = order;
         this.paymentMethod = paymentMethod;
         this.amount = amount;
@@ -51,11 +53,11 @@ public class Payment {
         this.amount = amount;
     }
 
-    public String getStatus() {
+    public PaymentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(PaymentStatus status) {
         this.status = status;
     }
 

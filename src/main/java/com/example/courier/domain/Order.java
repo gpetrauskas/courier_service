@@ -1,6 +1,7 @@
 package com.example.courier.domain;
 
 
+import com.example.courier.common.OrderStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -30,8 +31,9 @@ public class Order {
     @Column(nullable = false)
     private String deliveryPreferences;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private OrderStatus status;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
@@ -39,7 +41,7 @@ public class Order {
 
     public Order() {}
 
-    public Order(User user, String senderAddress, String recipientAddress, Package packageDetails, String deliveryPreferences, String status, LocalDateTime createDate) {
+    public Order(User user, String senderAddress, String recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
@@ -89,11 +91,11 @@ public class Order {
         this.deliveryPreferences = deliveryPreferences;
     }
 
-    public String getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
