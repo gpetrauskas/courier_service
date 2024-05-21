@@ -1,8 +1,11 @@
 package com.example.courier.controller;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
@@ -15,9 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,11 +89,30 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/cancelOrder/{orderId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId, Principal principal) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() ->
+                new OrderNotFoundException("Order not found"));
+
+        if (!order.getUser().getEmail().equals(principal.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are ot authorized to cancel this order");
+        }
+
+        if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Order already confirmed and paid for. " +
+                    "Contact support for more information how to abort it.");
+        }
+
+        orderService.cancelOrder(order);
+        return ResponseEntity.ok("Order cancelled successfully.");
+    }
+
     @GetMapping("/trackOrder/{trackingNumber}")
-    public ResponseEntity<String> trackOrder(@PathVariable String trackingNumber) {
+    public ResponseEntity<?> trackOrder(@PathVariable String trackingNumber) {
         try {
             logger.info("Tracking package info with tracking id: " + trackingNumber);
-            String orderStatus = trackingService.getPackageStatus(trackingNumber);
+            PackageStatus orderStatus = trackingService.getPackageStatus(trackingNumber);
             logger.info("Package status with tracking id: " + trackingNumber + " was found.");
             return ResponseEntity.ok(orderStatus);
         } catch (Exception e) {
