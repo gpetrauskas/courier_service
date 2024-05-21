@@ -6,6 +6,6 @@ import java.math.BigDecimal;
 
 public record PaymentDetailsDTO(BigDecimal amount, String status) {
     public static PaymentDetailsDTO fromPayment(Payment payment) {
-        return new PaymentDetailsDTO(payment.getAmount(), payment.getStatus());
+        return new PaymentDetailsDTO(payment.getAmount(), payment.getStatus().name());
     }
 }
