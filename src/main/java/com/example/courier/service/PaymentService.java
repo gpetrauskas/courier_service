@@ -4,6 +4,9 @@ import com.example.courier.domain.*;
 import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentDTO;
 import com.example.courier.dto.PaymentMethodDTO;
+import com.example.courier.exception.PaymentFailedException;
+import com.example.courier.exception.PaymentMethodNotFoundException;
+import com.example.courier.exception.UnauthorizedPaymentMethodException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.repository.PaymentRepository;
@@ -14,9 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class PaymentService {
@@ -30,51 +30,23 @@ public class PaymentService {
     private PaymentRepository paymentRepository;
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
+    @Autowired
+    private CreditCardService creditCardService;
 
     public ResponseEntity<String> processPayment(PaymentDTO paymentDTO, Payment payment) {
         Order order = orderRepository.findById(payment.getOrder().getId()).orElseThrow(() ->
                 new RuntimeException("Order not found."));
+        User user = userRepository.findById(payment.getOrder().getUser().getId()).orElseThrow(() ->
+                new RuntimeException("user not found"));
+        if (payment.getStatus().equals("PAID")) {
+            throw new RuntimeException("No active payment for this order.");
+        }
 
         try {
             if (paymentDTO.newPaymentMethod() != null) {
-                PaymentMethodDTO paymentMethodDTO = paymentDTO.newPaymentMethod();
-                if (paymentMethodDTO instanceof CreditCardDTO) {
-                    CreditCard card = setupCreditCard(paymentMethodDTO, payment);
-                    String cvc = ((CreditCardDTO) paymentMethodDTO).cvc();
-
-                    ResponseEntity<String> responseEntity = testingPayment(card, cvc);
-                    if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-                        payment.setStatus("FAILED");
-                        paymentRepository.save(payment);
-                        System.out.println("3");
-                        return responseEntity;
-                    }
-
-                    paymentMethodRepository.saveAndFlush(card);
-                    payment.setPaymentMethod(card);
-                }
-
+                handleNewPaymentMethod(paymentDTO, payment, user);
             } else if (paymentDTO.paymentMethodId() != null) {
-                PaymentMethod pm = paymentMethodRepository.findById(paymentDTO.paymentMethodId())
-                        .orElseThrow(() -> new RuntimeException("Payment method not found."));
-                if (!pm.getUser().equals(payment.getOrder().getUser())) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment was nor found.");
-                } else {
-                    Long paymentMethodId = paymentDTO.paymentMethodId();
-                    PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() ->
-                            new RuntimeException("Payment method not found."));
-                    if (paymentMethod instanceof CreditCard) {
-                        CreditCard card = (CreditCard) paymentMethod;
-
-                        ResponseEntity responseEntity = testingPayment(card, paymentDTO.cvc());
-                        if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
-                            payment.setStatus("FAILED");
-                            paymentRepository.save(payment);
-                            return responseEntity;
-                        }
-                    }
-                    payment.setPaymentMethod(paymentMethod);
-                }
+                handleExistingPaymentMethod(paymentDTO, payment);
             }
 
             payment.setStatus("PAID");
@@ -93,36 +65,42 @@ public class PaymentService {
         }
     }
 
-    public CreditCard setupCreditCard(PaymentMethodDTO paymentMethodDTO, Payment payment) {
-        CreditCardDTO creditCardDTO = (CreditCardDTO) paymentMethodDTO;
+    private void handleNewPaymentMethod(PaymentDTO paymentDTO, Payment payment, User user) {
+        PaymentMethodDTO paymentMethodDTO = paymentDTO.newPaymentMethod();
+        if (paymentMethodDTO instanceof CreditCardDTO) {
+            CreditCard card = creditCardService.setupCreditCard((CreditCardDTO) paymentMethodDTO, user);
 
-        CreditCard creditCard = new CreditCard();
-        creditCard.setUser(payment.getOrder().getUser());
-        creditCard.setCardHolderName(creditCardDTO.cardHolderName());
-        creditCard.setCardNumber(creditCardDTO.cardNumber());
-        creditCard.setExpiryDate(creditCardDTO.expiryDate());
+            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentDTO.cvc());
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                payment.setStatus("FAILED");
+                paymentRepository.save(payment);
+                throw new PaymentFailedException(responseEntity.getBody());
+            }
 
-        return creditCard;
+            paymentMethodRepository.saveAndFlush(card);
+            payment.setPaymentMethod(card);
+        }
     }
 
-    public ResponseEntity<String> testingPayment(CreditCard card, String cvc) {
-        if (cardExpired(card)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CARD EXPIRED");
+    private void handleExistingPaymentMethod(PaymentDTO paymentDTO, Payment payment) {
+        Long paymentMethodId = paymentDTO.paymentMethodId();
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId).orElseThrow(() ->
+                new PaymentMethodNotFoundException("Payment method not found."));
+        if (!paymentMethod.getUser().equals(payment.getOrder().getUser())) {
+            throw new UnauthorizedPaymentMethodException("Payment was not found");
         }
-        if (card.getCardNumber().endsWith("00")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DECLINED");
-        }
-        if (cvc.endsWith("3")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
-        }
-            return ResponseEntity.ok("APPROVED");
-    }
 
-    public boolean cardExpired(CreditCard card) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
-        YearMonth expiryDate = YearMonth.parse(card.getExpiryDate(), formatter);
-        YearMonth currentDate = YearMonth.now();
+        if (paymentMethod instanceof CreditCard) {
+            CreditCard card = (CreditCard) paymentMethod;
 
-        return expiryDate.isBefore(currentDate);
+            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentDTO.cvc());
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                payment.setStatus("FAILED");
+                paymentRepository.save(payment);
+                throw new PaymentFailedException(responseEntity.getBody());
+            }
+        }
+
+        payment.setPaymentMethod(paymentMethod);
     }
 }
