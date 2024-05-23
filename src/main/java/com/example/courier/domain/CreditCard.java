@@ -21,6 +21,9 @@ public class CreditCard extends PaymentMethod {
     @Transient
     private String cvc;
 
+    @Column(nullable = false)
+    private boolean saved = false;
+
     public String getCardNumber() {
         return cardNumber;
     }
@@ -43,5 +46,13 @@ public class CreditCard extends PaymentMethod {
 
     public void setCardHolderName(String cardHolderName) {
         this.cardHolderName = cardHolderName;
+    }
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
     }
 }
