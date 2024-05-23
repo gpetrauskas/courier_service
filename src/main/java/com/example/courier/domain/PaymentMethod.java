@@ -1,5 +1,6 @@
 package com.example.courier.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,6 +14,7 @@ public abstract class PaymentMethod {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     public void setUser(User user) {
@@ -21,5 +23,9 @@ public abstract class PaymentMethod {
 
     public User getUser() {
         return this.user;
+    }
+
+    public boolean isCreditCard() {
+        return this instanceof CreditCard;
     }
 }
