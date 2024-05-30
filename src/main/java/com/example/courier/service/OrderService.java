@@ -5,7 +5,9 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
+import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PackageDTO;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +34,29 @@ public class OrderService {
     private PricingOptionRepository pricingOptionRepository;
     @Autowired
     private PaymentRepository paymentRepository;
+    @Autowired
+    private AddressRepository addressRepository;
 
     @Transactional
     public void placeOrder(Long id, OrderDTO orderDTO) {
         // fetch user  from the database
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
 
+        // convert orderDOT ti Anress entities
+        Address senderAddress = AddressDTO.toAddress(orderDTO.senderAddress());
+        Address recipientAddress = AddressDTO.toAddress(orderDTO.recipientAddress());
+
+        senderAddress.setUser(user);
+        recipientAddress.setUser(user);
+
+        // save addresses to the database
+        addressRepository.saveAndFlush(senderAddress);
+        addressRepository.saveAndFlush(recipientAddress);
+
         Order order = new Order();
         order.setUser(user);
-        order.setSenderAddress(orderDTO.senderAddress());
-        order.setRecipientAddress(orderDTO.recipientAddress());
+        order.setSenderAddress(senderAddress);
+        order.setRecipientAddress(recipientAddress);
 
         PricingOption deliveryPreferenceOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.deliveryPreferences()))
                         .orElseThrow(() -> new RuntimeException("Delivery preference option not found."));
@@ -52,15 +67,16 @@ public class OrderService {
 
         Package packageDetails = new Package();
 
-        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getWeight()))
+
+        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().weight()))
                         .orElseThrow(() -> new RuntimeException("Weight option not found."));
         packageDetails.setWeight(weightPricingOption.getDescription());
 
-        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getDimensions()))
+        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().dimensions()))
                         .orElseThrow(() -> new RuntimeException("Size option not found."));
         packageDetails.setDimensions(sizePricingOption.getDescription());
 
-        packageDetails.setContents(orderDTO.packageDetails().getContents());
+        packageDetails.setContents(orderDTO.packageDetails().contents());
         packageDetails.setTrackingNumber(UUID.randomUUID().toString());
         packageDetails.setStatus(PackageStatus.WAITING_FOR_PAYMENT);
 
@@ -81,9 +97,9 @@ public class OrderService {
 
         PricingOption deliveryPricingOption = pricingOptionRepository.findById(Long.valueOf(orderDTO.deliveryPreferences()))
                 .orElseThrow(() -> new RuntimeException("Delivery preference option was not found."));
-        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getWeight()))
+        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().weight()))
                 .orElseThrow(() -> new RuntimeException("Weight option was not found"));
-        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().getDimensions()))
+        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().dimensions()))
                 .orElseThrow(() -> new RuntimeException("Size option was not found."));
 
         BigDecimal deliveryPrice = deliveryPricingOption.getPrice();
@@ -103,14 +119,7 @@ public class OrderService {
     }
 
     public OrderDTO mapToOrderDTO(Order order) {
-        OrderDTO orderDTO = new OrderDTO(order.getId(),
-                order.getSenderAddress(),
-                order.getRecipientAddress(),
-                order.getPackageDetails(),
-                order.getDeliveryPreferences(),
-                order.getStatus(),
-                order.getCreateDate());
-
+        OrderDTO orderDTO = OrderDTO.fromOrder(order);
         return orderDTO;
     }
 
