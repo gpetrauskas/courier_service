@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
@@ -17,6 +18,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -61,5 +65,18 @@ public class UserController {
         User user = userRepository.findByEmail(userEmail);
         String fullName = user.getName();
         return ResponseEntity.ok("Hello, " + fullName + "!");
+    }
+
+    @GetMapping("/ccList")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> testing(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName());
+        System.out.println(user.getEmail());
+        List<PaymentMethod> paymentMethods = user.getPaymentMethods();
+        if (user.getPaymentMethods() == null || user.getPaymentMethods().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Payment Methods found for the user");
+        }
+
+        return ResponseEntity.ok(paymentMethods);
     }
 }
