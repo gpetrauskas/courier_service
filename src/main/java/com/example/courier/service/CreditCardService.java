@@ -29,6 +29,7 @@ public class CreditCardService {
         card.setCardNumber(creditCardDTO.cardNumber());
         card.setExpiryDate(creditCardDTO.expiryDate());
         card.setCardHolderName(creditCardDTO.cardHolderName());
+        card.setSaved(creditCardDTO.saveCard());
 
         return card;
     }
@@ -53,5 +54,12 @@ public class CreditCardService {
         YearMonth currentDate = YearMonth.now();
 
         return expiryDate.isBefore(currentDate);
+    }
+
+    public CreditCard dontSaveCreditCard(CreditCard card) {
+        int ccLength = card.getCardNumber().length();
+        card.setCardNumber(card.getCardNumber().substring(ccLength - 4, ccLength));
+
+        return card;
     }
 }
