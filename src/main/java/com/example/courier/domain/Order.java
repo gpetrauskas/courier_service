@@ -4,11 +4,12 @@ package com.example.courier.domain;
 import com.example.courier.common.OrderStatus;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
-public class Order {
+public class Order implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +19,13 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private String senderAddress;
+    @ManyToOne
+    @JoinColumn(name = "sender_address_id", nullable = false)
+    private Address senderAddress;
 
-    @Column(nullable = false)
-    private String recipientAddress;
+    @ManyToOne
+    @JoinColumn(name = "recipient_address_id", nullable = false)
+    private Address recipientAddress;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "package_id", referencedColumnName = "id")
@@ -41,7 +44,7 @@ public class Order {
 
     public Order() {}
 
-    public Order(User user, String senderAddress, String recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
+    public Order(User user, Address senderAddress, Address recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
@@ -59,19 +62,19 @@ public class Order {
         this.user = user;
     }
 
-    public String getSenderAddress() {
+    public Address getSenderAddress() {
         return senderAddress;
     }
 
-    public void setSenderAddress(String senderAddress) {
+    public void setSenderAddress(Address senderAddress) {
         this.senderAddress = senderAddress;
     }
 
-    public String getRecipientAddress() {
+    public Address getRecipientAddress() {
         return recipientAddress;
     }
 
-    public void setRecipientAddress(String recipientAddress) {
+    public void setRecipientAddress(Address recipientAddress) {
         this.recipientAddress = recipientAddress;
     }
 
