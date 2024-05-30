@@ -84,9 +84,12 @@ public class AdminService {
         if (updatedUser.email() != null) {
             existingUse.setEmail(updatedUser.email());
         }
+        /*
         if (updatedUser.address() != null) {
             existingUse.setAddress(updatedUser.address());
         }
+
+         */
         if (updatedUser.password() != null) {
             String encodedPass = passwordEncoder.encode(updatedUser.password());
             existingUse.setPassword(encodedPass);
@@ -138,7 +141,7 @@ public class AdminService {
             report.append(user.getId()).append("\t");
             report.append(user.getName()).append("\t");
             report.append(user.getEmail()).append("\t");
-            report.append(user.getAddress()).append("\t");
+            report.append(user.getAddresses()).append("\t");
             report.append(user.getRole()).append("\n");
         }
         return report.toString();
