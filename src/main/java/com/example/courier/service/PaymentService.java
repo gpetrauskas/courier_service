@@ -82,6 +82,11 @@ public class PaymentService {
                 throw new PaymentFailedException(responseEntity.getBody());
             }
 
+            if (!card.isSaved()) {
+                paymentMethodRepository.saveAndFlush(creditCardService.dontSaveCreditCard(card));
+                payment.setPaymentMethod(card);
+                return;
+            }
             paymentMethodRepository.saveAndFlush(card);
             payment.setPaymentMethod(card);
         }
