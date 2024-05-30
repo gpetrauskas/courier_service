@@ -3,9 +3,11 @@ package com.example.courier.domain;
 import com.example.courier.common.PackageStatus;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "packages")
-public class Package {
+public class Package implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

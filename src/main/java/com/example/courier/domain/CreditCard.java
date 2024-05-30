@@ -5,9 +5,11 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 
+import java.io.Serializable;
+
 @Entity
 @DiscriminatorValue("CREDIT_CARD")
-public class CreditCard extends PaymentMethod {
+public class CreditCard extends PaymentMethod implements Serializable {
 
     @Column(nullable = false)
     private String cardNumber;

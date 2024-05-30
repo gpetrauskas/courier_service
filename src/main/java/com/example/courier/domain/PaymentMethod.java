@@ -3,10 +3,12 @@ package com.example.courier.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "payment_type")
-public abstract class PaymentMethod {
+public abstract class PaymentMethod implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
