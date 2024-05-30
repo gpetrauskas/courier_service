@@ -5,6 +5,7 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PackageDTO;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -60,16 +60,16 @@ public class OrderController {
     @GetMapping("/getAllOrders")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDTO>> getOrders() {
-        List<Order> order = orderRepository.findAll();
+        try {
+            List<Order> order = orderRepository.findAll();
 
-        List<OrderDTO> orderDTOs = order.stream()
-                .map(o -> {
-                    OrderDTO orderDTO = new OrderDTO(o.getId(), o.getSenderAddress(),
-                            o.getRecipientAddress(), o.getPackageDetails(), o.getDeliveryPreferences(),
-                            o.getStatus(), o.getCreateDate());
-                    return orderDTO;
-                }).collect(Collectors.toList());
-        return ResponseEntity.ok(orderDTOs);
+            List<OrderDTO> orderDTOs = order.stream()
+                    .map(OrderDTO::fromOrder)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(orderDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping("/placeOrder")
