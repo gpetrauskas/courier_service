@@ -64,7 +64,7 @@ public class OrderService {
         order.setDeliveryPreferences(deliveryPreferenceOption.getDescription());
 
         order.setStatus(OrderStatus.PENDING);
-        order.setCreateDate(LocalDateTime.now());
+        order.setCreateDate(LocalDateTime.now().withNano(0));
 
         Package packageDetails = new Package();
 
@@ -114,14 +114,9 @@ public class OrderService {
     public List<OrderDTO> findUserOrders(User user) {
         List<Order> orders = orderRepository.findByUserId(user.getId());
         List<OrderDTO> orderDTOs = orders.stream()
-                .map(order -> mapToOrderDTO(order))
+                .map(OrderMapper.INSTANCE::toOrderDTO)
                 .collect(Collectors.toList());
         return orderDTOs;
-    }
-
-    public OrderDTO mapToOrderDTO(Order order) {
-        OrderDTO orderDTO = OrderMapper.INSTANCE.toOrderDTO(order);
-        return orderDTO;
     }
 
     @Transactional
