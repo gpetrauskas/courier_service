@@ -4,8 +4,10 @@ import com.example.courier.common.OrderStatus;
 import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
+import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PackageDTO;
+import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
@@ -64,7 +66,7 @@ public class OrderController {
             List<Order> order = orderRepository.findAll();
 
             List<OrderDTO> orderDTOs = order.stream()
-                    .map(OrderDTO::fromOrder)
+                    .map(OrderMapper.INSTANCE::toOrderDTO)
                     .collect(Collectors.toList());
             return ResponseEntity.ok(orderDTOs);
         } catch (Exception e) {

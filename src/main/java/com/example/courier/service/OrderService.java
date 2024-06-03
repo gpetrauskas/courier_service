@@ -5,14 +5,13 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.PackageDTO;
+import com.example.courier.dto.mapper.AddressMapper;
+import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +35,8 @@ public class OrderService {
     private PaymentRepository paymentRepository;
     @Autowired
     private AddressRepository addressRepository;
+    @Autowired
+    private AddressMapper addressMapper;
 
     @Transactional
     public void placeOrder(Long id, OrderDTO orderDTO) {
@@ -43,8 +44,8 @@ public class OrderService {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
 
         // convert orderDOT ti Anress entities
-        Address senderAddress = AddressDTO.toAddress(orderDTO.senderAddress());
-        Address recipientAddress = AddressDTO.toAddress(orderDTO.recipientAddress());
+        Address senderAddress = addressMapper.toAddress(orderDTO.senderAddress());
+        Address recipientAddress = addressMapper.toAddress(orderDTO.recipientAddress());
 
         senderAddress.setUser(user);
         recipientAddress.setUser(user);
@@ -119,7 +120,7 @@ public class OrderService {
     }
 
     public OrderDTO mapToOrderDTO(Order order) {
-        OrderDTO orderDTO = OrderDTO.fromOrder(order);
+        OrderDTO orderDTO = OrderMapper.INSTANCE.toOrderDTO(order);
         return orderDTO;
     }
 
