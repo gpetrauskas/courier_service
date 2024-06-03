@@ -3,14 +3,19 @@ package com.example.courier.controller;
 import com.example.courier.domain.Address;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
+import com.example.courier.repository.AddressRepository;
 import com.example.courier.service.AddressService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -19,6 +24,8 @@ public class AddressController {
 
     @Autowired
     private AddressService addressService;
+    @Autowired
+    private AddressRepository addressRepository;
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
@@ -42,9 +49,26 @@ public class AddressController {
 
     @PatchMapping("/update/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressDTO addressDTO) {
-        AddressDTO updatedAddress = addressService.updateAddress(id, addressDTO);
+    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressDTO addressDTO, Principal principal) {
+        try {
+            Address address = addressRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
-        return ResponseEntity.ok(updatedAddress);
+            if (!principal.getName().equals(address.getUser().getEmail())) {
+                throw new AccessDeniedException("Invalid request");
+            }
+            if (!id.equals(addressDTO.id())) {
+                throw new IllegalArgumentException("Cannot update address");
+            }
+
+            AddressDTO updatedAddress = addressService.updateAddress(id, addressDTO);
+
+            return ResponseEntity.ok(updatedAddress);
+        } catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred.");
+        }
+
     }
 }
