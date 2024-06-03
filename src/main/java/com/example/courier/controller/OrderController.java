@@ -13,6 +13,8 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
 import com.example.courier.service.TrackingService;
+import org.aspectj.weaver.tools.Trace;
+import org.aspectj.weaver.tools.Traceable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,9 +69,10 @@ public class OrderController {
 
             List<OrderDTO> orderDTOs = order.stream()
                     .map(OrderMapper.INSTANCE::toOrderDTO)
-                    .collect(Collectors.toList());
+                    .toList();
             return ResponseEntity.ok(orderDTOs);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
