@@ -6,6 +6,8 @@ target/
 
 # Ignore application.properties
 application.properties
+# Ignore resources directory
+/src/main/resources/
 
 ### STS ###
 .apt_generated

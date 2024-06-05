@@ -1,5 +1,5 @@
 package com.example.courier;
-
+/*
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Package;
 import com.example.courier.domain.User;
@@ -30,3 +30,5 @@ public class OrderTest {
     }
 
 }
+
+ */

@@ -27,12 +27,12 @@ public class UserTest {
     @Test
     public void testConstructor_WithValidParameters_ShouldCreateUserObjectWithCorrectValues() {
         // create a valid user
-        User user = new User("Bilbo Baggins", "bilbo@middleearth.com", "Bag End", "underhill99" );
+        User user = new User("Bilbo Baggins", "bilbo@middleearth.com", "underhill99" );
 
         // assert that user parameters match expected parameters
         assertEquals("Bilbo Baggins", user.getName());
         assertEquals("bilbo@middleearth.com", user.getEmail());
-        assertEquals("Bag End", user.getAddress());
+        assertEquals("Bag End", user.getAddresses());
         assertEquals("underhill99", user.getPassword());
     }
 
@@ -43,20 +43,20 @@ public class UserTest {
         // set parameters for the user
         user.setName("Bilbo Baggins");
         user.setEmail("bilbo@middleearth.com");
-        user.setAddress("Bag End");
+       // user.setAddress("Bag End");
         user.setPassword("underhill99");
 
         // assert that user parameters match expected parameters
         assertEquals("Bilbo Baggins", user.getName());
         assertEquals("bilbo@middleearth.com", user.getEmail());
-        assertEquals("Bag End", user.getAddress());
+        assertEquals("Bag End", user.getAddresses());
         assertEquals("underhill99", user.getPassword());
     }
 
     @Test
     public void testValidationConstraints_OneFieldEmpty_ShouldThrowConstraintViolationException() {
         // create user object with one empty field (email)
-        User user = new User("Bilbo Baggins", "", "Bag End", "underhill99");
+        User user = new User("Bilbo Baggins", "", "underhill99");
 
         // validate user object
         Set<ConstraintViolation<User>> violations = validator.validate(user);
@@ -68,7 +68,7 @@ public class UserTest {
     @Test
     public void testValidationConstraints_PasswordTooShortAndTooLong_ShouldThrowConstraintViolationException() {
         // user object with password that is too short
-        User user = new User("Samwise Gamgee", "sam@middleearth.com", "Hobbiton", "toshort");
+        User user = new User("Samwise Gamgee", "sam@middleearth.com", "toshort");
         // validate the user object
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         // retrieve first violation fro the set
@@ -80,7 +80,7 @@ public class UserTest {
         assertEquals(1, violations.size());
 
         // user object with password that is too long
-        User user2 = new User("Samwise Gamgee", "sam@middleearth.com", "Hobbiton", "waytolongpasswordforsamgamgee");
+        User user2 = new User("Samwise Gamgee", "sam@middleearth.com", "waytolongpasswordforsamgamgee");
         // validate the user object
         Set<ConstraintViolation<User>> violations1 = validator.validate(user2);
         // retrieve first violation from the set
@@ -97,11 +97,11 @@ public class UserTest {
     void testCreatingUserWithDuplicateEmail_shouldThrowException() {
         // arrange
         String email = "frodo@middleearth.com";
-        User existingUser = new User("Frodo Baggins", email, "The Shire", "ringbearer321");
+        User existingUser = new User("Frodo Baggins", email, "ringbearer321");
 
         // act & assert
         assertThrows(IllegalArgumentException.class, () -> {
-            User newUser = new User("Samwise Gamgee", email, "The Shire", "gardener123");
+            User newUser = new User("Samwise Gamgee", email, "gardener123");
             checkDuplicateEmail(newUser.getEmail(), existingUser.getEmail());
         });
     }

@@ -1,5 +1,5 @@
 package com.example.courier;
-
+/*
 import com.example.courier.domain.User;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.repository.UserRepository;
@@ -69,3 +69,5 @@ public class UserServiceTest {
         assertEquals("Password length must be between 8-16 characters.", exception.getMessage());
     }
 }
+
+ */

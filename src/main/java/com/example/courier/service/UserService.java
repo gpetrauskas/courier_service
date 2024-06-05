@@ -66,7 +66,6 @@ public class UserService {
         User newUser = new User();
         newUser.setName(userDTO.name());
         newUser.setEmail(userDTO.email());
-        newUser.setAddress(userDTO.address());
         String encodedPass = passwordEncoder.encode(userDTO.password());
         newUser.setPassword(encodedPass);
         newUser.setRole(Role.USER);

@@ -1,4 +1,4 @@
-package com.example.courier.domain;
+/*package com.example.courier.domain;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
@@ -11,7 +11,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "couriers")
-public class Couriers extends User {
+public class Courier extends User {
+
+    public Courier() {
+        super();
+    }
 
     @OneToMany(mappedBy = "courier", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -35,3 +39,6 @@ public class Couriers extends User {
         order.setCourier(null);
     }
 }
+
+
+ */
