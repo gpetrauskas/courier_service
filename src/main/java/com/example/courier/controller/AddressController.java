@@ -27,12 +27,6 @@ public class AddressController {
     @Autowired
     private AddressRepository addressRepository;
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
-      //  addressService.deleteAddress(id);
-        return null;
-    }
-
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/myAddressList")
     public ResponseEntity<List<AddressDTO>> getMyAddressList() {
@@ -69,6 +63,29 @@ public class AddressController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred.");
         }
+    }
 
+    @DeleteMapping("/remove/{id}")
+    public ResponseEntity<String> removeAddress(@PathVariable Long id, Principal principal) {
+        try {
+            Address address = addressRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+
+            if (!principal.getName().equals(address.getUser().getEmail())) {
+                throw new AccessDeniedException("Invalid request");
+            }
+
+            if (!id.equals(address.getId())) {
+                throw new IllegalArgumentException("Cannot delete this.");
+            }
+
+            addressRepository.deleteById(id);
+
+            return ResponseEntity.ok().body("Address was successfully deleted.");
+        } catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred");
+        }
     }
 }
