@@ -31,8 +31,10 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/courier/*").permitAll()
                                 .requestMatchers("/*", "/testpage/**").permitAll()
                                 .requestMatchers("/api/user/register", "/api/user/login",
-                                        "/api/orders/trackOrder/{id}", "/api/orders/**").permitAll()
+                                        "/api/orders/trackOrder/{id}", "/api/orders/**",
+                                        "/api/paymentMethods/**", "/api/user/cc/*", "/api/addresses/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/courier/**").hasAnyRole("COURIER", "ADMIN")
                                 .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService),
                         UsernamePasswordAuthenticationFilter.class)
