@@ -13,4 +13,9 @@ public interface OrderMapper {
 
     @Mapping(target = "createTime", source = "createDate")
     OrderDTO toOrderDTO(Order order);
+
+    @Mapping(target = "createDate", source = "createTime")
+    @Mapping(target = "senderAddress", ignore = true)
+    @Mapping(target = "recipientAddress", ignore = true)
+    Order toOrder(OrderDTO orderDTO);
 }
