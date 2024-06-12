@@ -4,17 +4,13 @@ import com.example.courier.common.OrderStatus;
 import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
-import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.PackageDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
 import com.example.courier.service.TrackingService;
-import org.aspectj.weaver.tools.Trace;
-import org.aspectj.weaver.tools.Traceable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -48,17 +43,15 @@ public class OrderController {
     @GetMapping("/getUserOrders")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserOrders() {
-        List<OrderDTO> orders;
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = userRepository.findByEmail(auth.getName());
+            List<OrderDTO> orders = orderService.findUserOrders(user);
 
-            orders = orderService.findUserOrders(user);
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred finding orders.");
         }
-
-        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/getAllOrders")
