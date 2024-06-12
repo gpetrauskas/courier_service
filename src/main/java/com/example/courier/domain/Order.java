@@ -21,11 +21,11 @@ public class Order implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "sender_address_id", nullable = false)
-    private Address senderAddress;
+    private OrderAddress senderAddress;
 
     @ManyToOne
     @JoinColumn(name = "recipient_address_id", nullable = false)
-    private Address recipientAddress;
+    private OrderAddress recipientAddress;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "package_id", referencedColumnName = "id")
@@ -44,7 +44,7 @@ public class Order implements Serializable {
 
     public Order() {}
 
-    public Order(User user, Address senderAddress, Address recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
+    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
@@ -62,19 +62,19 @@ public class Order implements Serializable {
         this.user = user;
     }
 
-    public Address getSenderAddress() {
+    public OrderAddress getSenderAddress() {
         return senderAddress;
     }
 
-    public void setSenderAddress(Address senderAddress) {
+    public void setSenderAddress(OrderAddress senderAddress) {
         this.senderAddress = senderAddress;
     }
 
-    public Address getRecipientAddress() {
+    public OrderAddress getRecipientAddress() {
         return recipientAddress;
     }
 
-    public void setRecipientAddress(Address recipientAddress) {
+    public void setRecipientAddress(OrderAddress recipientAddress) {
         this.recipientAddress = recipientAddress;
     }
 
