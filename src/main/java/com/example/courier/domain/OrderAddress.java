@@ -1,4 +1,23 @@
-package com.example.courier.dto;
+package com.example.courier.domain;
 
-public class OrderAddress {
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "order_addresses")
+public class OrderAddress extends BaseAddress {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    public OrderAddress() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
