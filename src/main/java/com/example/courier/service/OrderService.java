@@ -5,7 +5,9 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
+import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PackageDTO;
 import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.repository.*;
@@ -19,7 +21,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -36,61 +37,88 @@ public class OrderService {
     @Autowired
     private AddressRepository addressRepository;
     @Autowired
+    private OrderAddressRepository orderAddressRepository;
+    @Autowired
     private AddressMapper addressMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Transactional
     public void placeOrder(Long id, OrderDTO orderDTO) {
-        // fetch user  from the database
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
 
-        // convert orderDOT ti Anress entities
-        Address senderAddress = addressMapper.toAddress(orderDTO.senderAddress());
-        Address recipientAddress = addressMapper.toAddress(orderDTO.recipientAddress());
+        Address senderAddress = createAddress(orderDTO.senderAddress(), user);
+        Address recipientAddress = createAddress(orderDTO.recipientAddress(), user);
 
-        senderAddress.setUser(user);
-        recipientAddress.setUser(user);
+        OrderAddress orderSenderAddress = createOrderAddress(senderAddress);
+        OrderAddress orderRecipientAddress = createOrderAddress(recipientAddress);
 
-        // save addresses to the database
-        addressRepository.saveAndFlush(senderAddress);
-        addressRepository.saveAndFlush(recipientAddress);
-
-        Order order = new Order();
-        order.setUser(user);
-        order.setSenderAddress(senderAddress);
-        order.setRecipientAddress(recipientAddress);
-
-        PricingOption deliveryPreferenceOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.deliveryPreferences()))
-                        .orElseThrow(() -> new RuntimeException("Delivery preference option not found."));
-        order.setDeliveryPreferences(deliveryPreferenceOption.getDescription());
-
-        order.setStatus(OrderStatus.PENDING);
-        order.setCreateDate(LocalDateTime.now().withNano(0));
-
-        Package packageDetails = new Package();
-
-
-        PricingOption weightPricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().weight()))
-                        .orElseThrow(() -> new RuntimeException("Weight option not found."));
-        packageDetails.setWeight(weightPricingOption.getDescription());
-
-        PricingOption sizePricingOption = pricingOptionRepository.findById(Long.parseLong(orderDTO.packageDetails().dimensions()))
-                        .orElseThrow(() -> new RuntimeException("Size option not found."));
-        packageDetails.setDimensions(sizePricingOption.getDescription());
-
-        packageDetails.setContents(orderDTO.packageDetails().contents());
-        packageDetails.setTrackingNumber(UUID.randomUUID().toString());
-        packageDetails.setStatus(PackageStatus.WAITING_FOR_PAYMENT);
+        Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
+        Package packageDetails = createPackageFromDTO(orderDTO.packageDetails());
 
         order.setPackageDetails(packageDetails);
-
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(calculateShippingCost(orderDTO));
-        payment.setStatus(PaymentStatus.NOT_PAID);
+        Payment payment = createPayment(order, calculateShippingCost(orderDTO));
 
         orderRepository.save(order);
         paymentRepository.save(payment);
+    }
 
+    private Address createAddress(AddressDTO addressDTO, User user) {
+        Address address = addressMapper.toAddress(addressDTO);
+        address.setUser(user);
+
+        return addressRepository.saveAndFlush(address);
+    }
+
+    private OrderAddress createOrderAddress(Address address) {
+        OrderAddress orderAddress = new OrderAddress();
+        orderAddress.setCity(address.getCity());
+        orderAddress.setStreet(address.getStreet());
+        orderAddress.setHouseNumber(address.getHouseNumber());
+        orderAddress.setFlatNumber(address.getFlatNumber());
+        orderAddress.setPhoneNumber(address.getPhoneNumber());
+        orderAddress.setPostCode(address.getPostCode());
+        orderAddress.setName(address.getName());
+
+        return orderAddressRepository.saveAndFlush(orderAddress);
+    }
+
+    private Order createOrderFromDTO(OrderDTO orderDTO, User user, OrderAddress senderAddress, OrderAddress recipientAddress) {
+        Order order = orderMapper.toOrder(orderDTO);
+        order.setUser(user);
+        order.setSenderAddress(senderAddress);
+        order.setRecipientAddress(recipientAddress);
+        order.setDeliveryPreferences(getDescriptionById(orderDTO.deliveryPreferences()));
+        order.setStatus(OrderStatus.PENDING);
+        order.setCreateDate(LocalDateTime.now().withNano(0));
+
+        return order;
+    }
+
+    private Package createPackageFromDTO(PackageDTO packageDTO) {
+        Package packageDetails = new Package();
+        packageDetails.setWeight(getDescriptionById(packageDTO.weight()));
+        packageDetails.setDimensions(getDescriptionById(packageDTO.dimensions()));
+        packageDetails.setContents(packageDTO.contents());
+        packageDetails.setTrackingNumber(UUID.randomUUID().toString());
+        packageDetails.setStatus(PackageStatus.WAITING_FOR_PAYMENT);
+
+        return packageDetails;
+    }
+
+    private Payment createPayment(Order order, BigDecimal amount) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(amount);
+        payment.setStatus(PaymentStatus.NOT_PAID);
+
+        return payment;
+    }
+
+    private String getDescriptionById(String id) {
+        return pricingOptionRepository.findById(Long.parseLong(id))
+                .map(PricingOption::getDescription)
+                .orElseThrow(() -> new RuntimeException("Pricing option not found."));
     }
 
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) {
@@ -113,10 +141,9 @@ public class OrderService {
 
     public List<OrderDTO> findUserOrders(User user) {
         List<Order> orders = orderRepository.findByUserId(user.getId());
-        List<OrderDTO> orderDTOs = orders.stream()
-                .map(OrderMapper.INSTANCE::toOrderDTO)
-                .collect(Collectors.toList());
-        return orderDTOs;
+        return orders.stream()
+                .map(orderMapper::toOrderDTO)
+                .toList();
     }
 
     @Transactional
