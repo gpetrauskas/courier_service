@@ -64,10 +64,21 @@ public class OrderService {
     }
 
     private Address createAddress(AddressDTO addressDTO, User user) {
-        Address address = addressMapper.toAddress(addressDTO);
-        address.setUser(user);
 
-        return addressRepository.saveAndFlush(address);
+        if (addressDTO.id() != null) {
+            Address address = addressRepository.findById(addressDTO.id()).orElseThrow(() ->
+                    new RuntimeException("Address not found."));
+            if (!address.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException("Address does not belong to the user.");
+            }
+
+            return address;
+        } else {
+            Address address = addressMapper.toAddress(addressDTO);
+            address.setUser(user);
+
+            return addressRepository.saveAndFlush(address);
+        }
     }
 
     private OrderAddress createOrderAddress(Address address) {
