@@ -40,15 +40,19 @@ public class OrderController {
     @Autowired
     private TrackingService trackingService;
 
-    @GetMapping("/getUserOrders")
+    @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getUserOrders() {
+    public ResponseEntity<?> getUserOrders(@RequestParam("page") int page, @RequestParam("size") int size) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = userRepository.findByEmail(auth.getName());
             List<OrderDTO> orders = orderService.findUserOrders(user);
 
-            return ResponseEntity.ok(orders);
+            int start = (page - 1) * size;
+            int end = Math.min(start + size, orders.size());
+            List<OrderDTO> paginatedOrders = orders.subList(start, end);
+
+            return ResponseEntity.ok(paginatedOrders);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred finding orders.");
         }
