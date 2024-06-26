@@ -41,6 +41,7 @@ public class PaymentController {
         }
         try {
             ResponseEntity response = paymentService.processPayment(paymentDTO, payment);
+            log.info("test " + response.getStatusCode() + " " + response.getBody());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
