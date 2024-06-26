@@ -30,4 +30,8 @@ public abstract class PaymentMethod implements Serializable {
     public boolean isCreditCard() {
         return this instanceof CreditCard;
     }
+
+    public Long getId() {
+        return id;
+    }
 }
