@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -52,7 +54,13 @@ public class OrderController {
             int end = Math.min(start + size, orders.size());
             List<OrderDTO> paginatedOrders = orders.subList(start, end);
 
-            return ResponseEntity.ok(paginatedOrders);
+            Map<String, Object> response = new HashMap<>();
+            response.put("orders", paginatedOrders);
+            response.put("totalOrders", orders.size());
+            response.put("totalPages", (int) Math.ceil((double) orders.size() / size));
+            response.put("currentPage", page);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred finding orders.");
         }
