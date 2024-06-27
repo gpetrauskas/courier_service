@@ -14,8 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/paymentMethods")
@@ -66,6 +66,7 @@ public class PaymentMethodController {
         PaymentMethod savedMethods = paymentMethodRepository.findById(id).orElseThrow(() ->
                  new RuntimeException("Error"));
 
-        return ResponseEntity.ok(savedMethods);
+        Optional<PaymentMethodDTO> paymentMethodDTO = paymentMethodService.getSavedPaymentMethod(id);
+        return ResponseEntity.ok(paymentMethodDTO);
     }
 }

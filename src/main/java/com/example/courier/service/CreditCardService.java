@@ -35,6 +35,9 @@ public class CreditCardService {
     }
 
     public ResponseEntity<String> paymentTest(CreditCard card, String cvc) {
+        if (card.getCardNumber().isEmpty() || card.getCardHolderName().isEmpty() || card.getExpiryDate().isEmpty() || cvc.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fields annot be empty");
+        }
         if (isCardExpired(card)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CARD EXPIRED");
         }

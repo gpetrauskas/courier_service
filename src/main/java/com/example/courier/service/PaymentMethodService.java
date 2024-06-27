@@ -8,9 +8,12 @@ import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PaymentMethodService {
@@ -38,6 +41,11 @@ public class PaymentMethodService {
         return paymentMethods.stream()
                 .map(this::covertToDTO)
                 .toList();
+    }
+
+    public Optional<PaymentMethodDTO> getSavedPaymentMethod(Long id) {
+        return Optional.of(paymentMethodRepository.findById(id)
+                .map(this::covertToDTO).orElseGet(() -> (PaymentMethodDTO) ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error occurred getting payment method.")));
     }
 
     private PaymentMethodDTO covertToDTO(PaymentMethod paymentMethod) {
