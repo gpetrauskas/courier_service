@@ -94,7 +94,7 @@ public class OrderController {
 
             orderService.placeOrder(user.getId(), orderDTO);
             return ResponseEntity.ok("Order placed successfully. Shipping cost: " + shippingCost);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
         }
     }

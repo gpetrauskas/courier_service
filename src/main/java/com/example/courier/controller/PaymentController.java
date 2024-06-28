@@ -33,22 +33,21 @@ public class PaymentController {
     @PostMapping("/pay/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentDTO paymentDTO, Principal principal) {
-        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() ->
-                new RuntimeException("payment not found."));
-
-        log.info("checking: " + orderId);
-        log.info("checking dto: " + paymentDTO.paymentMethodId());
-
-        if (!principal.getName().equals(payment.getOrder().getUser().getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No payment with such id for this user.");
-        }
         try {
-            ResponseEntity<?> response = paymentService.processPayment(paymentDTO, payment);
-            log.info("test " + response.getStatusCode() + " " + response.getBody());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error occurred during payment: ", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            Payment payment = paymentService.getPaymentByOrderId(orderId);
+
+            log.info("checking: " + orderId);
+            log.info("checking dto: " + paymentDTO.paymentMethodId());
+
+            if (!principal.getName().equals(payment.getOrder().getUser().getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No payment with such id for this user.");
+            }
+                ResponseEntity<?> response = paymentService.processPayment(paymentDTO, payment);
+                log.info("test " + response.getStatusCode() + " " + response.getBody());
+                return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("Unexpected error during payment: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error durin payent");
         }
     }
 
