@@ -4,6 +4,7 @@ import com.example.courier.common.Role;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
+import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -82,5 +83,14 @@ public class UserService {
             logger.error("Error occurred during login", e);
         }
         throw new RuntimeException("Invalid credentials.");
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public Long getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email).getId();
     }
 }
