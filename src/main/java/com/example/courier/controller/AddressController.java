@@ -6,6 +6,8 @@ import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.service.AddressService;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/addresses")
 public class AddressController {
 
+    private Logger log = LoggerFactory.getLogger(AddressController.class);
     @Autowired
     private AddressService addressService;
     @Autowired
@@ -31,9 +34,6 @@ public class AddressController {
     @GetMapping("/myAddressList")
     public ResponseEntity<List<AddressDTO>> getMyAddressList() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated.");
-        }
         List<Address> myList = addressService.getAllMyAddresses(authentication.getName());
         List<AddressDTO> myAddressDTOs = myList.stream()
                 .map(AddressMapper.INSTANCE::toAddressDTO)

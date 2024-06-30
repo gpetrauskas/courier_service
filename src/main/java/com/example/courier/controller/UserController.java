@@ -56,7 +56,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
-
     @GetMapping("/test")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> test() {
