@@ -5,12 +5,11 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PackageDTO;
 import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.dto.mapper.OrderMapper;
-import com.example.courier.exception.UserNotFoundException;
+import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,72 +23,45 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
 
-    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
     @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
-    @Autowired
-    private PaymentRepository paymentRepository;
-    @Autowired
-    private AddressRepository addressRepository;
     @Autowired
     private OrderAddressRepository orderAddressRepository;
     @Autowired
     private AddressMapper addressMapper;
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private AddressService addressService;
+    @Autowired
+    private PaymentService paymentService;
+    @Autowired
+    private UserService userService;
 
     @Transactional
     public void placeOrder(Long id, OrderDTO orderDTO) {
-        User user = getUserById(id);
+        User user = userService.getUserById(id);
 
-        Address senderAddress = getAddress(orderDTO.senderAddress(), user);
-        Address recipientAddress = getAddress(orderDTO.recipientAddress(), user);
+        Address senderAddress = addressService.getAddress(orderDTO.senderAddress(), user);
+        Address recipientAddress = addressService.getAddress(orderDTO.recipientAddress(), user);
 
         OrderAddress orderSenderAddress = createOrderAddress(senderAddress);
         OrderAddress orderRecipientAddress = createOrderAddress(recipientAddress);
 
         Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
         Package packageDetails = createPackageFromDTO(orderDTO.packageDetails());
-
         order.setPackageDetails(packageDetails);
-        Payment payment = createPayment(order, calculateShippingCost(orderDTO));
+
+        Payment payment = paymentService.createPayment(order, calculateShippingCost(orderDTO));
 
         orderRepository.save(order);
-        paymentRepository.save(payment);
-    }
-
-    private Address getAddress(AddressDTO addressDTO, User user) {
-        if (addressDTO.id() != null) {
-            Address address = addressRepository.findById(addressDTO.id()).orElseThrow(() ->
-                    new RuntimeException("Address not found."));
-            validateAddressUser(address, user);
-            return address;
-        } else {
-            return createNewAddress(addressDTO, user);
-        }
-    }
-
-    private void validateAddressUser(Address address, User user) {
-        if (!address.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Address does not belong to the user.");
-        }
-    }
-
-    private Address createNewAddress(AddressDTO addressDTO, User user) {
-        Address address = addressMapper.toAddress(addressDTO);
-        address.setUser(user);
-
-        return addressRepository.saveAndFlush(address);
-    }
-
-    private User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+        paymentService.savePayment(payment);
     }
 
     private OrderAddress createOrderAddress(Address address) {
@@ -120,22 +92,13 @@ public class OrderService {
         return packageDetails;
     }
 
-    private Payment createPayment(Order order, BigDecimal amount) {
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(amount);
-        payment.setStatus(PaymentStatus.NOT_PAID);
-
-        return payment;
-    }
-
     private String getDescriptionById(String id) {
         return pricingOptionRepository.findById(Long.parseLong(id))
                 .map(PricingOption::getDescription)
                 .orElseThrow(() -> new RuntimeException("Pricing option not found."));
     }
 
-    public BigDecimal calculateShippingCost(OrderDTO orderDTO) {
+    public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws PricingOptionNotFoundException {
         BigDecimal shippingCost = new BigDecimal(0);
 
         PricingOption deliveryPricingOption = pricingOptionRepository.findById(Long.valueOf(orderDTO.deliveryPreferences()))
@@ -162,13 +125,16 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(Order order) {
-        Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
-                new RuntimeException("Payment not found."));
+        Payment payment = paymentService.getPaymentByOrderId(order.getId());
         order.setStatus(OrderStatus.CANCELED);
         order.getPackageDetails().setStatus(PackageStatus.CANCELED);
         payment.setStatus(PaymentStatus.CANCELED);
 
+        saveOrder(order);
+        paymentService.savePayment(payment);
+    }
+
+    public void saveOrder(Order order) {
         orderRepository.save(order);
-        paymentRepository.save(payment);
     }
 }
