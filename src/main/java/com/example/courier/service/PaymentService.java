@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -45,6 +46,10 @@ public class PaymentService {
             User user = userRepository.findById(payment.getOrder().getUser().getId()).orElseThrow(() ->
                     new UserNotFoundException("User not found"));
 
+            if (!isPaymentValid(payment)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No valid payment founded.");
+            }
+
             for (PaymentHandler handler : paymentHandlers) {
                 if (handler.isSupported(paymentDTO)) {
                     ResponseEntity<String> response = handler.handle(paymentDTO, payment);
@@ -71,5 +76,30 @@ public class PaymentService {
             log.error("Unexpected error during payment: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error during payment");
         }
+    }
+
+    private boolean isPaymentValid(Payment payment) {
+        if (payment.getStatus().equals(PaymentStatus.PAID) || payment.getStatus().equals(PaymentStatus.CANCELED)) {
+            return false;
+        }
+        return true;
+    }
+
+    public Payment createPayment(Order order, BigDecimal amount) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(amount);
+        payment.setStatus(PaymentStatus.NOT_PAID);
+
+        return payment;
+    }
+
+    public void savePayment(Payment payment) {
+        paymentRepository.save(payment);
+    }
+
+    public Payment getPaymentByOrderId(Long orderId) {
+        return paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Payment not found."));
     }
 }
