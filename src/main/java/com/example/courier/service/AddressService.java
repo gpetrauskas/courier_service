@@ -1,62 +1,93 @@
 package com.example.courier.service;
 
 import com.example.courier.domain.Address;
+import com.example.courier.domain.OrderAddress;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.exception.AddressNotFoundException;
+import com.example.courier.exception.UserAddressMismatchException;
+import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.AddressRepository;
-import com.example.courier.repository.UserRepository;
+import com.example.courier.repository.OrderAddressRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.List;
 
 @Service
 public class AddressService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AddressMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(AddressService.class);
 
     @Autowired
     private AddressRepository addressRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private AddressMapper addressMapper;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private OrderAddressRepository orderAddressRepository;
 
-    public List<Address> getAllMyAddresses(String email) {
-        Long userId = userRepository.findByEmail(email).getId();
-        return addressRepository.findByUserId(userId);
+    @Transactional(readOnly = true)
+    public List<AddressDTO> getAllMyAddresses(String email) {
+        try {
+            Long userId = userService.getUserIdByEmail(email);
+            List<Address> addresses = getAddressesByUserId(userId);
+
+            return addresses.stream()
+                    .map(addressMapper::toAddressDTO)
+                    .toList();
+        } catch (EntityNotFoundException e) {
+            logger.error("User wth email {} not found", email);
+            throw new UserNotFoundException("User not found");
+        } catch (Exception e) {
+            logger.error("Error fetching addresses for user with email {}", email, e);
+            throw new RuntimeException("Error fetching addresses", e);
+        }
     }
 
     @Transactional
-    public AddressDTO updateAddress(Long id, AddressDTO addressDTO) {
-        Address existingAddress = getAddressById(id);
+    public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO, Principal principal) {
+        validateAddressUser(addressId, principal.getName());
 
-        addressMapper.updateAddressFromDTO(addressDTO, existingAddress);
-        saveAddress(existingAddress);
+        Address address = getAddressById(addressId);
+        addressMapper.updateAddressFromDTO(addressDTO, address);
+        saveAddress(address);
 
-        logger.info("updated address with id: {}", id);
+        logger.info("updated address with id: {}", addressId);
 
-        return addressMapper.toAddressDTO(existingAddress);
+        return addressMapper.toAddressDTO(address);
+    }
+
+    @Transactional
+    public void deleteAddressById(Long addressId, Principal principal) {
+        validateAddressUser(addressId, principal.getName());
+        addressRepository.deleteById(addressId);
+        logger.info("Deleted address with id: {}", addressId);
     }
 
     public Address getAddress(AddressDTO addressDTO, User user) {
         if (addressDTO.id() != null) {
-            Address address = getAddressById(addressDTO.id());
-            validateAddressUser(address, user);
-            return address;
+            validateAddressUser(addressDTO.id(), user.getEmail());
+            return getAddressById(addressDTO.id());
         }
 
         return createNewAddress(addressDTO, user);
     }
 
-    private void validateAddressUser(Address address, User user) {
+    public void validateAddressUser(Long addressId, String userEmail) {
+        User user = userService.getUserByEmail(userEmail);
+        Address address = getAddressById(addressId);
+
         if (!address.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Address does not belong to the user.");
+            logger.error("Address id {} does nto match to the user with email {}", addressId, userEmail);
+            throw new UserAddressMismatchException("Address does not belong to the user.");
         }
     }
 
@@ -74,5 +105,17 @@ public class AddressService {
 
     public void saveAddress(Address address) {
         addressRepository.save(address);
+        logger.info("Saved address with id {} ", address.getId());
     }
+
+    public List<Address> getAddressesByUserId(Long userId) {
+        return addressRepository.findByUserId(userId);
+    }
+
+    public OrderAddress createOrderAddressFromAddress(Address address) {
+        OrderAddress orderAddress = addressMapper.toOrderAddress(address);
+        return orderAddressRepository.saveAndFlush(orderAddress);
+    }
+
+
 }
