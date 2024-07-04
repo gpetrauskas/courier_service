@@ -5,12 +5,10 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.mapper.OrderMapper;
-import com.example.courier.exception.OrderNotFoundException;
-import com.example.courier.repository.OrderRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.OrderService;
+import com.example.courier.service.PricingOptionService;
 import com.example.courier.service.TrackingService;
+import com.example.courier.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,18 +34,18 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
     private TrackingService trackingService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PricingOptionService pricingOptionService;
 
     @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserOrders(@RequestParam("page") int page, @RequestParam("size") int size) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = userRepository.findByEmail(auth.getName());
+            User user = userService.getUserByEmail(auth.getName());
             List<OrderDTO> orders = orderService.findUserOrders(user);
 
             int start = (page - 1) * size;
@@ -70,12 +68,9 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDTO>> getOrders() {
         try {
-            List<Order> order = orderRepository.findAll();
+            List<OrderDTO> orders = orderService.findAllOrders();
 
-            List<OrderDTO> orderDTOs = order.stream()
-                    .map(OrderMapper.INSTANCE::toOrderDTO)
-                    .toList();
-            return ResponseEntity.ok(orderDTOs);
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).build();
@@ -85,14 +80,13 @@ public class OrderController {
     @PostMapping("/placeOrder")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO) {
-
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = userRepository.findByEmail(auth.getName());
-
-            BigDecimal shippingCost = orderService.calculateShippingCost(orderDTO);
+            User user = userService.getUserByEmail(auth.getName());
+            BigDecimal shippingCost = pricingOptionService.calculateShippingCost(orderDTO);
 
             orderService.placeOrder(user.getId(), orderDTO);
+
             return ResponseEntity.ok("Order placed successfully. Shipping cost: " + shippingCost);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
@@ -102,8 +96,7 @@ public class OrderController {
     @PostMapping("/cancelOrder/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> cancelOrder(@PathVariable Long orderId, Principal principal) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() ->
-                new OrderNotFoundException("Order not found"));
+        Order order = orderService.findOrderById(orderId);
 
         if (!order.getUser().getEmail().equals(principal.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are ot authorized to cancel this order");
@@ -114,7 +107,7 @@ public class OrderController {
                     "Contact support for more information how to abort it.");
         }
 
-        orderService.cancelOrder(order);
+        orderService.cancelOrder(orderId, principal);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
 
