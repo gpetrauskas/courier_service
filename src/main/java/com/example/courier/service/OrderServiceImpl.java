@@ -5,11 +5,13 @@ import com.example.courier.common.PackageStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
+import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PackageDTO;
-import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.dto.mapper.OrderMapper;
+import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.OrderNotFoundException;
+import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,14 +43,11 @@ public class OrderServiceImpl implements OrderService {
     private  PricingOptionService pricingOptionService;
 
     @Transactional
-    public void placeOrder(Long id, OrderDTO orderDTO) {
-        User user = userService.getUserById(id);
+    public void placeOrder(Long userId, OrderDTO orderDTO) {
+        User user = userService.getUserById(userId);
 
-        Address senderAddress = addressService.getAddress(orderDTO.senderAddress(), user);
-        Address recipientAddress = addressService.getAddress(orderDTO.recipientAddress(), user);
-
-        OrderAddress orderSenderAddress = addressService.createOrderAddressFromAddress(senderAddress);
-        OrderAddress orderRecipientAddress = addressService.createOrderAddressFromAddress(recipientAddress);
+        OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
+        OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);
 
         Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
         Package packageDetails = createPackageFromDTO(orderDTO.packageDetails());
@@ -55,8 +55,12 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal amount = pricingOptionService.calculateShippingCost(orderDTO);
 
-        paymentService.createAndSavePayment(order, amount);
         saveOrder(order);
+        paymentService.createPayment(order, amount);
+    }
+
+    private OrderAddress getOrderAddress(AddressDTO addressDTO, User user) {
+        return addressService.fetchOrCreateOrderAddress(addressDTO, user);
     }
 
     private Order createOrderFromDTO(OrderDTO orderDTO, User user, OrderAddress senderAddress, OrderAddress recipientAddress) {
@@ -95,14 +99,35 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void cancelOrder(Order order) {
+    public void cancelOrder(Long orderId, Principal principal) {
+        Order order = findOrderById(orderId);
         Payment payment = paymentService.getPaymentByOrderId(order.getId());
+
+        checkIfOrderValidToCancel(order, principal);
+        handleOrderCancel(order, payment);
+
+        paymentService.savePayment(payment);
+    }
+
+    private void handleOrderCancel(Order order, Payment payment) {
         order.setStatus(OrderStatus.CANCELED);
         order.getPackageDetails().setStatus(PackageStatus.CANCELED);
         payment.setStatus(PaymentStatus.CANCELED);
+    }
 
-        saveOrder(order);
-        paymentService.savePayment(payment);
+    private void checkIfOrderValidToCancel(Order order, Principal principal) {
+        if (!order.getUser().getEmail().equals(principal.getName())) {
+            throw new UnauthorizedAccessException("You are ot authorized to cancel this order");
+        }
+
+        if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
+            throw new OrderCancellationException("Order already confirmed and paid for. " +
+                    "Contact support for more information how to abort it.");
+        }
+
+        if (order.getStatus().equals(OrderStatus.CANCELED)) {
+            throw new OrderCancellationException("Order already canceled.");
+        }
     }
 
     private void saveOrder(Order order) {

@@ -67,7 +67,7 @@ public class CreditCardService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
         }
 
-        logger.info("Payment test aprved for card: {}", card.getCardNumber());
+        logger.info("Payment test aprved for card: {}", card.maskCardNumber());
         return ResponseEntity.ok("APPROVED");
     }
 
@@ -77,7 +77,7 @@ public class CreditCardService {
         boolean expired = expiryDate.isBefore(currentDate);
 
         if (expired) {
-            logger.warn("Card {} is expired", card.getCardNumber());
+            logger.warn("Card {} is expired", card.maskCardNumber());
         }
 
         return expired;

@@ -72,13 +72,23 @@ public class AddressService {
         logger.info("Deleted address with id: {}", addressId);
     }
 
-    public Address getAddress(AddressDTO addressDTO, User user) {
-        if (addressDTO.id() != null) {
-            validateAddressUser(addressDTO.id(), user.getEmail());
-            return getAddressById(addressDTO.id());
+    public OrderAddress fetchOrCreateOrderAddress(AddressDTO addressDTO, User user) {
+        if (addressDTO == null) {
+            throw new IllegalArgumentException("AddressDTO cannot be null");
         }
-
-        return createNewAddress(addressDTO, user);
+        Address address;
+        try {
+            if (addressDTO.id() != null) {
+                validateAddressUser(addressDTO.id(), user.getEmail());
+                address = getAddressById(addressDTO.id());
+            } else {
+                address = createNewAddress(addressDTO, user);
+            }
+            return createOrderAddressFromAddress(address);
+        } catch (Exception e) {
+            logger.error("Failed to fetch or create OrderAddress for addressDTO {} and user {}", addressDTO, user, e);
+            throw new RuntimeException("Failed to fetch or create OrderAddress", e);
+        }
     }
 
     public void validateAddressUser(Long addressId, String userEmail) {
@@ -103,7 +113,7 @@ public class AddressService {
                 .orElseThrow(() -> new AddressNotFoundException("Address not found."));
     }
 
-    public void saveAddress(Address address) {
+    private void saveAddress(Address address) {
         addressRepository.save(address);
         logger.info("Saved address with id {} ", address.getId());
     }
@@ -112,7 +122,7 @@ public class AddressService {
         return addressRepository.findByUserId(userId);
     }
 
-    public OrderAddress createOrderAddressFromAddress(Address address) {
+    private OrderAddress createOrderAddressFromAddress(Address address) {
         OrderAddress orderAddress = addressMapper.toOrderAddress(address);
         return orderAddressRepository.saveAndFlush(orderAddress);
     }
