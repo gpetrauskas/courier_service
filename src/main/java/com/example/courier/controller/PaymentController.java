@@ -1,11 +1,7 @@
 package com.example.courier.controller;
 
-import com.example.courier.domain.Order;
-import com.example.courier.domain.Payment;
 import com.example.courier.dto.PaymentDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
-import com.example.courier.repository.OrderRepository;
-import com.example.courier.repository.PaymentRepository;
 import com.example.courier.service.PaymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,27 +20,13 @@ public class PaymentController {
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
     @Autowired
     private PaymentService paymentService;
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private PaymentRepository paymentRepository;
-
 
     @PostMapping("/pay/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentDTO paymentDTO, Principal principal) {
         try {
-            Payment payment = paymentService.getPaymentByOrderId(orderId);
-
-            log.info("checking: " + orderId);
-            log.info("checking dto: " + paymentDTO.paymentMethodId());
-
-            if (!principal.getName().equals(payment.getOrder().getUser().getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No payment with such id for this user.");
-            }
-                ResponseEntity<?> response = paymentService.processPayment(paymentDTO, payment);
-                log.info("test " + response.getStatusCode() + " " + response.getBody());
-                return ResponseEntity.ok(response);
+            ResponseEntity<?> response = paymentService.processPayment(paymentDTO, orderId, principal);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             log.error("Unexpected error during payment: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error durin payent");
@@ -66,17 +48,7 @@ public class PaymentController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getPaymentDetails(@PathVariable Long orderId, Principal principal) {
         try {
-            Order order = orderRepository.findById(orderId).orElseThrow(() ->
-                    new RuntimeException("Order not found."));
-
-            if (!principal.getName().equals(order.getUser().getEmail())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Order not found for the user.");
-            }
-
-            Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() ->
-                    new RuntimeException("Payment not found."));
-
-            PaymentDetailsDTO paymentDetailsDTO = PaymentDetailsDTO.fromPayment(payment);
+            PaymentDetailsDTO paymentDetailsDTO = paymentService.getPaymentDetails(orderId);
             return ResponseEntity.ok(paymentDetailsDTO);
 
         } catch (Exception e) {
