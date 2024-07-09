@@ -43,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
     private  PricingOptionService pricingOptionService;
 
     @Transactional
-    public void placeOrder(Long userId, OrderDTO orderDTO) {
+    public Long placeOrder(Long userId, OrderDTO orderDTO) {
         User user = userService.getUserById(userId);
 
         OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
@@ -57,6 +57,8 @@ public class OrderServiceImpl implements OrderService {
 
         saveOrder(order);
         paymentService.createPayment(order, amount);
+
+        return order.getId();
     }
 
     private OrderAddress getOrderAddress(AddressDTO addressDTO, User user) {

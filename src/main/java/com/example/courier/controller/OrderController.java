@@ -84,10 +84,13 @@ public class OrderController {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = userService.getUserByEmail(auth.getName());
             BigDecimal shippingCost = pricingOptionService.calculateShippingCost(orderDTO);
+            Long orderId = orderService.placeOrder(user.getId(), orderDTO);
 
-            orderService.placeOrder(user.getId(), orderDTO);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Order was placed successfully. Order cost: " + shippingCost);
+            response.put("orderId", orderId);
 
-            return ResponseEntity.ok("Order placed successfully. Shipping cost: " + shippingCost);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
         }
