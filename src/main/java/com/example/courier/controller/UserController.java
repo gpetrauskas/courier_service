@@ -20,7 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -34,12 +36,16 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO) {
+        logger.info("Received a registration request for user: {}", userDTO.email());
+        Map<String, String> response = new HashMap<>();
         try {
-            logger.info("Received a registration request for user: {}", userDTO.email());
             userService.registerUser(userDTO);
-            return ResponseEntity.ok("User registered successfully.");
+            response.put("message", "User registered successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred during registration");
+            logger.error("Error occurred while registering: {}", e.getMessage());
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
