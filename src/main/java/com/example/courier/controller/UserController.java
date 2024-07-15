@@ -7,6 +7,7 @@ import com.example.courier.dto.UserDTO;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -50,18 +52,56 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody @Valid LoginDTO loginDTO, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginDTO loginDTO, HttpServletResponse response) {
+        Map<String, String> loginResponse = new HashMap<>();
         try {
-            String token = userService.loginUser(loginDTO);
-            Cookie cookie = new Cookie("jwt", token);
-            cookie.setPath("/");
-            cookie.setHttpOnly(true);
-            response.addCookie(cookie);
-            return ResponseEntity.ok("Login successfully.");
+            Map<String, String> loginResult = userService.loginUser(loginDTO, response);
+            loginResponse.put("message", loginResult.get("message"));
+
+            logger.info("User {} logged in successfully", loginDTO.email());
+            return ResponseEntity.ok(loginResponse);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            loginResponse.put("error", e.getMessage());
+            logger.error("Error occurred while user {} tried to login: {}", loginDTO.email(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
         }
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/status")
+    public ResponseEntity<Boolean> checkAuthStatus(Authentication authentication) {
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated();
+        return ResponseEntity.ok(isAuthenticated);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/logout")
+    public ResponseEntity<Boolean> logout(HttpServletRequest request, HttpServletResponse response) {
+        try {
+
+            request.getSession().invalidate();
+            userService.logoutUser(response);
+
+            return ResponseEntity.ok(true);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+        }
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/checkAuth")
+    public ResponseEntity<?> checkAuth(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    return ResponseEntity.ok().build();
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+
     @GetMapping("/test")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> test() {

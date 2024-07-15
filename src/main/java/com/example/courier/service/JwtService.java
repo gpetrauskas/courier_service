@@ -5,14 +5,14 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class JwtService {
@@ -22,13 +22,19 @@ public class JwtService {
     public String createToken(String email, String role) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiry = now.plusHours(1);
+        String authToken = generateAuthToken();
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+                .claim("authToken", authToken)
                 .issuedAt(convertToDateViaInstant(now))
                 .expiration(convertToDateViaInstant(expiry))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    private String generateAuthToken() {
+        return UUID.randomUUID().toString();
     }
 
     private Date convertToDateViaInstant(LocalDateTime dateToConvert) {
@@ -39,10 +45,12 @@ public class JwtService {
         Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
         String subject = claims.getSubject();
         String role = claims.get("role", String.class);
+        String authToken = claims.get("authToken", String.class);
 
         Map<String, String> authDetails = new HashMap<>();
         authDetails.put("subject", subject);
         authDetails.put("role", role);
+        authDetails.put("authToken", authToken);
 
         return authDetails;
     }
@@ -53,6 +61,33 @@ public class JwtService {
             return keyGenerator.generateKey();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public String encryptAuthToken(String authToken) {
+        try {
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+            byte[] encrypted = cipher.doFinal(authToken.getBytes());
+
+            return Base64.getEncoder().encodeToString(encrypted);
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred encrypting auth token");
+        }
+    }
+
+    public String decryptAuthToken(String encryptedAuthToken) {
+        try {
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, keySpec);
+            byte[] decoded = Base64.getDecoder().decode(encryptedAuthToken);
+            byte[] decrypted = cipher.doFinal(decoded);
+
+            return new String(decrypted);
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred decrypting auth token");
         }
     }
 }

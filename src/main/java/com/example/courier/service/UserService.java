@@ -6,6 +6,8 @@ import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class UserService {
@@ -36,7 +41,7 @@ public class UserService {
             userRepository.save(newUser);
             logger.info("User registration successful");
         } catch (ValidationException e) {
-            logger.info("Validation error during registration: {}", e.getMessage());
+            logger.error("Validation error during registration: {}", e.getMessage());
             throw e;
         } catch (RuntimeException e) {
             logger.error("Unexpected error during registration: {}", e.getMessage());
@@ -73,16 +78,68 @@ public class UserService {
         return newUser;
     }
 
-    public String loginUser(LoginDTO loginDTO) {
+    @Transactional
+    public Map<String, String> loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
             User user = userRepository.findByEmail(loginDTO.email());
             if (user != null && passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-                return jwtService.createToken(loginDTO.email(), user.getRole().toString());
+                String jwt = jwtService.createToken(loginDTO.email(), user.getRole().toString());
+                Map<String, String> tokenDetails = jwtService.validateToken(jwt);
+                String authToken = tokenDetails.get("authToken");
+                String encryptedAuthToken = jwtService.encryptAuthToken(authToken);
+
+                setCookies(response, jwt, encryptedAuthToken);
+
+                Map<String, String> responseMap = new HashMap<>();
+                responseMap.put("message", "Login successfully");
+
+                return responseMap;
             }
         } catch (Exception e) {
             logger.error("Error occurred during login", e);
         }
         throw new RuntimeException("Invalid credentials.");
+    }
+
+    private void setCookies(HttpServletResponse response, String jwtToken, String encryptedAuthToken) {
+        setJwtCookie(response, jwtToken);
+        setAuthCookie(response, encryptedAuthToken);
+    }
+
+    private void setJwtCookie(HttpServletResponse response, String jwtToken) {
+        Cookie jwtCookie = new Cookie("jwt", jwtToken);
+        jwtCookie.setPath("/");
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setAttribute("SameSite", "Strict");
+        response.addCookie(jwtCookie);
+    }
+
+    private void setAuthCookie(HttpServletResponse response, String encryptedAuthToken) {
+        Cookie authCookie = new Cookie("authToken", encryptedAuthToken);
+        authCookie.setPath("/");
+        authCookie.setHttpOnly(false);
+        authCookie.setAttribute("SameSite", "Strict");
+        response.addCookie(authCookie);
+    }
+
+    public void logoutUser(HttpServletResponse response) {
+        try {
+            invalidateCookie(response, "jwt", true);
+            invalidateCookie(response, "authToken", false);
+            Map<String, String> logoutResponse = new HashMap<>();
+            logoutResponse.put("message", "Logout successful");
+        } catch (Exception e) {
+            throw new RuntimeException("Logout failed", e);
+        }
+    }
+
+    private void invalidateCookie(HttpServletResponse response, String cookieName, boolean httpOnly) {
+        Cookie cookie = new Cookie(cookieName, "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(httpOnly);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
     }
 
     public User getUserById(Long id) {
