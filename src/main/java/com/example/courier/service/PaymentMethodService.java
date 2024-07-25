@@ -7,6 +7,8 @@ import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.util.Optional;
 
 @Service
 public class PaymentMethodService {
+
+    private final Logger logger = LoggerFactory.getLogger(PaymentMethodService.class);
 
     @Autowired
     private UserService userService;
@@ -73,5 +77,24 @@ public class PaymentMethodService {
     @Transactional
     private void savePaymentMethod(PaymentMethod paymentMethod) {
         paymentMethodRepository.save(paymentMethod);
+    }
+
+    @Transactional
+    public ResponseEntity<String> deletePaymentMethodById(User user, Long paymentMethodId) {
+        try {
+            PaymentMethod paymentMethodToDelete = paymentMethodRepository.findById(paymentMethodId)
+                    .orElseThrow(() -> new RuntimeException("Payment method was not found."));
+            if (!paymentMethodToDelete.getUser().equals(user)) {
+                throw new RuntimeException("User is not authorized to delete this method");
+            }
+
+            paymentMethodRepository.delete(paymentMethodToDelete);
+            logger.info("Payment method with ID: {} was successfully deleted", paymentMethodId);
+            return ResponseEntity.ok("Payment was successfully deleted");
+
+        } catch (Exception e) {
+            logger.warn("Could not delete payment method with ID: {}", paymentMethodId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");
+        }
     }
 }

@@ -69,4 +69,17 @@ public class PaymentMethodController {
         Optional<PaymentMethodDTO> paymentMethodDTO = paymentMethodService.getSavedPaymentMethod(id);
         return ResponseEntity.ok(paymentMethodDTO);
     }
+
+    @DeleteMapping("/delete/{paymentMethodId}")
+    public ResponseEntity<String> deletePaymentMethod(@PathVariable Long paymentMethodId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User is not authenticated.");
+        }
+
+        User user = userRepository.findByEmail(authentication.getName());
+        ResponseEntity<String> response = paymentMethodService.deletePaymentMethodById(user, paymentMethodId);
+
+        return response;
+    }
 }
