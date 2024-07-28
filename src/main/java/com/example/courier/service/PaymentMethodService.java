@@ -40,7 +40,7 @@ public class PaymentMethodService {
 
     @Transactional(readOnly = true)
     public List<PaymentMethodDTO> getSavedPaymentMethods(Long userId) {
-        List<PaymentMethod> paymentMethods = paymentMethodRepository.findByUserId(userId);
+        List<PaymentMethod> paymentMethods = paymentMethodRepository.findByUserIdAndSavedTrue(userId);
 
         return paymentMethods.stream()
                 .map(this::covertToDTO)
@@ -80,21 +80,17 @@ public class PaymentMethodService {
     }
 
     @Transactional
-    public ResponseEntity<String> deletePaymentMethodById(User user, Long paymentMethodId) {
-        try {
-            PaymentMethod paymentMethodToDelete = paymentMethodRepository.findById(paymentMethodId)
-                    .orElseThrow(() -> new RuntimeException("Payment method was not found."));
-            if (!paymentMethodToDelete.getUser().equals(user)) {
-                throw new RuntimeException("User is not authorized to delete this method");
-            }
+    public void deactivatePaymentMethodById(User user, Long paymentMethodId) {
+        PaymentMethod paymentMethodToDeactivate = paymentMethodRepository.findByIdAndSavedTrue(paymentMethodId)
+                .orElseThrow(() -> new RuntimeException("Payment method was not found."));
 
-            paymentMethodRepository.delete(paymentMethodToDelete);
-            logger.info("Payment method with ID: {} was successfully deleted", paymentMethodId);
-            return ResponseEntity.ok("Payment was successfully deleted");
-
-        } catch (Exception e) {
-            logger.warn("Could not delete payment method with ID: {}", paymentMethodId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");
+        if (!paymentMethodToDeactivate.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("User is not authorized to delete this method");
         }
+
+        paymentMethodToDeactivate.setSaved(false);
+        savePaymentMethod(paymentMethodToDeactivate);
+
+        logger.info("Payment method with ID: {} was successfully deleted", paymentMethodId);
     }
 }
