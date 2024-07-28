@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pricing-options")
@@ -18,8 +19,8 @@ public class PricingOptionController {
     private PricingOptionService pricingOptionService;
 
     @GetMapping
-    public ResponseEntity<List<PricingOption>> getAllPricingOptions() {
-        List<PricingOption> pricingOptions = pricingOptionService.getAllPricingOptions();
+    public ResponseEntity<Map<String, List<PricingOption>>> getAllPricingOptions() {
+        Map<String, List<PricingOption>> pricingOptions = pricingOptionService.getAllPricingOptions();
         return ResponseEntity.ok(pricingOptions);
     }
 
