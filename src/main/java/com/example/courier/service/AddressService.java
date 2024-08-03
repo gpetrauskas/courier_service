@@ -81,6 +81,13 @@ public class AddressService {
             if (addressDTO.id() != null) {
                 validateAddressUser(addressDTO.id(), user.getEmail());
                 address = getAddressById(addressDTO.id());
+
+                if (address.getName() == null || !address.getName().equals(addressDTO.name())) {
+                    address.setName(addressDTO.name());
+                }
+                if (!address.getPhoneNumber().equals(addressDTO.phoneNumber())) {
+                    address.setPhoneNumber(addressDTO.phoneNumber());
+                }
             } else {
                 address = createNewAddress(addressDTO, user);
             }
