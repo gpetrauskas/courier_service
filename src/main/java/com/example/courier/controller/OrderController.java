@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/orders")
 public class OrderController {
 
@@ -64,6 +63,13 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/getUserOrderById/{orderId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long orderId, Principal principal) {
+        OrderDTO orderDTO = orderService.findUserOrderDTOById(orderId, principal);
+        return ResponseEntity.ok(orderDTO);
+    }
+
     @GetMapping("/getAllOrders")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDTO>> getOrders() {
@@ -88,6 +94,7 @@ public class OrderController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Order was placed successfully. Order cost: " + shippingCost);
+            response.put("cost", shippingCost);
             response.put("orderId", orderId);
 
             return ResponseEntity.ok(response);

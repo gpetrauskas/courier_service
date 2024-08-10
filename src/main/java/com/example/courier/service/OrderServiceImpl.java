@@ -111,16 +111,26 @@ public class OrderServiceImpl implements OrderService {
         paymentService.savePayment(payment);
     }
 
+    public OrderDTO findUserOrderDTOById(Long orderId, Principal principal) {
+        Order order = findOrderById(orderId);
+        checkIfOrderBelongsToUser(order, principal);
+        return orderMapper.toOrderDTO(order);
+    }
+
     private void handleOrderCancel(Order order, Payment payment) {
         order.setStatus(OrderStatus.CANCELED);
         order.getPackageDetails().setStatus(PackageStatus.CANCELED);
         payment.setStatus(PaymentStatus.CANCELED);
     }
 
-    private void checkIfOrderValidToCancel(Order order, Principal principal) {
+    private void checkIfOrderBelongsToUser(Order order, Principal principal) {
         if (!order.getUser().getEmail().equals(principal.getName())) {
-            throw new UnauthorizedAccessException("You are ot authorized to cancel this order");
+            throw new UnauthorizedAccessException("You are not authorized to cancel this oerder");
         }
+    }
+
+    private void checkIfOrderValidToCancel(Order order, Principal principal) {
+        checkIfOrderBelongsToUser(order, principal);
 
         if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
             throw new OrderCancellationException("Order already confirmed and paid for. " +

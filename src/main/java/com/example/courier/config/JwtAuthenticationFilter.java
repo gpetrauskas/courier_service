@@ -62,6 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.info("Token passed validation");
                 String subject = authDetails.get("subject");
                 String role = authDetails.get("role");
+                String name = authDetails.get("name");
                 String authTokenFromJWT = authDetails.get("authToken");
 
                 if (!jwtService.decryptAuthToken(authToken).equals(authTokenFromJWT)) {
@@ -76,6 +77,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 Authentication auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
+
+                logger.info("Authenticated user: {}", name);
+
             } catch (SignatureException e) {
                 logger.warn("Invalid JWT signature: {}", e.getMessage());
             } catch (ExpiredJwtException e) {

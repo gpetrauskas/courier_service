@@ -19,13 +19,14 @@ public class JwtService {
 
     private SecretKey secretKey = generateKey();
 
-    public String createToken(String email, String role) {
+    public String createToken(String email, String role, String name) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiry = now.plusHours(1);
         String authToken = generateAuthToken();
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+                .claim("name", name)
                 .claim("authToken", authToken)
                 .issuedAt(convertToDateViaInstant(now))
                 .expiration(convertToDateViaInstant(expiry))
@@ -45,11 +46,13 @@ public class JwtService {
         Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
         String subject = claims.getSubject();
         String role = claims.get("role", String.class);
+        String name = claims.get("name", String.class);
         String authToken = claims.get("authToken", String.class);
 
         Map<String, String> authDetails = new HashMap<>();
         authDetails.put("subject", subject);
         authDetails.put("role", role);
+        authDetails.put("name", name);
         authDetails.put("authToken", authToken);
 
         return authDetails;

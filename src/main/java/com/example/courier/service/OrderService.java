@@ -12,6 +12,7 @@ public interface OrderService {
     List<OrderDTO> findUserOrders(User user);
     void cancelOrder(Long orderId, Principal principal);
     Order findOrderById(Long orderId);
+    OrderDTO findUserOrderDTOById(Long orderId, Principal principal);
     List<OrderDTO> findAllOrders();
     //void saveOrder(Order order);
    // void updateAndSaveOrderStatusConfirmed(Long orderId);
