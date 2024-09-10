@@ -80,7 +80,7 @@ public class UserController {
         try {
 
             request.getSession().invalidate();
-            userService.logoutUser(response);
+            //userService.logoutUser(response);
 
             return ResponseEntity.ok(true);
         } catch (RuntimeException e) {

@@ -25,8 +25,7 @@ public class PaymentController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentDTO paymentDTO, Principal principal) {
         try {
-            ResponseEntity<?> response = paymentService.processPayment(paymentDTO, orderId, principal);
-            return ResponseEntity.ok(response);
+            return paymentService.processPayment(paymentDTO, orderId, principal);
         } catch (RuntimeException e) {
             log.error("Unexpected error during payment: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error durin payent");

@@ -53,6 +53,7 @@ public class AddressController {
     }
 
     @DeleteMapping("/remove/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> removeAddress(@PathVariable Long id, Principal principal) {
         try {
             addressService.deleteAddressById(id, principal);

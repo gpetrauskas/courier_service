@@ -81,10 +81,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.info("Authenticated user: {}", name);
 
             } catch (SignatureException e) {
+                logoutOnWrongCookies(request, response);
                 logger.warn("Invalid JWT signature: {}", e.getMessage());
             } catch (ExpiredJwtException e) {
+                logoutOnWrongCookies(request, response);
                 logger.warn("JWT token is expired: {}", e.getMessage());
             } catch (Exception e) {
+                logoutOnWrongCookies(request, response);
                 logger.error("Could not set user authentication in security context.", e);
             }
         }

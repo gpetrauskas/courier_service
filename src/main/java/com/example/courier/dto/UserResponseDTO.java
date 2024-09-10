@@ -2,8 +2,8 @@ package com.example.courier.dto;
 
 import com.example.courier.domain.User;
 
-public record UserResponseDTO(String name, String email) {
+public record UserResponseDTO(Long id, String name, String email) {
     public static UserResponseDTO fromUser(User user) {
-        return new UserResponseDTO(user.getName(), user.getEmail());
+        return new UserResponseDTO(user.getId(), user.getName(), user.getEmail());
     }
 }

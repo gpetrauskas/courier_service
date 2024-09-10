@@ -21,5 +21,6 @@ public interface AddressMapper {
     @Mapping(target = "id", ignore = true)
     OrderAddress toOrderAddress(Address address);
 
+    @Mapping(target = "id", ignore = true)
     void updateAddressFromDTO(AddressDTO addressDTO, @MappingTarget Address address);
 }

@@ -83,7 +83,7 @@ public class UserService {
         try {
             User user = userRepository.findByEmail(loginDTO.email());
             if (user != null && passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-                String jwt = jwtService.createToken(loginDTO.email(), user.getRole().toString());
+                String jwt = jwtService.createToken(loginDTO.email(), user.getRole().toString(), user.getName());
                 Map<String, String> tokenDetails = jwtService.validateToken(jwt);
                 String authToken = tokenDetails.get("authToken");
                 String encryptedAuthToken = jwtService.encryptAuthToken(authToken);
@@ -109,7 +109,7 @@ public class UserService {
     private void setJwtCookie(HttpServletResponse response, String jwtToken) {
         Cookie jwtCookie = new Cookie("jwt", jwtToken);
         jwtCookie.setPath("/");
-        jwtCookie.setHttpOnly(true);
+        jwtCookie.setHttpOnly(false);
         jwtCookie.setAttribute("SameSite", "Strict");
         response.addCookie(jwtCookie);
     }
@@ -122,6 +122,7 @@ public class UserService {
         response.addCookie(authCookie);
     }
 
+    /*
     public void logoutUser(HttpServletResponse response) {
         try {
             invalidateCookie(response, "jwt", true);
@@ -141,6 +142,8 @@ public class UserService {
         cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
     }
+
+     */
 
     public User getUserById(Long id) {
         return userRepository.findById(id)

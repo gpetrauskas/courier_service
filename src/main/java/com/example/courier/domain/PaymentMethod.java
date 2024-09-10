@@ -19,6 +19,9 @@ public abstract class PaymentMethod implements Serializable {
     @JsonBackReference
     private User user;
 
+    @Column(nullable = false)
+    private boolean saved = false;
+
     public void setUser(User user) {
         this.user = user;
     }
@@ -33,5 +36,13 @@ public abstract class PaymentMethod implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
     }
 }
