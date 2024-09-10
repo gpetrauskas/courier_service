@@ -5,6 +5,7 @@ import com.example.courier.domain.Package;
 import com.example.courier.domain.PricingOption;
 import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.UserDTO;
+import com.example.courier.dto.UserDetailsDTO;
 import com.example.courier.dto.UserResponseDTO;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PackageRepository;
@@ -13,6 +14,7 @@ import com.example.courier.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,9 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -78,9 +78,9 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
 
-        Optional<UserResponseDTO> userResponseDTO = adminService.findUserById(id);
-        if (userResponseDTO.isPresent()) {
-            return ResponseEntity.ok(userResponseDTO);
+        Optional<UserDetailsDTO> userDetailsDTO = adminService.findUserById(id);
+        if (userDetailsDTO.isPresent()) {
+            return ResponseEntity.ok(userDetailsDTO);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found.");
         }
@@ -99,18 +99,22 @@ public class AdminController {
 
     @PostMapping("/updateUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<Map<String, String>> updateUser(@PathVariable Long id, @RequestBody UserDetailsDTO userDetailsDTO) {
+        Map<String, String> response = new HashMap<>();
         try {
             logger.info("Admin controller: before userUpdate");
-            adminService.updateUser(id, userDTO);
+            adminService.updateUser(id, userDetailsDTO);
             logger.info("User updated successfully.");
-            return ResponseEntity.ok("User was updated successfully.");
+            response.put("message", "User was updated successfully");
+            return ResponseEntity.ok(response);
         } catch (UserNotFoundException e) {
             logger.info("User was not found.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found.");
+            response.put("error", "User was not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             logger.info("Unexpected error occurred: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during user update.");
+            response.put("error", "Error Occurred during user update");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
@@ -132,8 +136,19 @@ public class AdminController {
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AdminOrderDTO> getAllOrders() {
-        return adminService.getAllOrders();
+    public ResponseEntity<Map<String, Object>> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<AdminOrderDTO> orderPage = adminService.getAllOrders(page, size);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orders", orderPage.getContent());
+        response.put("currentPage", orderPage.getNumber());
+        response.put("totalItems", orderPage.getTotalElements());
+        response.put("totalPages", orderPage.getTotalPages());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/orders/{id}")

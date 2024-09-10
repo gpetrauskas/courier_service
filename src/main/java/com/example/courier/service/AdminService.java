@@ -1,11 +1,14 @@
 package com.example.courier.service;
 
+import com.example.courier.common.Role;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
 import com.example.courier.dto.AdminOrderDTO;
-import com.example.courier.dto.UserDTO;
+import com.example.courier.dto.UserDetailsDTO;
 import com.example.courier.dto.UserResponseDTO;
+import com.example.courier.dto.mapper.UserMapper;
 import com.example.courier.exception.OrderNotFoundException;
+import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.OrderRepository;
@@ -15,13 +18,15 @@ import com.example.courier.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -48,13 +53,13 @@ public class AdminService {
         return allUserResponseDTOs;
     }
 
-    public Optional<UserResponseDTO> findUserById(Long id) {
+    public Optional<UserDetailsDTO> findUserById(Long id) {
         try {
             User user = userRepository.findById(id).orElseThrow(() ->
                     new UserNotFoundException("User was not found"));
-            UserResponseDTO userResponseDTO = UserResponseDTO.fromUser(user);
+            UserDetailsDTO userDetailsDTO = UserMapper.INSTANCE.toUserDetailsDTO(user);
 
-            return Optional.of(userResponseDTO);
+            return Optional.of(userDetailsDTO);
         } catch (UserNotFoundException e) {
             logger.warn("User not found", e.getMessage());
             return Optional.empty();
@@ -64,7 +69,7 @@ public class AdminService {
         }
     }
 
-    public void updateUser(Long id, UserDTO updatedUser) {
+    public void updateUser(Long id, UserDetailsDTO updatedUser) {
         try {
             User existingUser = userRepository.findById(id).orElseThrow(() ->
                     new UserNotFoundException("User was not found."));
@@ -77,22 +82,15 @@ public class AdminService {
         }
     }
 
-    private void updateUserFields(User existingUse, UserDTO updatedUser) {
+    private void updateUserFields(User existingUse, UserDetailsDTO updatedUser) {
         if (updatedUser.name() != null) {
             existingUse.setName(updatedUser.name());
         }
         if (updatedUser.email() != null) {
             existingUse.setEmail(updatedUser.email());
         }
-        /*
-        if (updatedUser.address() != null) {
-            existingUse.setAddress(updatedUser.address());
-        }
-
-         */
-        if (updatedUser.password() != null) {
-            String encodedPass = passwordEncoder.encode(updatedUser.password());
-            existingUse.setPassword(encodedPass);
+        if (updatedUser.role() != null) {
+            existingUse.setRole(Role.valueOf(updatedUser.role()));
         }
     }
 
@@ -103,24 +101,35 @@ public class AdminService {
             userRepository.delete(user);
     }
 
-    public List<AdminOrderDTO> getAllOrders() {
-        try {
-            List<Order> allOrders = orderRepository.findAll();
-            List<AdminOrderDTO> allOrderDTOs = allOrders.stream()
-                    .map(AdminOrderDTO::fromOrder)
-                    .collect(Collectors.toList());
-            return allOrderDTOs;
-        } catch (Exception e) {
-            throw e;
+    public Page<AdminOrderDTO> getAllOrders(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+        List<Order> allOrders = orderPage.getContent();
+
+        if (allOrders.isEmpty()) {
+            return Page.empty();
         }
+
+        List<Long> orderIds = allOrders.stream().map(Order::getId).collect(Collectors.toList());
+        List<Payment> allPayments = paymentRepository.findAllByOrderIdIn(orderIds);
+
+        Map<Long, Payment> paymentMap = allPayments.stream()
+                .collect(Collectors.toMap(payment -> payment.getOrder().getId(), payment -> payment));
+
+        List<AdminOrderDTO> allOrderDTOs = allOrders.stream()
+                .map(order -> AdminOrderDTO.fromOrder(order, paymentMap.get(order.getId())))
+                .toList();
+        return new PageImpl<>(allOrderDTOs, pageable, orderPage.getTotalElements());
     }
 
     public AdminOrderDTO getOrderById(Long id) {
         try {
             Order order = orderRepository.findById(id).orElseThrow(() ->
                     new OrderNotFoundException("Order was not found."));
-            AdminOrderDTO adminOrderDTO = AdminOrderDTO.fromOrder(order);
-            return adminOrderDTO;
+            Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
+                    new PaymentMethodNotFoundException("Payment not found"));
+            return AdminOrderDTO.fromOrder(order, payment);
         } catch (OrderNotFoundException e) {
             logger.warn("Order was not found for id: " + id);
             return null;
