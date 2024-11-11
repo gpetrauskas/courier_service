@@ -1,5 +1,8 @@
 package com.example.courier.service;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.PackageStatus;
+import com.example.courier.common.PaymentStatus;
 import com.example.courier.common.Role;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +47,8 @@ public class AdminService {
     private PaymentRepository paymentRepository;
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
+    @Autowired
+    private PricingOptionService pricingOptionService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
     public List<UserResponseDTO> findAllUsers() {
@@ -101,10 +107,22 @@ public class AdminService {
             userRepository.delete(user);
     }
 
-    public Page<AdminOrderDTO> getAllOrders(int page, int size) {
+    public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
 
-        Page<Order> orderPage = orderRepository.findAll(pageable);
+        Specification<Order> specification = Specification.where(null);
+
+        if (userId != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("user").get("id"), userId));
+        }
+
+        if (status != null && !status.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("status"), status));
+        }
+
+        Page<Order> orderPage = orderRepository.findAll(specification, pageable);
         List<Order> allOrders = orderPage.getContent();
 
         if (allOrders.isEmpty()) {
@@ -246,4 +264,84 @@ public class AdminService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e);
         }
     }
+
+    public void updateSection(Map<String, Object> updatedData) {
+        Order order = orderRepository.findById(Long.valueOf((Integer) updatedData.get("id"))).orElseThrow(() ->
+                new OrderNotFoundException("Order with usch id was not found"));
+
+        System.out.println(updatedData.entrySet());
+        System.out.println(updatedData);
+        System.out.println(updatedData.values());
+        System.out.println(updatedData.get("status"));
+        System.out.println(updatedData.get("deliveryPreferences"));
+
+        String section = updatedData.get("sectionToEdit").toString();
+        System.out.println(section);
+
+        switch (section) {
+            case "orderSection" -> updateOrderSection(updatedData, order);
+            case "paymentSection" -> updatePaymentSection(updatedData, order);
+            case "packageSection" -> updatePackageSection(updatedData, order);
+            case "senderSection" -> updateAddressSection(updatedData, order, true);
+            case "recipientSection" -> updateAddressSection(updatedData, order, false);
+        }
+
+    }
+
+    private void updateOrderSection(Map<String, Object> updatedData, Order order) {
+
+        String statusString = (String) updatedData.get("status");
+        OrderStatus statusEnum = OrderStatus.valueOf(statusString.toUpperCase());
+
+        order.setStatus(statusEnum);
+        order.setDeliveryPreferences(updatedData.get("deliveryPreferences").toString());
+        logger.info("order successfully updated");
+        orderRepository.save(order);
+    }
+
+    private void updatePaymentSection(Map<String, Object> updatedData, Order order) {
+        Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
+                new PaymentMethodNotFoundException("Payment not found"));
+
+        String paymentStatus = (String) updatedData.get("status");
+        PaymentStatus statusEnum = PaymentStatus.valueOf(paymentStatus.toUpperCase());
+        payment.setStatus(statusEnum);
+        logger.info("payment successfully updated");
+
+        paymentRepository.save(payment);
+    }
+
+    private void updatePackageSection(Map<String, Object> updatedData, Order order) {
+        String packageStatus = (String) updatedData.get("status");
+        PackageStatus packageStatusEnum = PackageStatus.valueOf(packageStatus);
+        String contents = (String) updatedData.get("contents");
+
+        order.getPackageDetails().setStatus(packageStatusEnum);
+        order.getPackageDetails().setContents(contents);
+
+        orderRepository.save(order);
+    }
+
+    private void updateAddressSection(Map<String, Object> updatedData, Order order, boolean isSender) {
+        OrderAddress orderAddress = isSender ? order.getSenderAddress() : order.getRecipientAddress();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> addressData = (Map<String, Object>) updatedData.get("address");
+        logger.info("Address Data: " + addressData);
+
+        orderAddress.setName((String) addressData.get("name"));
+        orderAddress.setStreet((String) addressData.get("street"));
+        orderAddress.setHouseNumber((String) addressData.get("houseNumber"));
+        orderAddress.setCity((String) addressData.get("city"));
+        orderAddress.setPostCode((String) addressData.get("postCode"));
+        orderAddress.setPhoneNumber((String) addressData.get("phoneNumber"));
+        orderAddress.setFlatNumber((String) addressData.get("flatNumber"));
+
+        if (isSender) order.setSenderAddress(orderAddress);
+        else order.setRecipientAddress(orderAddress);
+
+        logger.info((isSender ? "Sender" : "Recipient") + " address successfully updated");
+        orderRepository.save(order);
+    }
+
 }

@@ -37,6 +37,12 @@ public class PricingOptionService {
         return categorizedOptions;
     }
 
+    public List<PricingOption> getPricingOptionsNotCategorized() {
+        List<PricingOption> list = pricingOptionRepository.findAll();
+
+        return list;
+    }
+
     @Transactional
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws PricingOptionNotFoundException {
         BigDecimal shippingCost = new BigDecimal(0);

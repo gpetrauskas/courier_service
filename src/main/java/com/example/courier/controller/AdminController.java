@@ -1,8 +1,10 @@
 package com.example.courier.controller;
 
 import com.example.courier.common.PackageStatus;
+import com.example.courier.domain.Order;
 import com.example.courier.domain.Package;
 import com.example.courier.domain.PricingOption;
+import com.example.courier.domain.User;
 import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.dto.UserDetailsDTO;
@@ -118,6 +120,22 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/updateOrder/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateOrderSection(@PathVariable Long id, @RequestBody Map<String, Object> updateData) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            logger.info("Trying to edit order with id: {} details", id);
+            adminService.updateSection(updateData);
+            response.put("message", "Success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error occurred while editing order details with order id: {}", id, e);
+            response.put("message", "Error occurred");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     @DeleteMapping("/deleteUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
@@ -138,9 +156,11 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String status
     ) {
-        Page<AdminOrderDTO> orderPage = adminService.getAllOrders(page, size);
+        Page<AdminOrderDTO> orderPage = adminService.getAllOrders(page, size, userId, status);
 
         Map<String, Object> response = new HashMap<>();
         response.put("orders", orderPage.getContent());
@@ -188,12 +208,15 @@ public class AdminController {
 
     @PostMapping("/create-pricing-option")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> createPricingOption(@RequestBody PricingOption pricingOption) {
+    public ResponseEntity<?> createPricingOption(@RequestBody PricingOption pricingOption) {
+        Map<String, String> response = new HashMap<>();
         try {
             adminService.createPricingOption(pricingOption);
-            return ResponseEntity.ok("New pricing option was added successfully.");
+            response.put("message", "New pricing option was added successfully.");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
+            response.put("error", "Error occurred while adding new pricing option. " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -211,8 +234,17 @@ public class AdminController {
 
     @DeleteMapping("/deletePricingOption/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deletePricingOption(@PathVariable Long id) {
-        return adminService.deletePricingOption(id);
+    public ResponseEntity<?> deletePricingOption(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            ResponseEntity<String> message = adminService.deletePricingOption(id);
+            response.put("message", message.getBody());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error occured while deleting pricing option", e.getMessage());
+            logger.info("Error occurred while deleting pricing option: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
 }
