@@ -71,9 +71,22 @@ public class AdminController {
 
     @GetMapping("/getAllUsers")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<UserResponseDTO> allUsers = adminService.findAllUsers();
-        return ResponseEntity.ok(allUsers);
+    public ResponseEntity<Map<String, Object>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String role) {
+
+        logger.info("role {}", role);
+
+        Page<UserResponseDTO> userPage = adminService.findAllUsers(page, size, role);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("users", userPage.getContent());
+        response.put("currentPage", userPage.getNumber());
+        response.put("totalItems", userPage.getTotalElements());
+        response.put("totalPages", userPage.getTotalPages());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/getUserById/{id}")
