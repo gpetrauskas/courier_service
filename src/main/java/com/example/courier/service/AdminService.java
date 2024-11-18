@@ -18,6 +18,7 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PaymentRepository;
 import com.example.courier.repository.PricingOptionRepository;
 import com.example.courier.repository.UserRepository;
+import com.example.courier.specification.UserSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,12 +51,27 @@ public class AdminService {
     private PricingOptionService pricingOptionService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
-    public List<UserResponseDTO> findAllUsers() {
-        List<User> allUsers = userRepository.findAll();
-        List<UserResponseDTO> allUserResponseDTOs = allUsers.stream()
+    public Page<UserResponseDTO> findAllUsers(int page, int size, String role) {
+
+        System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Specification<User> specification = Specification.where(UserSpecification.hasRole(role));
+
+        logger.info("User role: {}", role);
+
+        Page<User> userPage = userRepository.findAll(specification, pageable);
+        List<User> allUsers = userPage.getContent();
+
+        if (allUsers.isEmpty()) {
+            return Page.empty();
+        }
+
+        List<UserResponseDTO> allUserDTOs = allUsers.stream()
                 .map(UserResponseDTO::fromUser)
                 .collect(Collectors.toList());
-        return allUserResponseDTOs;
+
+        return new PageImpl<>(allUserDTOs, pageable, userPage.getTotalElements());
     }
 
     public Optional<UserDetailsDTO> findUserById(Long id) {
@@ -109,7 +124,6 @@ public class AdminService {
 
     public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
-
         Specification<Order> specification = Specification.where(null);
 
         if (userId != null) {
@@ -138,6 +152,7 @@ public class AdminService {
         List<AdminOrderDTO> allOrderDTOs = allOrders.stream()
                 .map(order -> AdminOrderDTO.fromOrder(order, paymentMap.get(order.getId())))
                 .toList();
+
         return new PageImpl<>(allOrderDTOs, pageable, orderPage.getTotalElements());
     }
 
