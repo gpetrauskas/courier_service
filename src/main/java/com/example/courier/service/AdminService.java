@@ -51,14 +51,16 @@ public class AdminService {
     private PricingOptionService pricingOptionService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
-    public Page<UserResponseDTO> findAllUsers(int page, int size, String role) {
+    public Page<UserResponseDTO> findAllUsers(int page, int size, String role, String search) {
 
-        System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role);
+        System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Specification<User> specification = Specification.where(UserSpecification.hasRole(role));
 
-        logger.info("User role: {}", role);
+        if (search != null && !search.isEmpty()) {
+            specification = specification.and(UserSpecification.hasKeyword(search));
+        }
 
         Page<User> userPage = userRepository.findAll(specification, pageable);
         List<User> allUsers = userPage.getContent();
