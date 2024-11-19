@@ -20,4 +20,17 @@ public class UserSpecification {
                         :
                         criteriaBuilder.conjunction();
     }
+
+    public static Specification<User> hasKeyword(String searchWording) {
+        return ((root, query, criteriaBuilder) -> {
+            if (searchWording == null || searchWording.isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+            String searchPattern = "%" + searchWording.toLowerCase() + "%";
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), searchPattern)
+            );
+        });
+    }
 }
