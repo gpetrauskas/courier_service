@@ -74,11 +74,12 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String role) {
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String search) {
 
-        logger.info("role {}", role);
+        logger.info("role {}, search {}", role, search);
 
-        Page<UserResponseDTO> userPage = adminService.findAllUsers(page, size, role);
+        Page<UserResponseDTO> userPage = adminService.findAllUsers(page, size, role, search);
 
         Map<String, Object> response = new HashMap<>();
         response.put("users", userPage.getContent());
