@@ -152,17 +152,21 @@ public class AdminController {
 
     @DeleteMapping("/deleteUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
         try {
             logger.info("Request to delete user with id: {}", id);
             adminService.deleteUser(id);
-            return ResponseEntity.ok("User deleted successfully.");
+            response.put("success", "User deleted successfully.");
+            return ResponseEntity.ok(response);
         } catch (UserNotFoundException e) {
             logger.warn("deleteUser: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found");
+            response.put("error", "Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             logger.warn("deleteUser: Error occurred: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while deleting user.");
+            response.put("error", "Error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
