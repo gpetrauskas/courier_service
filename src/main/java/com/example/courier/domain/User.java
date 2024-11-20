@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,16 +39,24 @@ public class User implements Serializable {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "default_address_id")
     private Address defaultAddress;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Address> addresses = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<PaymentMethod> paymentMethods;
+
+    @Column(name = "is_blocked", nullable = false)
+    @ColumnDefault("false")
+    private boolean isBlocked;
+
+    @Column(name = "is_deleted", nullable = false)
+    @ColumnDefault("false")
+    private boolean isDeleted;
 
     public User() {
         this.paymentMethods = new ArrayList<>();
@@ -99,6 +108,14 @@ public class User implements Serializable {
         this.role = role;
     }
 
+    public boolean isBlocked() {
+        return isBlocked;
+    }
+
+    public void setBlocked(boolean isBlocked) {
+        this.isBlocked = isBlocked;
+    }
+
     public List<PaymentMethod> test() {
         return this.paymentMethods.stream()
                 .filter(paymentMethod -> paymentMethod.isCreditCard())
@@ -143,5 +160,13 @@ public class User implements Serializable {
 
     public void setDefaultAddress(Address defaultAddress) {
         this.defaultAddress = defaultAddress;
+    }
+
+    public boolean isDeleted() {
+        return this.isDeleted;
+    }
+
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
