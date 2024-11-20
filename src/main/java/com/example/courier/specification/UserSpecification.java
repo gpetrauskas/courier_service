@@ -33,4 +33,9 @@ public class UserSpecification {
             );
         });
     }
+
+    public static Specification<User> isNotDeleted() {
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.isFalse(root.get("isDeleted")));
+    }
 }
