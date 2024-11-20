@@ -26,6 +26,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@PreAuthorize("hasRole('ADMIN')")
 @Service
 public class AdminService {
 
@@ -56,11 +58,11 @@ public class AdminService {
         System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Specification<User> specification = Specification.where(UserSpecification.hasRole(role));
+        Specification<User> specification = Specification.where(UserSpecification.isNotDeleted());
 
-        if (search != null && !search.isEmpty()) {
-            specification = specification.and(UserSpecification.hasKeyword(search));
-        }
+
+        specification = specification.and(UserSpecification.hasRole(role));
+        specification = specification.and(UserSpecification.hasKeyword(search));
 
         Page<User> userPage = userRepository.findAll(specification, pageable);
         List<User> allUsers = userPage.getContent();
@@ -121,7 +123,9 @@ public class AdminService {
             User user = userRepository.findById(id).orElseThrow(() ->
                     new UserNotFoundException("User was not found."));
             logger.info("User was found for deletion");
-            userRepository.delete(user);
+            user.setDeleted(true);
+
+            userRepository.save(user);
     }
 
     public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
