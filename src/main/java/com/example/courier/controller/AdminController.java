@@ -164,9 +164,43 @@ public class AdminController {
             response.put("error", "Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
-            logger.warn("deleteUser: Error occurred: {}", e.getMessage());
+            logger.warn("Error occurred: {}", e.getMessage());
             response.put("error", "Error occurred: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PutMapping("/banUser/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> banUser(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            logger.info("Request to ban user with id {}", id);
+            adminService.banUser(id);
+
+            response.put("success", "User with id " + id + ", was successfully banned.");
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            logger.warn("User with id {}, was not found", id);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @PutMapping("/unbanUser/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> unbanUser(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            logger.info("Request to unban user with id {}", id);
+            adminService.unbanUser(id);
+
+            response.put("success", "User with id" +  id + " was unbanned successfully.");
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            logger.warn("User with id {}, was not found", id);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 

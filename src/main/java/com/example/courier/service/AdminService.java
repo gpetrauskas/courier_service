@@ -120,12 +120,31 @@ public class AdminService {
     }
 
     public void deleteUser(Long id) {
-            User user = userRepository.findById(id).orElseThrow(() ->
-                    new UserNotFoundException("User was not found."));
-            logger.info("User was found for deletion");
-            user.setDeleted(true);
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("User was not found."));
+        logger.info("User was found for deletion");
+        user.setDeleted(true);
 
-            userRepository.save(user);
+        userRepository.save(user);
+    }
+
+    public void banUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new RuntimeException("User was not found."));
+
+        user.setBlocked(true);
+        userRepository.save(user);
+
+        logger.info("User: name {} - id {}, was banned successfully.", user.getName(), user.getId());
+    }
+
+    public void unbanUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new RuntimeException("User was not found"));
+
+        user.setBlocked(false);
+        userRepository.save(user);
+        logger.info("User: name {} - id {}, was unbanned successfully", user.getName(), userId);
     }
 
     public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
