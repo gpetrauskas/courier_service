@@ -1,15 +1,11 @@
 package com.example.courier.controller;
 
 import com.example.courier.common.PackageStatus;
-import com.example.courier.domain.Order;
+import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.domain.PricingOption;
-import com.example.courier.domain.User;
-import com.example.courier.dto.AdminOrderDTO;
-import com.example.courier.dto.UserDTO;
-import com.example.courier.dto.UserDetailsDTO;
-import com.example.courier.dto.UserResponseDTO;
+import com.example.courier.dto.*;
 import com.example.courier.exception.UserNotFoundException;
+import com.example.courier.repository.DeliveryTaskItemRepository;
 import com.example.courier.repository.PackageRepository;
 import com.example.courier.service.AdminService;
 import com.example.courier.service.UserService;
@@ -34,6 +30,10 @@ public class AdminController {
     private PackageRepository packageRepository;
     @Autowired
     private AdminService adminService;
+
+    @Autowired
+    private DeliveryTaskItemRepository deliveryTaskItemRepository;
+
     @Autowired
     private UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
@@ -298,6 +298,78 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @PostMapping("/createCourierDeliveryList")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createCourierDeliveryList(@RequestBody CreateTaskDTO taskDTO) {
+        Map<String, String> response = new HashMap<>();
+        Admin admin = adminService.getAuthenticatedAdmin();
+
+        // Create a new DTO with adminId set
+        CreateTaskDTO updatedTaskDTO = new CreateTaskDTO(
+                taskDTO.courierId(),
+                admin.getId(), // Set adminId here
+                taskDTO.parcelsIds(),
+                taskDTO.taskType()
+        );
+
+        try {
+            logger.info("Parcels IDs: " + updatedTaskDTO.parcelsIds());
+            logger.info("Courier ID: " + updatedTaskDTO.courierId());
+            logger.info("Task Type: " + updatedTaskDTO.taskType());
+
+            adminService.createNewCourierTask(updatedTaskDTO);
+
+            response.put("success", "Courier Task List was created successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", "Error occurred while creating courier list. " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    @GetMapping("/getItemsForTheListCount")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Number>> getItemsForTheListCount() {
+        Map<String, Number> response = adminService.getItemsForTheListCount();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/getItemsByStatus")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getItemsByStatus(@RequestParam("status") String status,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int size) {
+        
+        Map<String, Object> packages = adminService.getItemsByStatus(page, size, status);
+        return ResponseEntity.ok(packages);
+    }
+
+    @GetMapping("/getAvailableCouriers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
+        List<CourierDTO> availableCouriers = adminService.getAvailableCouriers();
+
+        return ResponseEntity.ok(availableCouriers);
+    }
+
+    @GetMapping("/testGet")
+    public ResponseEntity<?> getTest() {
+
+        List<DeliveryTaskItem> list = deliveryTaskItemRepository.findAll();
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("getAllDeliveryLists")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DeliveryTaskDTO>> getAllDeliveryLists() {
+        List<DeliveryTaskDTO> tasksList = adminService.getAllDeliveryLists();
+
+        return ResponseEntity.ok(tasksList);
+    }
+
 
 }
 
