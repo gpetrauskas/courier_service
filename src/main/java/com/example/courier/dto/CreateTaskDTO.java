@@ -1,4 +1,6 @@
 package com.example.courier.dto;
 
-public record CreateTaskDTO() {
+import java.util.List;
+
+public record CreateTaskDTO(Long courierId, Long adminId, List<Long> parcelsIds, String taskType) {
 }

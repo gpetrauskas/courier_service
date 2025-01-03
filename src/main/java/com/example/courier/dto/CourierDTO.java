@@ -1,4 +1,4 @@
 package com.example.courier.dto;
 
-public record CourierDTO() {
+public record CourierDTO(Long id, String name, String email) {
 }
