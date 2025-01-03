@@ -3,8 +3,12 @@ package com.example.courier.common;
 public enum PackageStatus {
     WAITING_FOR_PAYMENT,
     PICKING_UP,
-    IN_TRANSIT,
+    DELIVERING,
+    PICKED_UP,
     DELIVERED,
+    AT_CHECKPOINT,
+    FAILED_PICKUP,
+    FAILED_DELIVERY,
     CANCELED,
     NOT_SHIPPED;
 
