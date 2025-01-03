@@ -31,6 +31,9 @@ public class User extends Person implements Serializable {
     @JsonManagedReference
     private List<PaymentMethod> paymentMethods;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Order> orders;
+
     @Column(name = "is_blocked", nullable = false)
     @ColumnDefault("false")
     private boolean isBlocked;
@@ -108,5 +111,13 @@ public class User extends Person implements Serializable {
 
     public void setDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 }
