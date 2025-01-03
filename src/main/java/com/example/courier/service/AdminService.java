@@ -1,23 +1,17 @@
 package com.example.courier.service;
 
-import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
-import com.example.courier.common.PaymentStatus;
-import com.example.courier.common.Role;
+import com.example.courier.common.*;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
-import com.example.courier.dto.AdminOrderDTO;
-import com.example.courier.dto.UserDetailsDTO;
-import com.example.courier.dto.UserResponseDTO;
+import com.example.courier.dto.*;
+import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.mapper.UserMapper;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
-import com.example.courier.repository.OrderRepository;
-import com.example.courier.repository.PaymentRepository;
-import com.example.courier.repository.PricingOptionRepository;
-import com.example.courier.repository.UserRepository;
+import com.example.courier.repository.*;
+import com.example.courier.specification.OrderSpecification;
 import com.example.courier.specification.UserSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +21,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +45,17 @@ public class AdminService {
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
+    private AdminRepository adminRepository;
+    @Autowired
+    private DeliveryTaskRepository deliveryTaskRepository;
+    @Autowired
     private PricingOptionRepository pricingOptionRepository;
+    @Autowired
+    private PackageRepository packageRepository;
+    @Autowired
+    private CourierRepository courierRepository;
+    @Autowired
+    private OrderMapper orderMapper;
     @Autowired
     private PricingOptionService pricingOptionService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
@@ -384,4 +391,135 @@ public class AdminService {
         orderRepository.save(order);
     }
 
+    public void createNewCourierTask(CreateTaskDTO taskDTO) {
+        Admin admin = getAuthenticatedAdmin();
+        Courier courier = courierRepository.findById(taskDTO.courierId()).orElseThrow(() ->
+                new RuntimeException("Courier not found with given id"));
+
+        logger.info(taskDTO.parcelsIds().toString());
+
+
+        DeliveryTask deliveryTask = new DeliveryTask();
+        deliveryTask.setTaskType(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
+                TaskType.PICKUP : TaskType.DELIVERY);
+        deliveryTask.setCreatedBy(admin);
+        deliveryTask.setCourier(courier);
+        deliveryTask.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
+
+        System.out.println(taskDTO.parcelsIds());
+
+        List<Package> packageList = packageRepository.findAllById(taskDTO.parcelsIds());
+
+        List<DeliveryTaskItem> items = packageList.stream()
+                .map(p -> {
+                    p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
+                            PackageStatus.PICKING_UP : PackageStatus.DELIVERING);
+                    DeliveryTaskItem item = new DeliveryTaskItem();
+                    item.setParcel(p);
+                    item.setTask(deliveryTask);
+                    item.setStatus(p.getStatus());
+                    return item;
+                }).toList();
+
+        deliveryTask.setItems(items);
+        courier.setHasActiveTask(true);
+
+        deliveryTaskRepository.save(deliveryTask);
+        courierRepository.save(courier);
+        packageRepository.saveAll(packageList);
+
+    }
+
+    public Map<String, Number> getItemsForTheListCount() {
+        List<Package> packagesToPickup = packageRepository.findByStatus(PackageStatus.PICKING_UP);
+        List<Package> packagesDelivering = packageRepository.findByStatus(PackageStatus.DELIVERING);
+
+        Map<String, Number> response = new HashMap<>();
+        response.put("toPickup", packagesToPickup.size());
+        response.put("delivering", packagesDelivering.size());
+
+        return response;
+    }
+
+    public Map<String, Object> getItemsByStatus(int page, int size, String status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+        Specification<Order> specification = OrderSpecification.hasPackageStatus(status);
+
+        Page<Order> orderPage = orderRepository.findAll(specification, pageable);
+
+        Map<String, Object> mappedOrdersPage = new HashMap<>();
+        mappedOrdersPage.put("packages", orderPage.stream().map(orderMapper::toOrderDTO).toList());
+        mappedOrdersPage.put("currentPage", orderPage.getNumber());
+        mappedOrdersPage.put("totalPages", orderPage.getTotalPages());
+
+        return mappedOrdersPage;
+    }
+
+    public List<CourierDTO> getAvailableCouriers() {
+        List<Courier> allCouriers = courierRepository.findByHasActiveTaskFalse();
+
+        return allCouriers.stream()
+                .map(c -> new CourierDTO(c.getId(), c.getName(), c.getEmail()))
+                .toList();
+    }
+
+    public Admin getAuthenticatedAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            System.out.println("Authenticated email: " + authentication.getName());
+            return adminRepository.findByEmail(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("Admin was not found"));
+        }
+        throw new RuntimeException("No authenticated admin found");
+    }
+
+    public List<DeliveryTaskDTO> getAllDeliveryLists() {
+        List<DeliveryTask> tasksList = deliveryTaskRepository.findAll();
+
+
+        return tasksList.stream()
+                .map(t -> new DeliveryTaskDTO(
+                        t.getId(),
+                        new CourierDTO(t.getCourier().getId(), t.getCourier().getName(), t.getCourier().getEmail()),
+                        t.getCreatedBy().getId(),
+                        t.getItems().stream()
+                                .map(item -> {
+                                    Order order = orderRepository.findByPackageDetails(item.getParcel()).orElseThrow(() ->
+                                            new RuntimeException("Order not found for package id " + item.getParcel().getId()));
+
+                                    OrderAddress senderAddress = order.getSenderAddress();
+                                    OrderAddress recipientAddress = order.getRecipientAddress();
+
+                                    OrderAddressDTO senderAddressDTO = new OrderAddressDTO(
+                                            senderAddress.getId(),
+                                            senderAddress.getCity(),
+                                            senderAddress.getStreet(),
+                                            senderAddress.getHouseNumber(),
+                                            senderAddress.getFlatNumber(),
+                                            senderAddress.getPhoneNumber(),
+                                            senderAddress.getPostCode(),
+                                            senderAddress.getName()
+                                    );
+
+                                    OrderAddressDTO recipientAddressDTO = new OrderAddressDTO(
+                                            recipientAddress.getId(),
+                                            recipientAddress.getCity(),
+                                            recipientAddress.getStreet(),
+                                            recipientAddress.getHouseNumber(),
+                                            recipientAddress.getFlatNumber(),
+                                            recipientAddress.getPhoneNumber(),
+                                            recipientAddress.getPostCode(),
+                                            recipientAddress.getName()
+                                    );
+
+                                    return DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO);
+                                })
+                                .toList(),
+                        t.getTaskType(),
+                        t.getDeliveryStatus(),
+                        t.getCreatedAt(),
+                        t.getCompletedAt()
+                ))
+                .toList();
+    }
 }

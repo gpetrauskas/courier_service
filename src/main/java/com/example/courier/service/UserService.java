@@ -1,10 +1,12 @@
 package com.example.courier.service;
 
 import com.example.courier.common.Role;
+import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.UserDTO;
 import com.example.courier.exception.UserNotFoundException;
+import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -25,6 +28,8 @@ public class UserService {
     private Logger logger = LoggerFactory.getLogger(UserService.class);
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PersonRepository personRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -81,9 +86,9 @@ public class UserService {
     @Transactional
     public Map<String, String> loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            User user = userRepository.findByEmail(loginDTO.email());
-            if (user != null && passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-                String jwt = jwtService.createToken(loginDTO.email(), user.getRole().toString(), user.getName());
+            var user = personRepository.findByEmail(loginDTO.email());
+            if (user.isPresent() && passwordEncoder.matches(loginDTO.password(), user.get().getPassword())) {
+                String jwt = jwtService.createToken(loginDTO.email(), user.get().getRole().toString(), user.get().getName());
                 Map<String, String> tokenDetails = jwtService.validateToken(jwt);
                 String authToken = tokenDetails.get("authToken");
                 String encryptedAuthToken = jwtService.encryptAuthToken(authToken);

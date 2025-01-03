@@ -94,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     public List<OrderDTO> findUserOrders(User user) {
-        List<Order> orders = orderRepository.findByUserId(user.getId());
+        List<Order> orders = user.getOrders();
         return orders.stream()
                 .map(orderMapper::toOrderDTO)
                 .toList();
