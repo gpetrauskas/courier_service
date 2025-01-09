@@ -23,6 +23,14 @@ public class DeliveryTaskItem {
     @Column(nullable = false)
     private PackageStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "sender_address_id", nullable = false)
+    private OrderAddress senderAddress;
+
+    @ManyToOne
+    @JoinColumn(name = "recipient_address_id", nullable = false)
+    private OrderAddress recipientAddress;
+
 
     public Long getId() {
         return id;
@@ -56,4 +64,19 @@ public class DeliveryTaskItem {
         this.status = status;
     }
 
+    public OrderAddress getSenderAddress() {
+        return senderAddress;
+    }
+
+    public void setSenderAddress(OrderAddress senderAddress) {
+        this.senderAddress = senderAddress;
+    }
+
+    public OrderAddress getRecipientAddress() {
+        return recipientAddress;
+    }
+
+    public void setRecipientAddress(OrderAddress recipientAddress) {
+        this.recipientAddress = recipientAddress;
+    }
 }

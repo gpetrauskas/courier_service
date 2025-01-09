@@ -39,6 +39,8 @@ public class AdminService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private PersonRepository personRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private OrderRepository orderRepository;
@@ -46,6 +48,8 @@ public class AdminService {
     private PaymentRepository paymentRepository;
     @Autowired
     private AdminRepository adminRepository;
+    @Autowired
+    private OrderAddressRepository orderAddressRepository;
     @Autowired
     private DeliveryTaskRepository deliveryTaskRepository;
     @Autowired
@@ -65,14 +69,14 @@ public class AdminService {
         System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Specification<User> specification = Specification.where(UserSpecification.isNotDeleted());
+        Specification<Person> specification = Specification.where(UserSpecification.isNotDeleted());
 
 
         specification = specification.and(UserSpecification.hasRole(role));
         specification = specification.and(UserSpecification.hasKeyword(search));
 
-        Page<User> userPage = userRepository.findAll(specification, pageable);
-        List<User> allUsers = userPage.getContent();
+        Page<Person> userPage = personRepository.findAll(specification, pageable);
+        List<Person> allUsers = userPage.getContent();
 
         if (allUsers.isEmpty()) {
             return Page.empty();
@@ -418,6 +422,12 @@ public class AdminService {
                     item.setParcel(p);
                     item.setTask(deliveryTask);
                     item.setStatus(p.getStatus());
+
+                    Order order = orderRepository.findByPackageDetails(p).orElseThrow(() ->
+                            new RuntimeException("Order not found"));
+
+                    item.setSenderAddress(order.getSenderAddress());
+                    item.setRecipientAddress(order.getRecipientAddress());
                     return item;
                 }).toList();
 
@@ -476,7 +486,6 @@ public class AdminService {
     public List<DeliveryTaskDTO> getAllDeliveryLists() {
         List<DeliveryTask> tasksList = deliveryTaskRepository.findAll();
 
-
         return tasksList.stream()
                 .map(t -> new DeliveryTaskDTO(
                         t.getId(),
@@ -484,33 +493,13 @@ public class AdminService {
                         t.getCreatedBy().getId(),
                         t.getItems().stream()
                                 .map(item -> {
+                                    /*
                                     Order order = orderRepository.findByPackageDetails(item.getParcel()).orElseThrow(() ->
                                             new RuntimeException("Order not found for package id " + item.getParcel().getId()));
+                                     */
 
-                                    OrderAddress senderAddress = order.getSenderAddress();
-                                    OrderAddress recipientAddress = order.getRecipientAddress();
-
-                                    OrderAddressDTO senderAddressDTO = new OrderAddressDTO(
-                                            senderAddress.getId(),
-                                            senderAddress.getCity(),
-                                            senderAddress.getStreet(),
-                                            senderAddress.getHouseNumber(),
-                                            senderAddress.getFlatNumber(),
-                                            senderAddress.getPhoneNumber(),
-                                            senderAddress.getPostCode(),
-                                            senderAddress.getName()
-                                    );
-
-                                    OrderAddressDTO recipientAddressDTO = new OrderAddressDTO(
-                                            recipientAddress.getId(),
-                                            recipientAddress.getCity(),
-                                            recipientAddress.getStreet(),
-                                            recipientAddress.getHouseNumber(),
-                                            recipientAddress.getFlatNumber(),
-                                            recipientAddress.getPhoneNumber(),
-                                            recipientAddress.getPostCode(),
-                                            recipientAddress.getName()
-                                    );
+                                    OrderAddressDTO senderAddressDTO = OrderAddressDTO.fromOrderAddress(item.getSenderAddress());
+                                    OrderAddressDTO recipientAddressDTO = OrderAddressDTO.fromOrderAddress(item.getRecipientAddress());
 
                                     return DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO);
                                 })
