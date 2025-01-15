@@ -64,29 +64,24 @@ public class AdminService {
     private PricingOptionService pricingOptionService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
-    public Page<UserResponseDTO> findAllUsers(int page, int size, String role, String search) {
-
+    public Page<PersonResponseDTO> findAllUsers(int page, int size, String role, String search) {
         System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Specification<Person> specification = Specification.where(UserSpecification.isNotDeleted());
+        Specification<Person> specification = buildSpecification(role, search);
 
+        Page<Person> personPage = personRepository.findAll(specification, pageable);
+        List<Person> persons = personPage.getContent();
 
-        specification = specification.and(UserSpecification.hasRole(role));
-        specification = specification.and(UserSpecification.hasKeyword(search));
-
-        Page<Person> userPage = personRepository.findAll(specification, pageable);
-        List<Person> allUsers = userPage.getContent();
-
-        if (allUsers.isEmpty()) {
+        if (persons.isEmpty()) {
             return Page.empty();
         }
 
-        List<UserResponseDTO> allUserDTOs = allUsers.stream()
-                .map(UserResponseDTO::fromUser)
+        List<PersonResponseDTO> allPersonDTOs = persons.stream()
+                .map(PersonResponseDTO::fromPerson)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(allUserDTOs, pageable, userPage.getTotalElements());
+        return new PageImpl<>(allPersonDTOs, pageable, personPage.getTotalElements());
     }
 
     public Optional<UserDetailsDTO> findUserById(Long id) {
@@ -510,5 +505,21 @@ public class AdminService {
                         t.getCompletedAt()
                 ))
                 .toList();
+    }
+
+    private Specification<Person> buildSpecification(String role, String search) {
+        Specification<Person> specification = Specification.where(UserSpecification.isNotDeleted());
+
+        if (role != null) {
+            specification = specification.and(UserSpecification.hasRole(role));
+        }
+        if (search != null && !search.isEmpty()) {
+            specification = specification.and(UserSpecification.hasKeyword(search));
+        }
+
+        specification = specification.and((root, query, criteriaBuilder) ->
+                root.type().in(Admin.class, Courier.class, User.class));
+
+        return specification;
     }
 }
