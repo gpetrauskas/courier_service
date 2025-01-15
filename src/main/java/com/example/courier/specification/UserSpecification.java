@@ -1,11 +1,11 @@
 package com.example.courier.specification;
 
 import com.example.courier.common.Role;
-import com.example.courier.domain.User;
+import com.example.courier.domain.Person;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
-    public static Specification<User> hasRole(String role) {
+    public static Specification<Person> hasRole(String role) {
         return (root, query, criteriaBuilder) ->
                 role != null && !role.isEmpty() && Role.isValidRole(role) ?
                         criteriaBuilder.equal(root.get("role"), Role.valueOf(role.toUpperCase()))
@@ -13,7 +13,7 @@ public class UserSpecification {
                         criteriaBuilder.conjunction();
     }
 
-    public static Specification<User> hasUserId(Long userId) {
+    public static Specification<Person> hasUserId(Long userId) {
         return (root, query, criteriaBuilder) ->
                 userId != null ?
                         criteriaBuilder.equal(root.get("id"), userId)
@@ -21,7 +21,7 @@ public class UserSpecification {
                         criteriaBuilder.conjunction();
     }
 
-    public static Specification<User> hasKeyword(String searchWording) {
+    public static Specification<Person> hasKeyword(String searchWording) {
         return ((root, query, criteriaBuilder) -> {
             if (searchWording == null || searchWording.isEmpty()) {
                 return criteriaBuilder.conjunction();
@@ -34,7 +34,7 @@ public class UserSpecification {
         });
     }
 
-    public static Specification<User> isNotDeleted() {
+    public static Specification<Person> isNotDeleted() {
         return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));
     }

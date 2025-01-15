@@ -2,7 +2,6 @@ package com.example.courier.domain;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,20 +30,4 @@ public class Courier extends Person {
     public void setHasActiveTask(boolean hasActiveTask) {
         this.hasActiveTask = hasActiveTask;
     }
-
-
-/*
-    @OneToMany(mappedBy = "courier", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Order> assignedOrders = new ArrayList<>();
-
-    public List<Order> getAssignedOrders() {
-        return assignedOrders;
-    }
-
-    public void setAssignedOrders(List<Order> assignedOrders) {
-        this.assignedOrders = assignedOrders;
-    }
-
- */
 }

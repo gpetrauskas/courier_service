@@ -2,6 +2,7 @@ package com.example.courier.domain;
 
 import com.example.courier.common.Role;
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -23,6 +24,15 @@ public abstract class Person {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(name = "is_blocked", nullable = false)
+    @ColumnDefault("false")
+    private boolean isBlocked;
+
+    @Column(name = "is_deleted", nullable = false)
+    @ColumnDefault("false")
+    private boolean isDeleted;
+
 
     public Person() {}
 
@@ -67,5 +77,21 @@ public abstract class Person {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public boolean isBlocked() {
+        return isBlocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        isBlocked = blocked;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 }

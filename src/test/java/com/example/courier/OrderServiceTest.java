@@ -55,7 +55,7 @@ public class OrderServiceTest {
         MockitoAnnotations.openMocks(this);
 
         user = new User();
-        user.setId(1L);
+       // user.setId(1L);
         user.setEmail("myemail@mail.com");
 
         AddressDTO senderAddress = new AddressDTO(1L, "klaipeda", "sezamu", "13", "1", "123123123", "321", "vardas");

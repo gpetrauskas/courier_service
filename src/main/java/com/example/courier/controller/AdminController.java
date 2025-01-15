@@ -79,7 +79,7 @@ public class AdminController {
 
         logger.info("role {}, search {}", role, search);
 
-        Page<UserResponseDTO> userPage = adminService.findAllUsers(page, size, role, search);
+        Page<PersonResponseDTO> userPage = adminService.findAllUsers(page, size, role, search);
 
         Map<String, Object> response = new HashMap<>();
         response.put("users", userPage.getContent());
@@ -305,10 +305,9 @@ public class AdminController {
         Map<String, String> response = new HashMap<>();
         Admin admin = adminService.getAuthenticatedAdmin();
 
-        // Create a new DTO with adminId set
         CreateTaskDTO updatedTaskDTO = new CreateTaskDTO(
                 taskDTO.courierId(),
-                admin.getId(), // Set adminId here
+                admin.getId(),
                 taskDTO.parcelsIds(),
                 taskDTO.taskType()
         );
@@ -369,7 +368,5 @@ public class AdminController {
 
         return ResponseEntity.ok(tasksList);
     }
-
-
 }
 

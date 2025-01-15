@@ -3,18 +3,14 @@ package com.example.courier.domain;
 import com.example.courier.common.Role;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.annotations.ColumnDefault;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
-public class User extends Person implements Serializable {
+public class User extends Person {
 
 
     @Column(name = "phone_number")
@@ -34,14 +30,6 @@ public class User extends Person implements Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders;
 
-    @Column(name = "is_blocked", nullable = false)
-    @ColumnDefault("false")
-    private boolean isBlocked;
-
-    @Column(name = "is_deleted", nullable = false)
-    @ColumnDefault("false")
-    private boolean isDeleted;
-
     public User() {
         super();
         this.paymentMethods = new ArrayList<>();
@@ -49,14 +37,6 @@ public class User extends Person implements Serializable {
 
     public User(String name, String email, String password) {
         super(name, email, password, Role.USER);
-    }
-
-    public boolean isBlocked() {
-        return isBlocked;
-    }
-
-    public void setBlocked(boolean isBlocked) {
-        this.isBlocked = isBlocked;
     }
 
     public List<PaymentMethod> test() {
@@ -103,14 +83,6 @@ public class User extends Person implements Serializable {
 
     public void setDefaultAddress(Address defaultAddress) {
         this.defaultAddress = defaultAddress;
-    }
-
-    public boolean isDeleted() {
-        return this.isDeleted;
-    }
-
-    public void setDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
     }
 
     public List<Order> getOrders() {

@@ -6,12 +6,12 @@ import com.example.courier.domain.Package;
 
 import java.time.LocalDateTime;
 
-public record AdminOrderDTO(Long id, UserResponseDTO user, OrderAddress senderAddress, OrderAddress recipientAddress, Package packageDetails,
+public record AdminOrderDTO(Long id, PersonResponseDTO user, OrderAddress senderAddress, OrderAddress recipientAddress, Package packageDetails,
                             String deliveryPreferences, OrderStatus status, LocalDateTime createTime,
                             AdminPaymentDTO paymentDetails) {
 
     public static AdminOrderDTO fromOrder(Order order, Payment payment) {
-        UserResponseDTO user = UserResponseDTO.fromUser(order.getUser());
+        PersonResponseDTO user = PersonResponseDTO.fromPerson(order.getUser());
         AdminPaymentDTO paymentDetailsDTO = payment != null
                 ? AdminPaymentDTO.fromPayment(payment) : null;
 
