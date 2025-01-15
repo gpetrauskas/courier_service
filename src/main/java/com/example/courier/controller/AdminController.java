@@ -94,9 +94,9 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
 
-        Optional<UserDetailsDTO> userDetailsDTO = adminService.findUserById(id);
-        if (userDetailsDTO.isPresent()) {
-            return ResponseEntity.ok(userDetailsDTO);
+        Optional<PersonDetailsDTO> personDetailsDTO = adminService.findPersonById(id);
+        if (personDetailsDTO.isPresent()) {
+            return ResponseEntity.ok(personDetailsDTO);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found.");
         }
@@ -115,11 +115,11 @@ public class AdminController {
 
     @PostMapping("/updateUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> updateUser(@PathVariable Long id, @RequestBody UserDetailsDTO userDetailsDTO) {
+    public ResponseEntity<Map<String, String>> updateUser(@PathVariable Long id, @RequestBody PersonDetailsDTO personDetailsDTO) {
         Map<String, String> response = new HashMap<>();
         try {
             logger.info("Admin controller: before userUpdate");
-            adminService.updateUser(id, userDetailsDTO);
+            adminService.updateUser(id, personDetailsDTO);
             logger.info("User updated successfully.");
             response.put("message", "User was updated successfully");
             return ResponseEntity.ok(response);

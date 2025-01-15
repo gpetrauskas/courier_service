@@ -5,7 +5,7 @@ import com.example.courier.domain.*;
 import com.example.courier.domain.Package;
 import com.example.courier.dto.*;
 import com.example.courier.dto.mapper.OrderMapper;
-import com.example.courier.dto.mapper.UserMapper;
+import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.exception.OrderNotFoundException;
 import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.PricingOptionNotFoundException;
@@ -84,13 +84,13 @@ public class AdminService {
         return new PageImpl<>(allPersonDTOs, pageable, personPage.getTotalElements());
     }
 
-    public Optional<UserDetailsDTO> findUserById(Long id) {
+    public Optional<PersonDetailsDTO> findPersonById(Long id) {
         try {
-            User user = userRepository.findById(id).orElseThrow(() ->
+            Person person = personRepository.findById(id).orElseThrow(() ->
                     new UserNotFoundException("User was not found"));
-            UserDetailsDTO userDetailsDTO = UserMapper.INSTANCE.toUserDetailsDTO(user);
+            PersonDetailsDTO personDetailsDTO = PersonMapper.INSTANCE.toPersonDetailsDTO(person);
 
-            return Optional.of(userDetailsDTO);
+            return Optional.of(personDetailsDTO);
         } catch (UserNotFoundException e) {
             logger.warn("User not found", e.getMessage());
             return Optional.empty();
@@ -100,7 +100,7 @@ public class AdminService {
         }
     }
 
-    public void updateUser(Long id, UserDetailsDTO updatedUser) {
+    public void updateUser(Long id, PersonDetailsDTO updatedUser) {
         try {
             User existingUser = userRepository.findById(id).orElseThrow(() ->
                     new UserNotFoundException("User was not found."));
@@ -113,7 +113,7 @@ public class AdminService {
         }
     }
 
-    private void updateUserFields(User existingUse, UserDetailsDTO updatedUser) {
+    private void updateUserFields(User existingUse, PersonDetailsDTO updatedUser) {
         if (updatedUser.name() != null) {
             existingUse.setName(updatedUser.name());
         }
