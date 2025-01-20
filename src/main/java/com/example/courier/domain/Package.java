@@ -2,6 +2,7 @@ package com.example.courier.domain;
 
 import com.example.courier.common.PackageStatus;
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
 
@@ -28,6 +29,10 @@ public class Package implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PackageStatus status;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean isAssigned;
 
     public Package() {}
 
@@ -85,5 +90,13 @@ public class Package implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public boolean isAssigned() {
+        return isAssigned;
+    }
+
+    public void setAssigned(boolean assigned) {
+        isAssigned = assigned;
     }
 }
