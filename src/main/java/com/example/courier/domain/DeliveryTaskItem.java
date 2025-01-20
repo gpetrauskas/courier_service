@@ -11,11 +11,11 @@ public class DeliveryTaskItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private DeliveryTask task;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "package_id", nullable = false)
     private Package parcel;
 
@@ -23,11 +23,11 @@ public class DeliveryTaskItem {
     @Column(nullable = false)
     private PackageStatus status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_address_id", nullable = false)
     private OrderAddress senderAddress;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_address_id", nullable = false)
     private OrderAddress recipientAddress;
 
