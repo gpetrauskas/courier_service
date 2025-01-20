@@ -25,6 +25,9 @@ public class DeliveryTask {
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin createdBy;
 
+    @Column(name = "canceled_by_admin_id")
+    private Long canceledByAdminId;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DeliveryTaskItem> items = new ArrayList<>();
 
@@ -100,5 +103,13 @@ public class DeliveryTask {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public Long getCanceledByAdminId() {
+        return canceledByAdminId;
+    }
+
+    public void setCanceledByAdminId(Long canceledByAdminId) {
+        this.canceledByAdminId = canceledByAdminId;
     }
 }
