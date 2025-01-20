@@ -366,7 +366,52 @@ public class AdminController {
     public ResponseEntity<List<DeliveryTaskDTO>> getAllDeliveryLists() {
         List<DeliveryTaskDTO> tasksList = adminService.getAllDeliveryLists();
 
+        for (DeliveryTaskDTO taskDTO : tasksList) {
+            for (DeliveryTaskItemDTO itemDTO : taskDTO.itemsList()) {
+                System.out.println(itemDTO.packageDTO().status());
+            }
+        }
+
         return ResponseEntity.ok(tasksList);
+    }
+
+    @PostMapping("/deleteDeliveryTaskItemFromTheTask/{taskId}/item/{itemId}/remove")
+    public ResponseEntity<?> deleteDeliveryTaskItemFromTheTask(@PathVariable Long taskId, @PathVariable Long itemId) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            adminService.deleteDeliveryTaskItem(taskId, itemId);
+            logger.info("Successfully deleted delivery task item. Task ID: {}, Item ID: {}", taskId, itemId);
+            response.put("message", "Delivery task item removed successfully.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error while deleting delivery task item", e);
+            response.put("error", "Failed to delete delivery task item: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/testinu")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> testinu() {
+        logger.info("testinu");
+        return ResponseEntity.ok().body("ok");
+    }
+
+    @PostMapping("/cancelTask/{taskId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> cancelTask(@PathVariable Long taskId) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            adminService.cancelTask(taskId);
+
+            response.put("message", "Task with ID: " + taskId + " successfully canceled,");
+            logger.info("Task with ID {} successfully canceled", taskId);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            logger.error("Error while canceling task with id {}: {}", taskId, e.getMessage(), e);
+            response.put("error", "An error occrred while canceling the task: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 }
 

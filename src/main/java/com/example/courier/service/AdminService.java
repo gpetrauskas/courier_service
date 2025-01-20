@@ -13,6 +13,7 @@ import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.*;
 import com.example.courier.specification.OrderSpecification;
 import com.example.courier.specification.UserSpecification;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -390,48 +392,54 @@ public class AdminService {
         orderRepository.save(order);
     }
 
+    @Transactional
     public void createNewCourierTask(CreateTaskDTO taskDTO) {
-        Admin admin = getAuthenticatedAdmin();
-        Courier courier = courierRepository.findById(taskDTO.courierId()).orElseThrow(() ->
-                new RuntimeException("Courier not found with given id"));
+        try {
+            Admin admin = getAuthenticatedAdmin();
+            Courier courier = courierRepository.findById(taskDTO.courierId()).orElseThrow(() ->
+                    new RuntimeException("Courier not found with given id"));
 
-        logger.info(taskDTO.parcelsIds().toString());
+            logger.info(taskDTO.parcelsIds().toString());
 
 
-        DeliveryTask deliveryTask = new DeliveryTask();
-        deliveryTask.setTaskType(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
-                TaskType.PICKUP : TaskType.DELIVERY);
-        deliveryTask.setCreatedBy(admin);
-        deliveryTask.setCourier(courier);
-        deliveryTask.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
+            DeliveryTask deliveryTask = new DeliveryTask();
+            deliveryTask.setTaskType(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
+                    TaskType.PICKUP : TaskType.DELIVERY);
+            deliveryTask.setCreatedBy(admin);
+            deliveryTask.setCourier(courier);
+            deliveryTask.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
 
-        System.out.println(taskDTO.parcelsIds());
+            System.out.println(taskDTO.parcelsIds());
 
-        List<Package> packageList = packageRepository.findAllById(taskDTO.parcelsIds());
+            List<Package> packageList = packageRepository.findAllById(taskDTO.parcelsIds());
 
-        List<DeliveryTaskItem> items = packageList.stream()
-                .map(p -> {
-                    p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
-                            PackageStatus.PICKING_UP : PackageStatus.DELIVERING);
-                    DeliveryTaskItem item = new DeliveryTaskItem();
-                    item.setParcel(p);
-                    item.setTask(deliveryTask);
-                    item.setStatus(p.getStatus());
+            List<DeliveryTaskItem> items = packageList.stream()
+                    .map(p -> {
+                        p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
+                                PackageStatus.PICKING_UP : PackageStatus.DELIVERING);
+                        DeliveryTaskItem item = new DeliveryTaskItem();
+                        item.setParcel(p);
+                        item.setTask(deliveryTask);
+                        item.setStatus(p.getStatus());
 
-                    Order order = orderRepository.findByPackageDetails(p).orElseThrow(() ->
-                            new RuntimeException("Order not found"));
+                        Order order = orderRepository.findByPackageDetails(p).orElseThrow(() ->
+                                new RuntimeException("Order not found"));
 
-                    item.setSenderAddress(order.getSenderAddress());
-                    item.setRecipientAddress(order.getRecipientAddress());
-                    return item;
-                }).toList();
+                        item.setSenderAddress(order.getSenderAddress());
+                        item.setRecipientAddress(order.getRecipientAddress());
+                        return item;
+                    }).toList();
 
-        deliveryTask.setItems(items);
-        courier.setHasActiveTask(true);
+            deliveryTask.setItems(items);
+            courier.setHasActiveTask(true);
 
-        deliveryTaskRepository.save(deliveryTask);
-        courierRepository.save(courier);
-        packageRepository.saveAll(packageList);
+            deliveryTaskRepository.save(deliveryTask);
+            courierRepository.save(courier);
+            packageRepository.saveAll(packageList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
 
     }
 
@@ -477,33 +485,35 @@ public class AdminService {
         }
         throw new RuntimeException("No authenticated admin found");
     }
-
     public List<DeliveryTaskDTO> getAllDeliveryLists() {
         List<DeliveryTask> tasksList = deliveryTaskRepository.findAll();
+        System.out.println("Tasks list size: " + tasksList.size());
 
         return tasksList.stream()
-                .map(t -> new DeliveryTaskDTO(
-                        t.getId(),
-                        new CourierDTO(t.getCourier().getId(), t.getCourier().getName(), t.getCourier().getEmail()),
-                        t.getCreatedBy().getId(),
-                        t.getItems().stream()
-                                .map(item -> {
-                                    /*
-                                    Order order = orderRepository.findByPackageDetails(item.getParcel()).orElseThrow(() ->
-                                            new RuntimeException("Order not found for package id " + item.getParcel().getId()));
-                                     */
+                .map(t -> {
+                    System.out.println("Processing task ID: " + t.getId());
+                    List<DeliveryTaskItemDTO> items = t.getItems().stream()
+                            .map(item -> {
+                                System.out.println("Processing item ID: " + item.getId());
+                                OrderAddressDTO senderAddressDTO = OrderAddressDTO.fromOrderAddress(item.getSenderAddress());
+                                OrderAddressDTO recipientAddressDTO = OrderAddressDTO.fromOrderAddress(item.getRecipientAddress());
+                                DeliveryTaskItemDTO dto = DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO);
+                                System.out.println("Created DeliveryTaskItemDTO for item ID: " + item.getId());
+                                return dto;
+                            })
+                            .toList();
 
-                                    OrderAddressDTO senderAddressDTO = OrderAddressDTO.fromOrderAddress(item.getSenderAddress());
-                                    OrderAddressDTO recipientAddressDTO = OrderAddressDTO.fromOrderAddress(item.getRecipientAddress());
-
-                                    return DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO);
-                                })
-                                .toList(),
-                        t.getTaskType(),
-                        t.getDeliveryStatus(),
-                        t.getCreatedAt(),
-                        t.getCompletedAt()
-                ))
+                    return new DeliveryTaskDTO(
+                            t.getId(),
+                            new CourierDTO(t.getCourier().getId(), t.getCourier().getName(), t.getCourier().getEmail()),
+                            t.getCreatedBy().getId(),
+                            items,
+                            t.getTaskType(),
+                            t.getDeliveryStatus(),
+                            t.getCreatedAt(),
+                            t.getCompletedAt()
+                    );
+                })
                 .toList();
     }
 
@@ -521,5 +531,35 @@ public class AdminService {
                 root.type().in(Admin.class, Courier.class, User.class));
 
         return specification;
+    }
+
+    public void deleteDeliveryTaskItem(Long taskId, Long itemId) {
+        DeliveryTask task = deliveryTaskRepository.getReferenceById(taskId);
+
+        task.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .forEach(i -> i.setStatus(PackageStatus.REMOVED_FROM_THE_LIST));
+
+        deliveryTaskRepository.save(task);
+    }
+
+    @Transactional
+    public void cancelTask(Long taskId) {
+        Admin admin = getAuthenticatedAdmin();
+        DeliveryTask task = deliveryTaskRepository.getReferenceById(taskId);
+
+        task.getItems().forEach(i -> {
+            i.getParcel().setAssigned(false);
+            i.setStatus(PackageStatus.CANCELED);
+            packageRepository.save(i.getParcel());
+        });
+
+        task.setDeliveryStatus(DeliveryStatus.CANCELED);
+        task.setCanceledByAdminId(admin.getId());
+
+        task.getCourier().setHasActiveTask(false);
+
+        courierRepository.save(task.getCourier());
+        deliveryTaskRepository.save(task);
     }
 }
