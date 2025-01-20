@@ -10,6 +10,7 @@ public enum PackageStatus {
     FAILED_PICKUP,
     FAILED_DELIVERY,
     CANCELED,
+    REMOVED_FROM_THE_LIST,
     NOT_SHIPPED;
 
     public static boolean isValidStatus(String status) {
