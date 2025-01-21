@@ -543,7 +543,10 @@ public class AdminService {
 
         task.getItems().stream()
                 .filter(i -> i.getId().equals(itemId))
-                .forEach(i -> i.setStatus(PackageStatus.REMOVED_FROM_THE_LIST));
+                .forEach(i -> {
+                    i.getParcel().setAssigned(false);
+                    i.setStatus(PackageStatus.REMOVED_FROM_THE_LIST);
+                });
 
         deliveryTaskRepository.save(task);
     }
