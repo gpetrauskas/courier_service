@@ -490,6 +490,7 @@ public class AdminService {
         }
         throw new RuntimeException("No authenticated admin found");
     }
+
     public List<DeliveryTaskDTO> getAllDeliveryLists() {
         List<DeliveryTask> tasksList = deliveryTaskRepository.findAll();
         System.out.println("Tasks list size: " + tasksList.size());
@@ -498,12 +499,15 @@ public class AdminService {
                 .map(t -> {
                     System.out.println("Processing task ID: " + t.getId());
                     List<DeliveryTaskItemDTO> items = t.getItems().stream()
+                            .filter(item ->
+                                    !item.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST))
                             .map(item -> {
                                 System.out.println("Processing item ID: " + item.getId());
                                 OrderAddressDTO senderAddressDTO = OrderAddressDTO.fromOrderAddress(item.getSenderAddress());
                                 OrderAddressDTO recipientAddressDTO = OrderAddressDTO.fromOrderAddress(item.getRecipientAddress());
                                 DeliveryTaskItemDTO dto = DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO, item.getStatus());
                                 System.out.println("Created DeliveryTaskItemDTO for item ID: " + item.getId());
+
                                 return dto;
                             })
                             .toList();
@@ -541,6 +545,8 @@ public class AdminService {
     public void deleteDeliveryTaskItem(Long taskId, Long itemId) {
         DeliveryTask task = deliveryTaskRepository.getReferenceById(taskId);
 
+        isItemValidForTask(task, itemId);
+
         task.getItems().stream()
                 .filter(i -> i.getId().equals(itemId))
                 .forEach(i -> {
@@ -548,7 +554,36 @@ public class AdminService {
                     i.setStatus(PackageStatus.REMOVED_FROM_THE_LIST);
                 });
 
+        checkIfNotLastItemInTheTask(task, taskId);
+
         deliveryTaskRepository.save(task);
+    }
+
+    private void isItemValidForTask(DeliveryTask task, Long itemId) {
+        boolean isValid = task.getItems().stream()
+                .anyMatch(i ->
+                        i.getId().equals(itemId) &&
+                        !i.getStatus().equals(PackageStatus.CANCELED) &&
+                        !i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST)
+                );
+
+        if (!isValid || !task.getDeliveryStatus().equals(DeliveryStatus.IN_PROGRESS)) {
+            throw new IllegalArgumentException("Item does not belong to the specified task or" +
+                    " the task is not in a progress");
+        }
+    }
+
+    private void checkIfNotLastItemInTheTask(DeliveryTask task, Long taskId) {
+        System.out.println("check items in the task count" + task.getItems().size());
+        boolean hasRemainingItems = task.getItems().stream()
+                .anyMatch(i ->
+                        !i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST) &&
+                        !i.getStatus().equals(PackageStatus.CANCELED)
+                );
+
+        if (!hasRemainingItems) {
+            cancelTask(taskId);
+        }
     }
 
     @Transactional
@@ -556,9 +591,13 @@ public class AdminService {
         Admin admin = getAuthenticatedAdmin();
         DeliveryTask task = deliveryTaskRepository.getReferenceById(taskId);
 
+
+
         task.getItems().forEach(i -> {
             i.getParcel().setAssigned(false);
-            i.setStatus(PackageStatus.CANCELED);
+            if (!i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST)) {
+                i.setStatus(PackageStatus.CANCELED);
+            }
             packageRepository.save(i.getParcel());
         });
 
