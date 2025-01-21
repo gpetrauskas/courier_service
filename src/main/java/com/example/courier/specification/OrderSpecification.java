@@ -15,4 +15,11 @@ public class OrderSpecification {
             return criteriaBuilder.conjunction();
         };
     }
+
+    public static Specification<Order> hasPackageIsAssignedFalse() {
+        return ((root, query, criteriaBuilder) -> {
+            Join<Object, Object> packageJoin = root.join("packageDetails");
+            return criteriaBuilder.isFalse(packageJoin.get("isAssigned"));
+        });
+    }
 }

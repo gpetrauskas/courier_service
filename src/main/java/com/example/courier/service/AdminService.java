@@ -417,6 +417,7 @@ public class AdminService {
                     .map(p -> {
                         p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
                                 PackageStatus.PICKING_UP : PackageStatus.DELIVERING);
+                        p.setAssigned(true);
                         DeliveryTaskItem item = new DeliveryTaskItem();
                         item.setParcel(p);
                         item.setTask(deliveryTask);
@@ -456,7 +457,11 @@ public class AdminService {
 
     public Map<String, Object> getItemsByStatus(int page, int size, String status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
-        Specification<Order> specification = OrderSpecification.hasPackageStatus(status);
+
+        Specification<Order> specification = Specification.where(OrderSpecification.hasPackageIsAssignedFalse());
+        if (status != null && !status.isEmpty()) {
+            specification = specification.and(OrderSpecification.hasPackageStatus(status));
+        }
 
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
 
@@ -497,7 +502,7 @@ public class AdminService {
                                 System.out.println("Processing item ID: " + item.getId());
                                 OrderAddressDTO senderAddressDTO = OrderAddressDTO.fromOrderAddress(item.getSenderAddress());
                                 OrderAddressDTO recipientAddressDTO = OrderAddressDTO.fromOrderAddress(item.getRecipientAddress());
-                                DeliveryTaskItemDTO dto = DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO);
+                                DeliveryTaskItemDTO dto = DeliveryTaskItemDTO.fromDeliveryTaskItem(item, senderAddressDTO, recipientAddressDTO, item.getStatus());
                                 System.out.println("Created DeliveryTaskItemDTO for item ID: " + item.getId());
                                 return dto;
                             })
