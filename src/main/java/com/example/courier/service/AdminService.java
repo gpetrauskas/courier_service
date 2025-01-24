@@ -13,7 +13,6 @@ import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.*;
 import com.example.courier.specification.OrderSpecification;
 import com.example.courier.specification.UserSpecification;
-import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @PreAuthorize("hasRole('ADMIN')")
@@ -445,12 +441,11 @@ public class AdminService {
     }
 
     public Map<String, Number> getItemsForTheListCount() {
-        List<Package> packagesToPickup = packageRepository.findByStatus(PackageStatus.PICKING_UP);
-        List<Package> packagesDelivering = packageRepository.findByStatus(PackageStatus.DELIVERING);
-
         Map<String, Number> response = new HashMap<>();
-        response.put("toPickup", packagesToPickup.size());
-        response.put("delivering", packagesDelivering.size());
+
+        for (PackageStatus status: Arrays.asList(PackageStatus.PICKING_UP, PackageStatus.DELIVERING)) {
+            response.put(status.toString().toLowerCase(), packageRepository.countByStatusAndIsAssignedFalse(status));
+        }
 
         return response;
     }
@@ -461,6 +456,8 @@ public class AdminService {
         Specification<Order> specification = Specification.where(OrderSpecification.hasPackageIsAssignedFalse());
         if (status != null && !status.isEmpty()) {
             specification = specification.and(OrderSpecification.hasPackageStatus(status));
+        } else {
+            throw new IllegalArgumentException("Type task (status) must be specified");
         }
 
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
