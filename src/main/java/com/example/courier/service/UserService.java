@@ -1,6 +1,7 @@
 package com.example.courier.service;
 
-import com.example.courier.common.Role;
+import com.example.courier.domain.Admin;
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -79,16 +79,18 @@ public class UserService {
         newUser.setEmail(userDTO.email());
         String encodedPass = passwordEncoder.encode(userDTO.password());
         newUser.setPassword(encodedPass);
-        newUser.setRole(Role.USER);
         return newUser;
     }
 
     @Transactional
     public Map<String, String> loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            var user = personRepository.findByEmail(loginDTO.email());
-            if (user.isPresent() && passwordEncoder.matches(loginDTO.password(), user.get().getPassword())) {
-                String jwt = jwtService.createToken(loginDTO.email(), user.get().getRole().toString(), user.get().getName());
+            var person = personRepository.findByEmail(loginDTO.email());
+            if (person.isPresent() && passwordEncoder.matches(loginDTO.password(), person.get().getPassword())) {
+                Person p = person.get();
+                String role = getRole(p);
+
+                String jwt = jwtService.createToken(loginDTO.email(), role, person.get().getName());
                 Map<String, String> tokenDetails = jwtService.validateToken(jwt);
                 String authToken = tokenDetails.get("authToken");
                 String encryptedAuthToken = jwtService.encryptAuthToken(authToken);
@@ -105,6 +107,16 @@ public class UserService {
         }
         throw new RuntimeException("Invalid credentials.");
     }
+
+    private String getRole(Person person) {
+        return switch (person) {
+            case Admin ignored -> "ADMIN";
+            case Courier ignore -> "COURIER";
+            case User ignored -> "USER";
+                default -> throw new RuntimeException("Unknown person type: " + person.getClass());
+        };
+    }
+
 
     private void setCookies(HttpServletResponse response, String jwtToken, String encryptedAuthToken) {
         setJwtCookie(response, jwtToken);

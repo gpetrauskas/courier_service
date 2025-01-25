@@ -1,6 +1,5 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.Role;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -36,7 +35,7 @@ public class User extends Person {
     }
 
     public User(String name, String email, String password) {
-        super(name, email, password, Role.USER);
+        super(name, email, password);
     }
 
     public List<PaymentMethod> test() {

@@ -1,16 +1,36 @@
 package com.example.courier.specification;
 
-import com.example.courier.common.Role;
+import com.example.courier.domain.Admin;
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
+import com.example.courier.domain.User;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
     public static Specification<Person> hasRole(String role) {
-        return (root, query, criteriaBuilder) ->
-                role != null && !role.isEmpty() && Role.isValidRole(role) ?
-                        criteriaBuilder.equal(root.get("role"), Role.valueOf(role.toUpperCase()))
-                        :
-                        criteriaBuilder.conjunction();
+        return (root, query, criteriaBuilder) -> {
+            if (role == null || role.isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+
+            role.toUpperCase();
+
+            Class<?> entityClass;
+            switch (role) {
+                case "ADMIN":
+                    entityClass = Admin.class;
+                    break;
+                case "COURIER":
+                    entityClass = Courier.class;
+                    break;
+                case "USER":
+                    entityClass = User.class;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid role: " + role);
+            }
+            return criteriaBuilder.equal(root.type(), entityClass);
+        };
     }
 
     public static Specification<Person> hasUserId(Long userId) {

@@ -1,6 +1,5 @@
 package com.example.courier.config;
 
-import com.example.courier.common.Role;
 import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
 import com.example.courier.repository.AdminRepository;
@@ -31,7 +30,6 @@ public class DataInitializer implements CommandLineRunner {
             admin.setEmail("admin@email.lt");
             String encodedPassword = passwordEncoder.encode("123123123123");
             admin.setPassword(encodedPassword);
-            admin.setRole(Role.ADMIN);
             System.out.println("Initial admin created");
 
             adminRepository.save(admin);
@@ -41,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
             courier.setEmail("kurjeris2@test.k");
             String encodedPassword = passwordEncoder.encode("123123123123");
             courier.setPassword(encodedPassword);
-            courier.setRole(Role.COURIER);
+         //   courier.setRole(Role.COURIER);
             System.out.println("Initial courier crated");
 
             courierRepository.save(courier);

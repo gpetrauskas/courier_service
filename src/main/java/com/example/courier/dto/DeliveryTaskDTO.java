@@ -2,7 +2,6 @@ package com.example.courier.dto;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.TaskType;
-import com.example.courier.domain.DeliveryTask;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -118,9 +118,6 @@ public class AdminService {
         if (updatedUser.email() != null) {
             existingUse.setEmail(updatedUser.email());
         }
-        if (updatedUser.role() != null) {
-            existingUse.setRole(Role.valueOf(updatedUser.role()));
-        }
     }
 
     public void deleteUser(Long id) {
@@ -213,7 +210,6 @@ public class AdminService {
             report.append(user.getName()).append("\t");
             report.append(user.getEmail()).append("\t");
             report.append(user.getAddresses()).append("\t");
-            report.append(user.getRole()).append("\n");
         }
         return report.toString();
     }

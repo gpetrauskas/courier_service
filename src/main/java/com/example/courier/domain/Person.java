@@ -1,6 +1,5 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -21,10 +20,6 @@ public abstract class Person {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-
     @Column(name = "is_blocked", nullable = false)
     @ColumnDefault("false")
     private boolean isBlocked;
@@ -36,11 +31,10 @@ public abstract class Person {
 
     public Person() {}
 
-    public Person(String name, String email, String password, Role role) {
+    public Person(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.role = role;
     }
 
     public Long getId() {
@@ -69,14 +63,6 @@ public abstract class Person {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 
     public boolean isBlocked() {
