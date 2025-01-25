@@ -85,12 +85,13 @@ public class UserService {
     @Transactional
     public Map<String, String> loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            var person = personRepository.findByEmail(loginDTO.email());
-            if (person.isPresent() && passwordEncoder.matches(loginDTO.password(), person.get().getPassword())) {
-                Person p = person.get();
-                String role = getRole(p);
+            var person = personRepository.findByEmail(loginDTO.email()).orElseThrow(() ->
+                    new RuntimeException("Invalid credentials"));
 
-                String jwt = jwtService.createToken(loginDTO.email(), role, person.get().getName());
+            if (passwordEncoder.matches(loginDTO.password(), person.getPassword())) {
+                String role = getRole(person);
+
+                String jwt = jwtService.createToken(loginDTO.email(), role, person.getName());
                 Map<String, String> tokenDetails = jwtService.validateToken(jwt);
                 String authToken = tokenDetails.get("authToken");
                 String encryptedAuthToken = jwtService.encryptAuthToken(authToken);
@@ -99,7 +100,6 @@ public class UserService {
 
                 Map<String, String> responseMap = new HashMap<>();
                 responseMap.put("message", "Login successfully");
-
                 return responseMap;
             }
         } catch (Exception e) {
@@ -111,9 +111,9 @@ public class UserService {
     private String getRole(Person person) {
         return switch (person) {
             case Admin ignored -> "ADMIN";
-            case Courier ignore -> "COURIER";
+            case Courier ignored -> "COURIER";
             case User ignored -> "USER";
-                default -> throw new RuntimeException("Unknown person type: " + person.getClass());
+                default -> throw new IllegalArgumentException("Unknown person type: " + person.getClass());
         };
     }
 
