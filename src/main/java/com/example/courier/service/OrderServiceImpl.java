@@ -38,13 +38,13 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private PaymentService paymentService;
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     @Autowired
     private  PricingOptionService pricingOptionService;
 
     @Transactional
     public Long placeOrder(Long userId, OrderDTO orderDTO) {
-        User user = userService.getUserById(userId);
+        User user = authService.getUserById(userId);
 
         OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
         OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);

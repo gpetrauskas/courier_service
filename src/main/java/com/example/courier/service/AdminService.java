@@ -602,4 +602,15 @@ public class AdminService {
         courierRepository.save(task.getCourier());
         deliveryTaskRepository.save(task);
     }
+
+    public ResponseEntity<String> createCourierAccount(RegistrationDTO registrationDTO) {
+
+        Courier courier = new Courier();
+        courier.setName(registrationDTO.name());
+        courier.setEmail(registrationDTO.email());
+
+
+
+        return null;
+    }
 }

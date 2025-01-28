@@ -6,12 +6,9 @@ import com.example.courier.domain.User;
 import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +21,7 @@ public class PaymentMethodService {
     private final Logger logger = LoggerFactory.getLogger(PaymentMethodService.class);
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
     @Autowired
@@ -32,7 +29,7 @@ public class PaymentMethodService {
 
     @Transactional
     public void addPaymentMethod(Long userId, PaymentMethodDTO paymentMethodDTO) {
-        User user = userService.getUserById(userId);
+        User user = authService.getUserById(userId);
 
         PaymentMethod paymentMethod = createPaymentMethod(paymentMethodDTO, user);
         savePaymentMethod(paymentMethod);

@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecificationExecutor<Person> {
     Optional<Person>findByEmail(String email);
     Page<Person> findAll(Specification<Person> specification, Pageable pageable);
+    Boolean existsByEmail(String email);
 }

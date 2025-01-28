@@ -31,7 +31,7 @@ public class OrderServiceTest {
     @InjectMocks
     private OrderServiceImpl orderService;
     @Mock
-    private UserService userService;
+    private AuthService authService;
     @Mock
     private AddressService addressService;
     @Mock
@@ -73,7 +73,7 @@ public class OrderServiceTest {
 
     @Test
     public void testPlaceOrder_Success() {
-        when(userService.getUserById(1L)).thenReturn(user);
+        when(authService.getUserById(1L)).thenReturn(user);
         when(addressService.fetchOrCreateOrderAddress(any(AddressDTO.class), eq(user)))
                 .thenReturn(new OrderAddress());
         when(orderMapper.toOrder(orderDTO)).thenReturn(order);

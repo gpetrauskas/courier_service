@@ -3,9 +3,8 @@ package com.example.courier.controller;
 import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
-import com.example.courier.dto.UserDTO;
 import com.example.courier.repository.UserRepository;
-import com.example.courier.service.UserService;
+import com.example.courier.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,35 +26,20 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
-@RequestMapping("/api/user")
-public class UserController {
+@RequestMapping("/api/auth")
+public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     @Autowired
     private UserRepository userRepository;
-
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO) {
-        logger.info("Received a registration request for user: {}", userDTO.email());
-        Map<String, String> response = new HashMap<>();
-        try {
-            userService.registerUser(userDTO);
-            response.put("message", "User registered successfully");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error occurred while registering: {}", e.getMessage());
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginDTO loginDTO, HttpServletResponse response) {
         Map<String, String> loginResponse = new HashMap<>();
         try {
-            Map<String, String> loginResult = userService.loginUser(loginDTO, response);
+            Map<String, String> loginResult = authService.loginUser(loginDTO, response);
             loginResponse.put("message", loginResult.get("message"));
 
             logger.info("User {} logged in successfully", loginDTO.email());

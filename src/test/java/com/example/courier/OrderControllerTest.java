@@ -5,7 +5,7 @@ import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.service.OrderService;
 import com.example.courier.service.PricingOptionService;
-import com.example.courier.service.UserService;
+import com.example.courier.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -27,7 +27,7 @@ public class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
     @Mock
-    private UserService userService;
+    private AuthService authService;
     @Mock
     private PricingOptionService pricingOptionService;
     @Mock
@@ -51,7 +51,7 @@ public class OrderControllerTest {
 
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("myemail@mail.com");
-        when(userService.getUserByEmail("myemail@mail.com")).thenReturn(user);
+        when(authService.getUserByEmail("myemail@mail.com")).thenReturn(user);
         when(pricingOptionService.calculateShippingCost(orderDTO)).thenReturn(shippingCost);
 
         ResponseEntity<?> response = orderController.addOrder(orderDTO);
@@ -68,7 +68,7 @@ public class OrderControllerTest {
 
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("myemail@mail.com");
-        when(userService.getUserByEmail("myemail.@mail.com")).thenThrow(new RuntimeException());
+        when(authService.getUserByEmail("myemail.@mail.com")).thenThrow(new RuntimeException());
 
         ResponseEntity<?> response = orderController.addOrder(orderDTO);
 

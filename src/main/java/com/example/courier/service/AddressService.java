@@ -30,14 +30,14 @@ public class AddressService {
     @Autowired
     private AddressMapper addressMapper;
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     @Autowired
     private OrderAddressRepository orderAddressRepository;
 
     @Transactional(readOnly = true)
     public List<AddressDTO> getAllMyAddresses(String email) {
         try {
-            Long userId = userService.getUserIdByEmail(email);
+            Long userId = authService.getUserIdByEmail(email);
             List<Address> addresses = getAddressesByUserId(userId);
 
             return addresses.stream()
@@ -79,6 +79,7 @@ public class AddressService {
         Address address;
         try {
             if (addressDTO.id() != null) {
+                logger.info("Address found with id {}", addressDTO.id());
                 validateAddressUser(addressDTO.id(), user.getEmail());
                 address = getAddressById(addressDTO.id());
 
@@ -89,8 +90,10 @@ public class AddressService {
                     address.setPhoneNumber(addressDTO.phoneNumber());
                 }
             } else {
+                logger.info("Address not found. Creating new one.");
                 address = createNewAddress(addressDTO, user);
             }
+            logger.info("Creating order address from address. ID: {}", address.getId());
             return createOrderAddressFromAddress(address);
         } catch (Exception e) {
             logger.error("Failed to fetch or create OrderAddress for addressDTO {} and user {}", addressDTO, user, e);
@@ -99,7 +102,7 @@ public class AddressService {
     }
 
     public void validateAddressUser(Long addressId, String userEmail) {
-        User user = userService.getUserByEmail(userEmail);
+        User user = authService.getUserByEmail(userEmail);
         Address address = getAddressById(addressId);
 
         if (!address.getUser().getId().equals(user.getId())) {
@@ -112,6 +115,7 @@ public class AddressService {
     private Address createNewAddress(AddressDTO addressDTO, User user) {
         Address address = addressMapper.toAddress(addressDTO);
         address.setUser(user);
+        logger.info("New address created. Id: {}", address.getId());
         return addressRepository.saveAndFlush(address);
     }
 

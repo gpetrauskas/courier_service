@@ -8,7 +8,7 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.service.OrderService;
 import com.example.courier.service.PricingOptionService;
 import com.example.courier.service.TrackingService;
-import com.example.courier.service.UserService;
+import com.example.courier.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class OrderController {
     @Autowired
     private TrackingService trackingService;
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     @Autowired
     private PricingOptionService pricingOptionService;
 
@@ -44,7 +44,7 @@ public class OrderController {
     public ResponseEntity<?> getUserOrders(@RequestParam("page") int page, @RequestParam("size") int size) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = userService.getUserByEmail(auth.getName());
+            User user = authService.getUserByEmail(auth.getName());
             List<OrderDTO> orders = orderService.findUserOrders(user);
 
             int start = (page - 1) * size;
@@ -88,7 +88,7 @@ public class OrderController {
     public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = userService.getUserByEmail(auth.getName());
+            User user = authService.getUserByEmail(auth.getName());
             BigDecimal shippingCost = pricingOptionService.calculateShippingCost(orderDTO);
             Long orderId = orderService.placeOrder(user.getId(), orderDTO);
 
