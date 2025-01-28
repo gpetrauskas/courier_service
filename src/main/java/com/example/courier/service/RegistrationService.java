@@ -45,7 +45,7 @@ public class RegistrationService {
 
     private void validateUserRegistration(RegistrationDTO registrationDTO) {
         logger.info("Checking if user exists with email: {}", registrationDTO.email());
-        Boolean emailAlreadyExists = personRepository.existsByEmail(registrationDTO.email());
+        boolean emailAlreadyExists = personRepository.existsByEmail(registrationDTO.email());
         if (emailAlreadyExists) {
             logger.warn("Registration failed: EMail {} already registered", registrationDTO.email());
             throw new ValidationException("Email " + registrationDTO.email() + " is already registered");
