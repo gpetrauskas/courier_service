@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.config.CookieUtils;
 import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
@@ -56,20 +57,6 @@ public class AuthController {
     public ResponseEntity<Boolean> checkAuthStatus(Authentication authentication) {
         boolean isAuthenticated = authentication != null && authentication.isAuthenticated();
         return ResponseEntity.ok(isAuthenticated);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/logout")
-    public ResponseEntity<Boolean> logout(HttpServletRequest request, HttpServletResponse response) {
-        try {
-
-            request.getSession().invalidate();
-            //userService.logoutUser(response);
-
-            return ResponseEntity.ok(true);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
-        }
     }
 
     @PreAuthorize("isAuthenticated()")
