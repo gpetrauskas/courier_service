@@ -60,6 +60,8 @@ public class AdminService {
     private OrderMapper orderMapper;
     @Autowired
     private PricingOptionService pricingOptionService;
+    @Autowired
+    private RegistrationService registrationService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
     public Page<PersonResponseDTO> findAllUsers(int page, int size, String role, String search) {
@@ -601,16 +603,5 @@ public class AdminService {
 
         courierRepository.save(task.getCourier());
         deliveryTaskRepository.save(task);
-    }
-
-    public ResponseEntity<String> createCourierAccount(RegistrationDTO registrationDTO) {
-
-        Courier courier = new Courier();
-        courier.setName(registrationDTO.name());
-        courier.setEmail(registrationDTO.email());
-
-
-
-        return null;
     }
 }

@@ -8,7 +8,8 @@ import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.DeliveryTaskItemRepository;
 import com.example.courier.repository.PackageRepository;
 import com.example.courier.service.AdminService;
-import com.example.courier.service.UserService;
+import com.example.courier.service.AuthService;
+import com.example.courier.service.RegistrationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +31,13 @@ public class AdminController {
     private PackageRepository packageRepository;
     @Autowired
     private AdminService adminService;
-
+    @Autowired
+    private RegistrationService registrationService;
     @Autowired
     private DeliveryTaskItemRepository deliveryTaskItemRepository;
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     @PostMapping("/updateProductStatus/{trackingNumber}")
@@ -104,9 +106,9 @@ public class AdminController {
 
     @PostMapping("/createUser")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> createUser(@RequestBody RegistrationDTO registrationDTO) {
         try {
-            userService.registerUser(userDTO);
+            //userService.registerUser(registrationDTO);
             return ResponseEntity.ok("User registered successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Where was an error during registration: " + e.getMessage());
@@ -410,6 +412,21 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("Error while canceling task with id {}: {}", taskId, e.getMessage(), e);
             response.put("error", "An error occrred while canceling the task: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("registerCourier")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> registerCourier(@RequestBody RegistrationDTO registrationDTO) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            registrationService.createCourier(registrationDTO);
+            response.put("success", "Courier registered successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.warn("Error while registering courier");
+            response.put("error", "Error while registering courier: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
