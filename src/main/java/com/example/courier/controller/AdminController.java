@@ -42,10 +42,12 @@ public class AdminController {
 
     @PostMapping("/updateProductStatus/{trackingNumber}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateProductStatus(@PathVariable String trackingNumber, @RequestParam PackageStatus newStatus) {
+    public ResponseEntity<Map<String, String>> updateProductStatus(@PathVariable String trackingNumber, @RequestParam PackageStatus newStatus) {
+        Map<String, String> response = new HashMap<>();
         try {
             if (!PackageStatus.isValidStatus(newStatus.name())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid status.");
+                response.put("error", "Invalid status.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
             Package packageDetails = packageRepository.findByTrackingNumber(trackingNumber).orElseThrow(() ->
@@ -54,11 +56,14 @@ public class AdminController {
             packageDetails.setStatus(newStatus);
             packageRepository.save(packageDetails);
 
-            return ResponseEntity.ok("Package status updated successfully.");
+            response.put("success", "Package status updated successfully");
+            return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Problem occurred during package status update;");
+            response.put("error", "Problem occurred during package status change: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -73,7 +78,7 @@ public class AdminController {
 
     @GetMapping("/getAllUsers")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getAllUsers(
+    public ResponseEntity<PaginatedResponseDTO<PersonResponseDTO>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String role,
@@ -81,13 +86,8 @@ public class AdminController {
 
         logger.info("role {}, search {}", role, search);
 
-        Page<PersonResponseDTO> userPage = adminService.findAllUsers(page, size, role, search);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("users", userPage.getContent());
-        response.put("currentPage", userPage.getNumber());
-        response.put("totalItems", userPage.getTotalElements());
-        response.put("totalPages", userPage.getTotalPages());
+        PaginatedResponseDTO<PersonResponseDTO> response = adminService
+                .findAllUsersPaginated(page, size, role, search);
 
         return ResponseEntity.ok(response);
     }

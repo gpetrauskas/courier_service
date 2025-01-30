@@ -64,7 +64,7 @@ public class AdminService {
     private RegistrationService registrationService;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
 
-    public Page<PersonResponseDTO> findAllUsers(int page, int size, String role, String search) {
+    private Page<PersonResponseDTO> findAllUsers(int page, int size, String role, String search) {
         System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
@@ -82,6 +82,17 @@ public class AdminService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(allPersonDTOs, pageable, personPage.getTotalElements());
+    }
+
+    public PaginatedResponseDTO<PersonResponseDTO> findAllUsersPaginated(int page, int size, String role, String search) {
+        Page<PersonResponseDTO> userPage = findAllUsers(page, size, role, search);
+
+        return new PaginatedResponseDTO<>(
+                userPage.getContent(),
+                userPage.getNumber(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages()
+        );
     }
 
     public Optional<PersonDetailsDTO> findPersonById(Long id) {
