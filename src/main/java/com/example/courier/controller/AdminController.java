@@ -94,14 +94,8 @@ public class AdminController {
 
     @GetMapping("/getUserById/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-
-        Optional<PersonDetailsDTO> personDetailsDTO = adminService.findPersonById(id);
-        if (personDetailsDTO.isPresent()) {
-            return ResponseEntity.ok(personDetailsDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found.");
-        }
+    public ResponseEntity<PersonDetailsDTO> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.findPersonById(id));
     }
 
     @PostMapping("/createUser")
@@ -119,119 +113,80 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> updateUser(@PathVariable Long id, @RequestBody PersonDetailsDTO personDetailsDTO) {
         Map<String, String> response = new HashMap<>();
-        try {
-            logger.info("Admin controller: before userUpdate");
-            adminService.updateUser(id, personDetailsDTO);
-            logger.info("User updated successfully.");
-            response.put("message", "User was updated successfully");
-            return ResponseEntity.ok(response);
-        } catch (UserNotFoundException e) {
-            logger.info("User was not found.");
-            response.put("error", "User was not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        } catch (Exception e) {
-            logger.info("Unexpected error occurred: {}", e.getMessage());
-            response.put("error", "Error Occurred during user update");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+
+        logger.info("Admin controller: before userUpdate");
+        adminService.updateUser(id, personDetailsDTO);
+        logger.info("User updated successfully.");
+
+        response.put("message", "User was updated successfully");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/updateOrder/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateOrderSection(@PathVariable Long id, @RequestBody Map<String, Object> updateData) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            logger.info("Trying to edit order with id: {} details", id);
-            adminService.updateSection(updateData);
-            response.put("message", "Success");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error occurred while editing order details with order id: {}", id, e);
-            response.put("message", "Error occurred");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public ResponseEntity<ApiResponseDTO> updateOrderSection(@PathVariable Long id, @RequestBody Map<String, Object> updateData) {
+        logger.info("Trying to edit order with id: {}", id);
+        adminService.updateSection(updateData);
+        logger.info("Order with id: {} updated successfully", id);
+        ApiResponseDTO response = new ApiResponseDTO("success", "Order updated successfully");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/deleteUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            logger.info("Request to delete user with id: {}", id);
-            adminService.deleteUser(id);
-            response.put("success", "User deleted successfully.");
-            return ResponseEntity.ok(response);
-        } catch (UserNotFoundException e) {
-            logger.warn("deleteUser: {}", e.getMessage());
-            response.put("error", "Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        } catch (Exception e) {
-            logger.warn("Error occurred: {}", e.getMessage());
-            response.put("error", "Error occurred: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        logger.info("Request to delete user with id: {}", id);
+        adminService.deleteUser(id);
+        ApiResponseDTO response = new ApiResponseDTO("success", "User deleted successfully.");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/banUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> banUser(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            logger.info("Request to ban user with id {}", id);
-            adminService.banUser(id);
+    public ResponseEntity<ApiResponseDTO> banUser(@PathVariable Long id) {
+        logger.info("Request to ban user with id {}", id);
+        adminService.banUser(id);
 
-            response.put("success", "User with id " + id + ", was successfully banned.");
-            return ResponseEntity.ok(response);
-        } catch (UserNotFoundException e) {
-            logger.warn("User with id {}, was not found", id);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+        ApiResponseDTO response = new ApiResponseDTO("success", "User with id " + id + ", was successfully banned.");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/unbanUser/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> unbanUser(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            logger.info("Request to unban user with id {}", id);
-            adminService.unbanUser(id);
+        logger.info("Request to unban user with id {}", id);
+        adminService.unbanUser(id);
 
-            response.put("success", "User with id" +  id + " was unbanned successfully.");
-            return ResponseEntity.ok(response);
-        } catch (UserNotFoundException e) {
-            logger.warn("User with id {}, was not found", id);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+        ApiResponseDTO response = new ApiResponseDTO("success", "User with id" +  id + " was unbanned successfully.");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getAllOrders(
+    public ResponseEntity<PaginatedResponseDTO<AdminOrderDTO>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status
     ) {
+        logger.info("Fetching orders for page: {}, size: {}, userId: {}, status: {}", page, size, userId, status);
         Page<AdminOrderDTO> orderPage = adminService.getAllOrders(page, size, userId, status);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("orders", orderPage.getContent());
-        response.put("currentPage", orderPage.getNumber());
-        response.put("totalItems", orderPage.getTotalElements());
-        response.put("totalPages", orderPage.getTotalPages());
+        PaginatedResponseDTO<AdminOrderDTO> response = new PaginatedResponseDTO<>(
+                orderPage.getContent(),
+                orderPage.getNumber(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
 
+        logger.info("Fetched {} orders out of {}", orderPage.getNumberOfElements(), orderPage.getTotalElements());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/orders/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getOrderById(@PathVariable Long id) {
+    public ResponseEntity<AdminOrderDTO> getOrderById(@PathVariable Long id) {
         AdminOrderDTO adminOrderDTO = adminService.getOrderById(id);
-        if (adminOrderDTO == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order was not found.");
-        }
         return ResponseEntity.ok(adminOrderDTO);
     }
 
@@ -251,109 +206,67 @@ public class AdminController {
 
     @GetMapping("/pricing-options/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getPricingOptionById(@PathVariable Long id) {
-        Optional<PricingOption> option = adminService.getPricingOptionById(id);
-        if (option != null) {
-            return ResponseEntity.ok(option);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pricing option was not found");
-        }
+    public ResponseEntity<PricingOptionDTO> getPricingOptionById(@PathVariable Long id) {
+        PricingOptionDTO option = adminService.getPricingOptionById(id);
+        return ResponseEntity.ok(option);
     }
 
     @PostMapping("/create-pricing-option")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createPricingOption(@RequestBody PricingOption pricingOption) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            adminService.createPricingOption(pricingOption);
-            response.put("message", "New pricing option was added successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("error", "Error occurred while adding new pricing option. " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public ResponseEntity<ApiResponseDTO> createPricingOption(@RequestBody PricingOption pricingOption) {
+        adminService.createPricingOption(pricingOption);
+        return ResponseEntity.ok(new ApiResponseDTO("success", "Pricing option created successfully."));
     }
 
     @PutMapping("/updatePricingOption/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> updatePricingOption(@PathVariable Long id,
+    public ResponseEntity<ApiResponseDTO> updatePricingOption(@PathVariable Long id,
                                                       @RequestBody PricingOption pricingOption) {
-        try {
-            adminService.updatePricingOption(id, pricingOption);
-            return ResponseEntity.ok("Pricing option was updated successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
-        }
+        adminService.updatePricingOption(id, pricingOption);
+        return ResponseEntity.ok(new ApiResponseDTO("success", "Pricing option updated successfully."));
     }
 
     @DeleteMapping("/deletePricingOption/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deletePricingOption(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            ResponseEntity<String> message = adminService.deletePricingOption(id);
-            response.put("message", message.getBody());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("error occured while deleting pricing option", e.getMessage());
-            logger.info("Error occurred while deleting pricing option: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public ResponseEntity<ApiResponseDTO> deletePricingOption(@PathVariable Long id) {
+        String message = adminService.deletePricingOption(id);
+        return ResponseEntity.ok(new ApiResponseDTO("success", message));
     }
 
     @PostMapping("/createCourierDeliveryList")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createCourierDeliveryList(@RequestBody CreateTaskDTO taskDTO) {
-        Map<String, String> response = new HashMap<>();
-        Admin admin = adminService.getAuthenticatedAdmin();
+    public ResponseEntity<ApiResponseDTO> createCourierDeliveryList(@RequestBody CreateTaskDTO taskDTO) {
+            adminService.createNewCourierTask(taskDTO);
 
-        CreateTaskDTO updatedTaskDTO = new CreateTaskDTO(
-                taskDTO.courierId(),
-                admin.getId(),
-                taskDTO.parcelsIds(),
-                taskDTO.taskType()
-        );
-
-        try {
-            logger.info("Parcels IDs: " + updatedTaskDTO.parcelsIds());
-            logger.info("Courier ID: " + updatedTaskDTO.courierId());
-            logger.info("Task Type: " + updatedTaskDTO.taskType());
-
-            adminService.createNewCourierTask(updatedTaskDTO);
-
-            response.put("success", "Courier Task List was created successfully!");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("error", "Error occurred while creating courier list. " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+            return ResponseEntity.ok(new ApiResponseDTO("success", "Courier Task List was created successfully!"));
     }
-
 
     @GetMapping("/getItemsForTheListCount")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Number>> getItemsForTheListCount() {
-        Map<String, Number> response = adminService.getItemsForTheListCount();
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, Long>> getItemsForTheListCount() {
+        return ResponseEntity.ok(adminService.getItemsForTheListCount());
     }
 
     @GetMapping("/getItemsByStatus")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getItemsByStatus(@RequestParam("status") String status,
+    public ResponseEntity<PaginatedResponseDTO<OrderDTO>> getItemsByStatus(@RequestParam("status") String status,
                                               @RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "10") int size) {
         
-        Map<String, Object> packages = adminService.getItemsByStatus(page, size, status);
-        return ResponseEntity.ok(packages);
+        Page<OrderDTO> orderPage = adminService.getItemsByStatus(page, size, status);
+        PaginatedResponseDTO<OrderDTO> response = new PaginatedResponseDTO<>(
+                orderPage.getContent(),
+                orderPage.getNumber(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/getAvailableCouriers")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
-        List<CourierDTO> availableCouriers = adminService.getAvailableCouriers();
-
-        return ResponseEntity.ok(availableCouriers);
+        return ResponseEntity.ok(adminService.getAvailableCouriers());
     }
 
     @GetMapping("/testGet")
@@ -361,20 +274,6 @@ public class AdminController {
 
         List<DeliveryTaskItem> list = deliveryTaskItemRepository.findAll();
         return ResponseEntity.ok(list);
-    }
-
-    @GetMapping("getAllDeliveryLists")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<DeliveryTaskDTO>> getAllDeliveryLists() {
-        List<DeliveryTaskDTO> tasksList = adminService.getAllDeliveryLists();
-
-        for (DeliveryTaskDTO taskDTO : tasksList) {
-            for (DeliveryTaskItemDTO itemDTO : taskDTO.itemsList()) {
-                System.out.println(itemDTO.packageDTO().status());
-            }
-        }
-
-        return ResponseEntity.ok(tasksList);
     }
 
     @PostMapping("/deleteDeliveryTaskItemFromTheTask/{taskId}/item/{itemId}/remove")

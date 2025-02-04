@@ -10,7 +10,7 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PackageDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.exception.OrderCancellationException;
-import com.example.courier.exception.OrderNotFoundException;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
@@ -147,7 +147,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public Order findOrderById(Long orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        return orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
 
     public List<OrderDTO> findAllOrders() {
