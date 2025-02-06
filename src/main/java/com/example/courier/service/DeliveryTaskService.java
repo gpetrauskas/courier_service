@@ -28,11 +28,11 @@ public class DeliveryTaskService {
     private DeliveryTaskMapper deliveryTaskMapper;
 
     @PreAuthorize("hasRole('ADMIN')")
-    public PaginatedResponseDTO<DeliveryTaskDTO> getAllDeliveryLists(int page, int size, Long courierId,
-                                                     TaskType tType, DeliveryStatus status) {
-
+    public PaginatedResponseDTO<DeliveryTaskDTO> getAllDeliveryLists(
+            int page, int size, Long courierId, Long taskListId, TaskType tType, DeliveryStatus status
+    ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Specification<DeliveryTask> specification = DeliveryTaskSpecification.filterTasks(courierId, tType, status, false);
+        Specification<DeliveryTask> specification = DeliveryTaskSpecification.filterTasks(courierId, taskListId, tType, status, false);
 
         Page<DeliveryTask> taskPage = deliveryTaskRepository.findAll(specification, pageable);
 
