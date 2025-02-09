@@ -12,6 +12,11 @@ public class Admin extends Person {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DeliveryTask> createdTasks = new ArrayList<>();
 
+    @Override
+    public String getRole() {
+        return "ADMIN";
+    }
+
     public List<DeliveryTask> getCreatedTasks() {
         return createdTasks;
     }

@@ -1,4 +1,4 @@
-package com.example.courier.config;
+package com.example.courier.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;

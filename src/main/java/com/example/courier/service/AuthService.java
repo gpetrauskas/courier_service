@@ -125,4 +125,9 @@ public class AuthService {
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
+
+    public Person findByUsername(String username) {
+        return personRepository.findByEmail(username).orElseThrow(() ->
+             new UserNotFoundException("Person not found with username/email: " + username));
+    }
 }

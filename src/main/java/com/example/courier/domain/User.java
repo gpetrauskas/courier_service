@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 @Table(name = "users")
 public class User extends Person {
 
-
     @Column(name = "phone_number")
     private String phoneNumber;
 
@@ -32,6 +31,11 @@ public class User extends Person {
     public User() {
         super();
         this.paymentMethods = new ArrayList<>();
+    }
+
+    @Override
+    public String getRole() {
+        return "USER";
     }
 
     public User(String name, String email, String password) {

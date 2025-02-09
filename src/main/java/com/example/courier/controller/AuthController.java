@@ -1,6 +1,5 @@
 package com.example.courier.controller;
 
-import com.example.courier.config.CookieUtils;
 import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
