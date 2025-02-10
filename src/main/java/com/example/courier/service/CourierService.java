@@ -1,19 +1,15 @@
 package com.example.courier.service;
 
-import com.example.courier.common.PackageStatus;
-import com.example.courier.domain.Courier;
-import com.example.courier.domain.Package;
-import com.example.courier.dto.PackageDTO;
-//import com.example.courier.repository.CourierRepository;
-import com.example.courier.repository.PackageRepository;
+import com.example.courier.common.DeliveryStatus;
+import com.example.courier.domain.DeliveryTask;
+import com.example.courier.dto.DeliveryTaskDTO;
+import com.example.courier.dto.mapper.DeliveryTaskMapper;
+import com.example.courier.repository.DeliveryTaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.util.List;
 
 @Service
@@ -22,18 +18,16 @@ public class CourierService {
     private static final Logger logger = LoggerFactory.getLogger(CourierService.class);
 
     @Autowired
-    private PackageRepository packageRepository;
-   // @Autowired
-  //  private CourierRepository courierRepository;
+    private DeliveryTaskRepository deliveryTaskRepository;
+    @Autowired
+    private DeliveryTaskMapper deliveryTaskMapper;
 
+    public List<DeliveryTaskDTO> getCurrentTaskList(Long courierId) {
+        List<DeliveryTask> list = deliveryTaskRepository.findByCourierIdAndDeliveryStatus(courierId, DeliveryStatus.IN_PROGRESS);
 
-    public List<PackageDTO> getAllPackagesToPickUp() {
-
-            List<Package> packageList = packageRepository.findByStatus(PackageStatus.PICKING_UP);
-            List<PackageDTO> packageDTOList = packageList.stream()
-                    .map(PackageDTO::packageToDTO).toList();
-
-        return List.of();
+        return list.stream()
+                .map(deliveryTaskMapper::toDeliveryTaskDTO)
+                .toList();
     }
 
 }

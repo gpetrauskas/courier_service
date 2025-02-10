@@ -1,14 +1,14 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
 
 @Entity
-@Table(name = "packages")
-public class Package implements Serializable {
+@Table(name = "parcels")
+public class Parcel implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,15 +28,15 @@ public class Package implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PackageStatus status;
+    private ParcelStatus status;
 
     @Column(nullable = false)
     @ColumnDefault("false")
     private boolean isAssigned;
 
-    public Package() {}
+    public Parcel() {}
 
-    public Package(String weight, String dimensions, String contents, String trackingNumber, PackageStatus status) {
+    public Parcel(String weight, String dimensions, String contents, String trackingNumber, ParcelStatus status) {
         this.weight = weight;
         this.dimensions = dimensions;
         this.contents = contents;
@@ -76,11 +76,11 @@ public class Package implements Serializable {
         this.trackingNumber = trackingNumber;
     }
 
-    public PackageStatus getStatus() {
+    public ParcelStatus getStatus() {
         return status;
     }
 
-    public void setStatus(PackageStatus status) {
+    public void setStatus(ParcelStatus status) {
         this.status = status;
     }
 

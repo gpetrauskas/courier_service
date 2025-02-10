@@ -1,7 +1,7 @@
 package com.example.courier.service;
 
 import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.dto.PaymentDTO;
@@ -76,7 +76,7 @@ public class PaymentService {
     private void handlePaymentSuccess(Payment payment, Order order) {
         payment.setStatus(PaymentStatus.PAID);
         order.setStatus(OrderStatus.CONFIRMED);
-        order.getPackageDetails().setStatus(PackageStatus.PICKING_UP);
+        order.getParcelDetails().setStatus(ParcelStatus.PICKING_UP);
         savePayment(payment);
         log.info("Payment succeeded for order id {} and payment id {}", order.getId(), payment.getId());
     }

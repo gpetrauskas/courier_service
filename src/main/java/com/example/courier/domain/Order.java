@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "parcels")
 public class Order implements Serializable {
 
     @Id
@@ -28,8 +28,8 @@ public class Order implements Serializable {
     private OrderAddress recipientAddress;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "package_id", referencedColumnName = "id")
-    private Package packageDetails;
+    @JoinColumn(name = "parcel_id", referencedColumnName = "id")
+    private Parcel parcelDetails;
 
     @Column(nullable = false)
     private String deliveryPreferences;
@@ -44,11 +44,11 @@ public class Order implements Serializable {
 
     public Order() {}
 
-    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Package packageDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
+    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Parcel parcelDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
-        this.packageDetails = packageDetails;
+        this.parcelDetails = parcelDetails;
         this.deliveryPreferences = deliveryPreferences;
         this.status = status;
         this.createDate = createDate;
@@ -78,12 +78,12 @@ public class Order implements Serializable {
         this.recipientAddress = recipientAddress;
     }
 
-    public Package getPackageDetails() {
-        return packageDetails;
+    public Parcel getParcelDetails() {
+        return parcelDetails;
     }
 
-    public void setPackageDetails(Package packageDetails) {
-        this.packageDetails = packageDetails;
+    public void setParcelDetails(Parcel parcelDetails) {
+        this.parcelDetails = parcelDetails;
     }
 
     public String getDeliveryPreferences() {

@@ -2,13 +2,12 @@ package com.example.courier;
 
 
 import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Payment;
 import com.example.courier.domain.User;
 import com.example.courier.dto.*;
-import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;
 import com.example.courier.service.PaymentService;
@@ -19,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.method.HandlerMethod;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -73,9 +71,9 @@ public class PaymentServiceTest {
                 "1", "123123123", "321", "vardas");
         AddressDTO recipientAddress = new AddressDTO(2L, "klaipeda", "java", "23",
                 "3", "555123123", "421", "pavarde");
-        PackageDTO packageDTO = new PackageDTO(99L, "2kg", "30x30x30", "knygos",
-                "123456", PackageStatus.WAITING_FOR_PAYMENT);
-        OrderDTO orderDTO = new OrderDTO(88L, senderAddress, recipientAddress, packageDTO,
+        ParcelDTO parcelDTO = new ParcelDTO(99L, "2kg", "30x30x30", "knygos",
+                "123456", ParcelStatus.WAITING_FOR_PAYMENT);
+        OrderDTO orderDTO = new OrderDTO(88L, senderAddress, recipientAddress, parcelDTO,
                 "express", OrderStatus.PENDING, LocalDateTime.now());
 
         CreditCardDTO paymentMethodDTO = new CreditCardDTO(66L, "1111111111119",

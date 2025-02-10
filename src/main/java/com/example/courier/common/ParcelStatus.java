@@ -1,6 +1,6 @@
 package com.example.courier.common;
 
-public enum PackageStatus {
+public enum ParcelStatus {
     WAITING_FOR_PAYMENT,
     PICKING_UP,
     DELIVERING,
@@ -14,8 +14,8 @@ public enum PackageStatus {
     NOT_SHIPPED;
 
     public static boolean isValidStatus(String status) {
-        for (PackageStatus packageStatus : values()) {
-            if (packageStatus.name().equalsIgnoreCase(status)) {
+        for (ParcelStatus parcelStatus : values()) {
+            if (parcelStatus.name().equalsIgnoreCase(status)) {
                 return true;
             }
         }

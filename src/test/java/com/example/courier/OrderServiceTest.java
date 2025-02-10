@@ -1,14 +1,14 @@
 package com.example.courier;
 
 import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.OrderAddress;
-import com.example.courier.domain.Package;
+import com.example.courier.domain.Parcel;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.PackageDTO;
+import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PaymentRepository;
@@ -48,7 +48,7 @@ public class OrderServiceTest {
     private User user;
     private OrderDTO orderDTO;
     private Order order;
-    private Package aPackage;
+    private Parcel aParcel;
 
     @BeforeEach
     public void setUp() {
@@ -60,14 +60,14 @@ public class OrderServiceTest {
 
         AddressDTO senderAddress = new AddressDTO(1L, "klaipeda", "sezamu", "13", "1", "123123123", "321", "vardas");
         AddressDTO recipientAddress = new AddressDTO(2L, "klaipeda", "javos", "23", "3", "55123321", "421", "bevardis");
-        PackageDTO packageDTO = new PackageDTO(99L, "2kg", "30x30x30", "knygos", "12312312151555", PackageStatus.PICKING_UP);
-        orderDTO = new OrderDTO(88L, senderAddress, recipientAddress, packageDTO, "express", OrderStatus.PENDING, LocalDateTime.now());
+        ParcelDTO parcelDTO = new ParcelDTO(99L, "2kg", "30x30x30", "knygos", "12312312151555", ParcelStatus.PICKING_UP);
+        orderDTO = new OrderDTO(88L, senderAddress, recipientAddress, parcelDTO, "express", OrderStatus.PENDING, LocalDateTime.now());
 
         order = new Order();
         order.setUser(user);
         order.setSenderAddress(new OrderAddress());
         order.setRecipientAddress(new OrderAddress());
-        order.setPackageDetails(new Package());
+        order.setPackageDetails(new Parcel());
         order.setCreateDate(LocalDateTime.now());
     }
 

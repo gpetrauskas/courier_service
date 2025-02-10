@@ -1,12 +1,11 @@
 package com.example.courier.controller;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.*;
-import com.example.courier.domain.Package;
+import com.example.courier.domain.Parcel;
 import com.example.courier.dto.*;
-import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.DeliveryTaskItemRepository;
-import com.example.courier.repository.PackageRepository;
+import com.example.courier.repository.ParcelRepository;
 import com.example.courier.service.AdminService;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.RegistrationService;
@@ -28,7 +27,7 @@ import java.util.*;
 public class AdminController {
 
     @Autowired
-    private PackageRepository packageRepository;
+    private ParcelRepository parcelRepository;
     @Autowired
     private AdminService adminService;
     @Autowired
@@ -42,27 +41,27 @@ public class AdminController {
 
     @PostMapping("/updateProductStatus/{trackingNumber}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> updateProductStatus(@PathVariable String trackingNumber, @RequestParam PackageStatus newStatus) {
+    public ResponseEntity<Map<String, String>> updateProductStatus(@PathVariable String trackingNumber, @RequestParam ParcelStatus newStatus) {
         Map<String, String> response = new HashMap<>();
         try {
-            if (!PackageStatus.isValidStatus(newStatus.name())) {
+            if (!ParcelStatus.isValidStatus(newStatus.name())) {
                 response.put("error", "Invalid status.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            Package packageDetails = packageRepository.findByTrackingNumber(trackingNumber).orElseThrow(() ->
-                    new NoSuchElementException("Package not found."));
+            Parcel parcelDetails = parcelRepository.findByTrackingNumber(trackingNumber).orElseThrow(() ->
+                    new NoSuchElementException("Parcel not found."));
 
-            packageDetails.setStatus(newStatus);
-            packageRepository.save(packageDetails);
+            parcelDetails.setStatus(newStatus);
+            parcelRepository.save(parcelDetails);
 
-            response.put("success", "Package status updated successfully");
+            response.put("success", "Parcel status updated successfully");
             return ResponseEntity.ok(response);
         } catch (NoSuchElementException e) {
             response.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
-            response.put("error", "Problem occurred during package status change: " + e.getMessage());
+            response.put("error", "Problem occurred during parcel status change: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

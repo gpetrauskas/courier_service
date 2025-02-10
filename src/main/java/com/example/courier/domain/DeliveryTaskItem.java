@@ -1,6 +1,6 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 
 @Entity
@@ -16,12 +16,12 @@ public class DeliveryTaskItem {
     private DeliveryTask task;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "package_id", nullable = false)
-    private Package parcel;
+    @JoinColumn(name = "parcel_id", nullable = false)
+    private Parcel parcel;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PackageStatus status;
+    private ParcelStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_address_id", nullable = false)
@@ -48,19 +48,19 @@ public class DeliveryTaskItem {
         this.task = task;
     }
 
-    public Package getParcel() {
+    public Parcel getParcel() {
         return parcel;
     }
 
-    public void setParcel(Package parcel) {
+    public void setParcel(Parcel parcel) {
         this.parcel = parcel;
     }
 
-    public PackageStatus getStatus() {
+    public ParcelStatus getStatus() {
         return status;
     }
 
-    public void setStatus(PackageStatus status) {
+    public void setStatus(ParcelStatus status) {
         this.status = status;
     }
 

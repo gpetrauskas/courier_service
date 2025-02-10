@@ -48,8 +48,8 @@ public class PricingOptionService {
         BigDecimal shippingCost = new BigDecimal(0);
 
         BigDecimal deliveryPrice = getPriceById(orderDTO.deliveryPreferences());
-        BigDecimal weightPrice = getPriceById(orderDTO.packageDetails().weight());
-        BigDecimal sizePricing = getPriceById(orderDTO.packageDetails().dimensions());
+        BigDecimal weightPrice = getPriceById(orderDTO.parcelDetails().weight());
+        BigDecimal sizePricing = getPriceById(orderDTO.parcelDetails().dimensions());
 
         shippingCost = shippingCost.add(deliveryPrice).add(weightPrice).add(sizePricing);
 

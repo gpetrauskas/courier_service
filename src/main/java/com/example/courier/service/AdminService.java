@@ -2,7 +2,7 @@ package com.example.courier.service;
 
 import com.example.courier.common.*;
 import com.example.courier.domain.*;
-import com.example.courier.domain.Package;
+import com.example.courier.domain.Parcel;
 import com.example.courier.dto.*;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.mapper.PersonMapper;
@@ -21,7 +21,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +46,7 @@ public class AdminService {
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
     @Autowired
-    private PackageRepository packageRepository;
+    private ParcelRepository parcelRepository;
     @Autowired
     private CourierRepository courierRepository;
     @Autowired
@@ -209,10 +208,10 @@ public class AdminService {
 
         report.append("Order Report\n");
         report.append("Order ID\tUser ID\tSender Address\tRecipient Address\tDeliveryPreferencies\t" +
-                "Order Status\tOrder Create Date\tPackage ID\tWeight\tDimensions\tContents\tTracking Number\tPackage Status");
+                "Order Status\tOrder Create Date\tParcel ID\tWeight\tDimensions\tContents\tTracking Number\tParcel Status");
 
         for (Order order : orderList) {
-            Package packageDetails = order.getPackageDetails();
+            Parcel parcelDetails = order.getParcelDetails();
             Payment paymentDetails = paymentRepository.findById(order.getId()).orElse(null);
             report.append(order.getId()).append("\t");
             report.append(order.getUser().getId()).append("\t");
@@ -221,12 +220,12 @@ public class AdminService {
             report.append(order.getDeliveryPreferences()).append("\t");
             report.append(order.getStatus()).append("\t");
             report.append(order.getCreateDate()).append("\t");
-            report.append(packageDetails.getId()).append("\t");
-            report.append(packageDetails.getWeight()).append("\t");
-            report.append(packageDetails.getDimensions()).append("\t");
-            report.append(packageDetails.getContents()).append("\t");
-            report.append(packageDetails.getTrackingNumber()).append("\t");
-            report.append(packageDetails.getStatus()).append("\t");
+            report.append(parcelDetails.getId()).append("\t");
+            report.append(parcelDetails.getWeight()).append("\t");
+            report.append(parcelDetails.getDimensions()).append("\t");
+            report.append(parcelDetails.getContents()).append("\t");
+            report.append(parcelDetails.getTrackingNumber()).append("\t");
+            report.append(parcelDetails.getStatus()).append("\t");
             if (paymentDetails != null) {
                 report.append(paymentDetails.getId()).append("\t");
                 report.append(paymentDetails.getPaymentMethod()).append("\t");
@@ -297,7 +296,7 @@ public class AdminService {
         switch (section) {
             case "orderSection" -> updateOrderSection(updatedData, order);
             case "paymentSection" -> updatePaymentSection(updatedData, order);
-            case "packageSection" -> updatePackageSection(updatedData, order);
+            case "parcelSection" -> updateParcelSection(updatedData, order);
             case "senderSection" -> updateAddressSection(updatedData, order, true);
             case "recipientSection" -> updateAddressSection(updatedData, order, false);
         }
@@ -327,13 +326,13 @@ public class AdminService {
         paymentRepository.save(payment);
     }
 
-    private void updatePackageSection(Map<String, Object> updatedData, Order order) {
-        String packageStatus = (String) updatedData.get("status");
-        PackageStatus packageStatusEnum = PackageStatus.valueOf(packageStatus);
+    private void updateParcelSection(Map<String, Object> updatedData, Order order) {
+        String parcelStatus = (String) updatedData.get("status");
+        ParcelStatus parcelStatusEnum = ParcelStatus.valueOf(parcelStatus);
         String contents = (String) updatedData.get("contents");
 
-        order.getPackageDetails().setStatus(packageStatusEnum);
-        order.getPackageDetails().setContents(contents);
+        order.getParcelDetails().setStatus(parcelStatusEnum);
+        order.getParcelDetails().setContents(contents);
 
         orderRepository.save(order);
     }
@@ -370,15 +369,15 @@ public class AdminService {
         logger.info(taskDTO.parcelsIds().toString());
 
         DeliveryTask deliveryTask = createDeliveryTask(taskDTO, admin, courier);
-        List<Package> packageList = packageRepository.findAllById(taskDTO.parcelsIds());
-        List<DeliveryTaskItem> items = createDeliveryTaskItems(packageList, deliveryTask, taskDTO);
+        List<Parcel> parcelList = parcelRepository.findAllById(taskDTO.parcelsIds());
+        List<DeliveryTaskItem> items = createDeliveryTaskItems(parcelList, deliveryTask, taskDTO);
 
         deliveryTask.setItems(items);
         courier.setHasActiveTask(true);
 
         deliveryTaskRepository.save(deliveryTask);
         courierRepository.save(courier);
-        packageRepository.saveAll(packageList);
+        parcelRepository.saveAll(parcelList);
     }
 
     private Courier findCourierById(Long id) {
@@ -404,15 +403,15 @@ public class AdminService {
     }
 
     private List<DeliveryTaskItem> createDeliveryTaskItems(
-            List<Package> packageList, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
-        return packageList.stream()
+            List<Parcel> parcelList, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
+        return parcelList.stream()
                 .map(p -> createDeliveryTaskItem(p, deliveryTask, taskDTO))
                 .toList();
     }
 
-    private DeliveryTaskItem createDeliveryTaskItem(Package p, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
+    private DeliveryTaskItem createDeliveryTaskItem(Parcel p, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
         p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
-                PackageStatus.PICKING_UP : PackageStatus.DELIVERING);
+                ParcelStatus.PICKING_UP : ParcelStatus.DELIVERING);
         p.setAssigned(true);
 
         DeliveryTaskItem item = new DeliveryTaskItem();
@@ -420,8 +419,8 @@ public class AdminService {
         item.setTask(deliveryTask);
         item.setStatus(p.getStatus());
 
-        Order order = orderRepository.findByPackageDetails(p)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found for package: " + p.getId()));
+        Order order = orderRepository.findByParcelDetails(p)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found for parcel: " + p.getId()));
 
         item.setSenderAddress(order.getSenderAddress());
         item.setRecipientAddress(order.getRecipientAddress());
@@ -429,13 +428,13 @@ public class AdminService {
     }
 
     public Map<String, Long> getItemsForTheListCount() {
-        List<PackageStatus> statuses = List.of(PackageStatus.PICKING_UP, PackageStatus.DELIVERING);
+        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.DELIVERING);
         logger.info("fetching items count");
 
         Map<String, Long> response = statuses.stream()
                 .collect(Collectors.toMap(
                         status -> status.name().toLowerCase(),
-                        status -> packageRepository.countByStatusAndIsAssignedFalse(status)
+                        status -> parcelRepository.countByStatusAndIsAssignedFalse(status)
                 ));
 
         logger.info("Items count fetched successfully: {}", response);
@@ -449,8 +448,8 @@ public class AdminService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
 
-        Specification<Order> specification = Specification.where(OrderSpecification.hasPackageIsAssignedFalse()
-                .and(OrderSpecification.hasPackageStatus(status)));
+        Specification<Order> specification = Specification.where(OrderSpecification.hasParcelIsAssignedFalse()
+                .and(OrderSpecification.hasParcelStatus(status)));
 
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
         logger.info("aa" + orderPage);
@@ -501,7 +500,7 @@ public class AdminService {
                 .filter(i -> i.getId().equals(itemId))
                 .forEach(i -> {
                     i.getParcel().setAssigned(false);
-                    i.setStatus(PackageStatus.REMOVED_FROM_THE_LIST);
+                    i.setStatus(ParcelStatus.REMOVED_FROM_THE_LIST);
                 });
 
         checkIfNotLastItemInTheTask(task, taskId);
@@ -513,8 +512,8 @@ public class AdminService {
         boolean isValid = task.getItems().stream()
                 .anyMatch(i ->
                         i.getId().equals(itemId) &&
-                        !i.getStatus().equals(PackageStatus.CANCELED) &&
-                        !i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST)
+                        !i.getStatus().equals(ParcelStatus.CANCELED) &&
+                        !i.getStatus().equals(ParcelStatus.REMOVED_FROM_THE_LIST)
                 );
 
         if (!isValid || !task.getDeliveryStatus().equals(DeliveryStatus.IN_PROGRESS)) {
@@ -527,8 +526,8 @@ public class AdminService {
         System.out.println("check items in the task count" + task.getItems().size());
         boolean hasRemainingItems = task.getItems().stream()
                 .anyMatch(i ->
-                        !i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST) &&
-                        !i.getStatus().equals(PackageStatus.CANCELED)
+                        !i.getStatus().equals(ParcelStatus.REMOVED_FROM_THE_LIST) &&
+                        !i.getStatus().equals(ParcelStatus.CANCELED)
                 );
 
         if (!hasRemainingItems) {
@@ -545,10 +544,10 @@ public class AdminService {
 
         task.getItems().forEach(i -> {
             i.getParcel().setAssigned(false);
-            if (!i.getStatus().equals(PackageStatus.REMOVED_FROM_THE_LIST)) {
-                i.setStatus(PackageStatus.CANCELED);
+            if (!i.getStatus().equals(ParcelStatus.REMOVED_FROM_THE_LIST)) {
+                i.setStatus(ParcelStatus.CANCELED);
             }
-            packageRepository.save(i.getParcel());
+            parcelRepository.save(i.getParcel());
         });
 
         task.setDeliveryStatus(DeliveryStatus.CANCELED);

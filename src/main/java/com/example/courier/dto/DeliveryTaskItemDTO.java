@@ -1,15 +1,15 @@
 package com.example.courier.dto;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.DeliveryTaskItem;
 
-public record DeliveryTaskItemDTO(Long id, PackageDTO packageDTO, OrderAddressDTO senderAddress, OrderAddressDTO recipientAddress, PackageStatus status) {
+public record DeliveryTaskItemDTO(Long id, ParcelDTO parcelDTO, OrderAddressDTO senderAddress, OrderAddressDTO recipientAddress, ParcelStatus status) {
 
-    public static DeliveryTaskItemDTO fromDeliveryTaskItem(DeliveryTaskItem deliveryTaskItem, OrderAddressDTO senderAddress, OrderAddressDTO recipientAddress, PackageStatus status) {
+    public static DeliveryTaskItemDTO fromDeliveryTaskItem(DeliveryTaskItem deliveryTaskItem, OrderAddressDTO senderAddress, OrderAddressDTO recipientAddress, ParcelStatus status) {
 
-        PackageDTO packageDTO1 = PackageDTO.packageToDTO(deliveryTaskItem.getParcel());
+        ParcelDTO parcelDTO1 = ParcelDTO.parcelToDTO(deliveryTaskItem.getParcel());
 
 
-        return new DeliveryTaskItemDTO(deliveryTaskItem.getId(), packageDTO1, senderAddress, recipientAddress, status);
+        return new DeliveryTaskItemDTO(deliveryTaskItem.getId(), parcelDTO1, senderAddress, recipientAddress, status);
     }
 }

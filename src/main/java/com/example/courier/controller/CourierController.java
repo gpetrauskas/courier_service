@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.dto.DeliveryTaskDTO;
 import com.example.courier.service.CourierService;
 import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
@@ -26,13 +27,13 @@ public class CourierController {
 
 
     @PreAuthorize("hasRole('COURIER')")
-    @GetMapping("/pickupPackages")
-    public ResponseEntity<?> getAllOrdersToPickUp() {
+    @GetMapping("/currentTaskList")
+    public ResponseEntity<?> getCurrentTaskList() {
 
         logger.info("hello");
         Long courierId = AuthUtils.getAuthenticatedPersonId();
-        courierService.getAllPackagesToPickUp();
+        List<DeliveryTaskDTO> taskList = courierService.getCurrentTaskList(courierId);
 
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(taskList);
     }
 }

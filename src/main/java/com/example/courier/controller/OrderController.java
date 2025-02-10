@@ -1,7 +1,7 @@
 package com.example.courier.controller;
 
 import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
@@ -124,12 +124,12 @@ public class OrderController {
     @GetMapping("/trackOrder/{trackingNumber}")
     public ResponseEntity<?> trackOrder(@PathVariable String trackingNumber) {
         try {
-            logger.info("Tracking package info with tracking id: " + trackingNumber);
-            PackageStatus orderStatus = trackingService.getPackageStatus(trackingNumber);
-            logger.info("Package status with tracking id: " + trackingNumber + " was found.");
+            logger.info("Tracking parcel info with tracking id: " + trackingNumber);
+            ParcelStatus orderStatus = trackingService.getParcelStatus(trackingNumber);
+            logger.info("Parcel status with tracking id: " + trackingNumber + " was found.");
             return ResponseEntity.ok(orderStatus);
         } catch (Exception e) {
-            logger.error("Package with tracking number: " + trackingNumber + " was not found");
+            logger.error("Parcel with tracking number: " + trackingNumber + " was not found");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }

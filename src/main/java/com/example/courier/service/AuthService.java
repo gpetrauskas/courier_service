@@ -70,24 +70,16 @@ public class AuthService {
 
 
     private void setCookies(HttpServletResponse response, String jwtToken, String encryptedAuthToken) {
-        setJwtCookie(response, jwtToken);
-        setAuthCookie(response, encryptedAuthToken);
+        setCookie(response, jwtToken, "jwt");
+        setCookie(response, encryptedAuthToken, "authToken");
     }
 
-    private void setJwtCookie(HttpServletResponse response, String jwtToken) {
-        Cookie jwtCookie = new Cookie("jwt", jwtToken);
-        jwtCookie.setPath("/");
-        jwtCookie.setHttpOnly(false);
-        jwtCookie.setAttribute("SameSite", "Strict");
-        response.addCookie(jwtCookie);
-    }
-
-    private void setAuthCookie(HttpServletResponse response, String encryptedAuthToken) {
-        Cookie authCookie = new Cookie("authToken", encryptedAuthToken);
-        authCookie.setPath("/");
-        authCookie.setHttpOnly(false);
-        authCookie.setAttribute("SameSite", "Strict");
-        response.addCookie(authCookie);
+    private void setCookie(HttpServletResponse response, String token, String name) {
+        Cookie cookie = new Cookie(name, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(false);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
     }
 
     /*

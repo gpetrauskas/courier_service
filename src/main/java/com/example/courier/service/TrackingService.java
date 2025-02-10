@@ -1,6 +1,6 @@
 package com.example.courier.service;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.OrderRepository;
@@ -13,20 +13,20 @@ public class TrackingService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public PackageStatus getPackageStatus(String trackingNumber) {
+    public ParcelStatus getParcelStatus(String trackingNumber) {
         try {
-            Order trackedOrder = orderRepository.findByPackageDetails_TrackingNumber(trackingNumber);
+            Order trackedOrder = orderRepository.findByParcelDetails_TrackingNumber(trackingNumber);
             if (trackedOrder != null) {
-                return trackedOrder.getPackageDetails().getStatus();
+                return trackedOrder.getParcelDetails().getStatus();
             } else {
                 throw new ResourceNotFoundException("Order with tracking number: " + trackingNumber + " not found.");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error occurred while fetching package status", e);
+            throw new RuntimeException("Error occurred while fetching parcel status", e);
         }
     }
 
-    public void updatePackageStatus(String trackingNumber, String newStatus) {
+    public void updateParcelStatus(String trackingNumber, String newStatus) {
 
     }
 }

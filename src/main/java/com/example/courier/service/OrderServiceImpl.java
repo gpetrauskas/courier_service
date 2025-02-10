@@ -1,13 +1,13 @@
 package com.example.courier.service;
 
 import com.example.courier.common.OrderStatus;
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
-import com.example.courier.domain.Package;
+import com.example.courier.domain.Parcel;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.PackageDTO;
+import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
@@ -50,8 +50,8 @@ public class OrderServiceImpl implements OrderService {
         OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);
 
         Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
-        Package packageDetails = createPackageFromDTO(orderDTO.packageDetails());
-        order.setPackageDetails(packageDetails);
+        Parcel parcelDetails = createParcelFromDTO(orderDTO.parcelDetails());
+        order.setParcelDetails(parcelDetails);
 
         BigDecimal amount = pricingOptionService.calculateShippingCost(orderDTO);
 
@@ -81,15 +81,15 @@ public class OrderServiceImpl implements OrderService {
         return pricingOptionService.getDescriptionById(id);
     }
 
-    private Package createPackageFromDTO(PackageDTO packageDTO) {
-        Package packageDetails = new Package();
-        packageDetails.setWeight(getPricingOptionDescription(packageDTO.weight()));
-        packageDetails.setDimensions(getPricingOptionDescription(packageDTO.dimensions()));
-        packageDetails.setContents(packageDTO.contents());
-        packageDetails.setTrackingNumber(UUID.randomUUID().toString());
-        packageDetails.setStatus(PackageStatus.WAITING_FOR_PAYMENT);
+    private Parcel createParcelFromDTO(ParcelDTO parcelDTO) {
+        Parcel parcelDetails = new Parcel();
+        parcelDetails.setWeight(getPricingOptionDescription(parcelDTO.weight()));
+        parcelDetails.setDimensions(getPricingOptionDescription(parcelDTO.dimensions()));
+        parcelDetails.setContents(parcelDTO.contents());
+        parcelDetails.setTrackingNumber(UUID.randomUUID().toString());
+        parcelDetails.setStatus(ParcelStatus.WAITING_FOR_PAYMENT);
 
-        return packageDetails;
+        return parcelDetails;
     }
 
 
@@ -119,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void handleOrderCancel(Order order, Payment payment) {
         order.setStatus(OrderStatus.CANCELED);
-        order.getPackageDetails().setStatus(PackageStatus.CANCELED);
+        order.getParcelDetails().setStatus(ParcelStatus.CANCELED);
         payment.setStatus(PaymentStatus.CANCELED);
     }
 

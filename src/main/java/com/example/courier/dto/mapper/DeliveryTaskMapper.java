@@ -1,6 +1,6 @@
 package com.example.courier.dto.mapper;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.DeliveryTask;
 import com.example.courier.domain.DeliveryTaskItem;
@@ -38,13 +38,13 @@ public interface DeliveryTaskMapper {
     default List<DeliveryTaskItemDTO> mapItems(List<DeliveryTaskItem> items) {
         if (items == null) return List.of();
         return items.stream()
-                .filter(item -> item.getStatus() != PackageStatus.REMOVED_FROM_THE_LIST)
+                .filter(item -> item.getStatus() != ParcelStatus.REMOVED_FROM_THE_LIST)
                 .map(this::toDeliveryTaskItemDTO)
                 .toList();
     }
 
     @Mapping(target = "senderAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getSenderAddress()))")
     @Mapping(target = "recipientAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getRecipientAddress()))")
-    @Mapping(target = "packageDTO", expression = "java(PackageDTO.packageToDTO(deliveryTaskItem.getParcel()))")
+    @Mapping(target = "parcelDTO", expression = "java(ParcelDTO.parcelToDTO(deliveryTaskItem.getParcel()))")
     DeliveryTaskItemDTO toDeliveryTaskItemDTO(DeliveryTaskItem deliveryTaskItem);
 }

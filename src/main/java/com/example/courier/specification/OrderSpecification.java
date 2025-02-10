@@ -1,25 +1,25 @@
 package com.example.courier.specification;
 
-import com.example.courier.common.PackageStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 
 public class OrderSpecification {
-    public static Specification<Order> hasPackageStatus(String packageStatus) {
+    public static Specification<Order> hasParcelStatus(String parcelStatus) {
         return (root, query, criteriaBuilder) -> {
-            if (packageStatus != null && !packageStatus.isEmpty() && PackageStatus.isValidStatus(packageStatus)) {
-                Join<Object, Object> packageJoin = root.join("packageDetails");
-                return criteriaBuilder.equal(packageJoin.get("status"), PackageStatus.valueOf(packageStatus.toUpperCase()));
+            if (parcelStatus != null && !parcelStatus.isEmpty() && ParcelStatus.isValidStatus(parcelStatus)) {
+                Join<Object, Object> parcelJoin = root.join("parcelDetails");
+                return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
             }
             return criteriaBuilder.conjunction();
         };
     }
 
-    public static Specification<Order> hasPackageIsAssignedFalse() {
+    public static Specification<Order> hasParcelIsAssignedFalse() {
         return ((root, query, criteriaBuilder) -> {
-            Join<Object, Object> packageJoin = root.join("packageDetails");
-            return criteriaBuilder.isFalse(packageJoin.get("isAssigned"));
+            Join<Object, Object> parcelJoin = root.join("parcelDetails");
+            return criteriaBuilder.isFalse(parcelJoin.get("isAssigned"));
         });
     }
 }
