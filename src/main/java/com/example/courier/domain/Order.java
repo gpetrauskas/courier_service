@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "parcels")
+@Table(name = "orders")
 public class Order implements Serializable {
 
     @Id
