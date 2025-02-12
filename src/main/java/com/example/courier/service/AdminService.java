@@ -424,6 +424,8 @@ public class AdminService {
 
         item.setSenderAddress(order.getSenderAddress());
         item.setRecipientAddress(order.getRecipientAddress());
+
+        item.setDeliveryPreference(order.getDeliveryPreferences());
         return item;
     }
 

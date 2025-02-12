@@ -92,6 +92,7 @@ public class AddressService {
             } else {
                 logger.info("Address not found. Creating new one.");
                 address = createNewAddress(addressDTO, user);
+                logger.info("New address created. Id: {}", address.getId());
             }
             logger.info("Creating order address from address. ID: {}", address.getId());
             return createOrderAddressFromAddress(address);
@@ -115,7 +116,6 @@ public class AddressService {
     private Address createNewAddress(AddressDTO addressDTO, User user) {
         Address address = addressMapper.toAddress(addressDTO);
         address.setUser(user);
-        logger.info("New address created. Id: {}", address.getId());
         return addressRepository.saveAndFlush(address);
     }
 

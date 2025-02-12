@@ -4,11 +4,9 @@ import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.io.Serializable;
-
 @Entity
 @Table(name = "parcels")
-public class Parcel implements Serializable {
+public class Parcel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

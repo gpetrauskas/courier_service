@@ -1,16 +1,13 @@
 package com.example.courier.dto.mapper;
 
 import com.example.courier.common.ParcelStatus;
+import com.example.courier.common.TaskType;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.DeliveryTask;
 import com.example.courier.domain.DeliveryTaskItem;
-import com.example.courier.dto.CourierDTO;
-import com.example.courier.dto.DeliveryTaskDTO;
-import com.example.courier.dto.DeliveryTaskItemDTO;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.example.courier.domain.OrderAddress;
+import com.example.courier.dto.*;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -24,7 +21,7 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "courierDTO", source = "courier", qualifiedByName = "mapCourier")
     @Mapping(target = "itemsList", source = "items", qualifiedByName = "mapItems")
     @Mapping(target = "tType", source = "taskType")
-    @Mapping(target = "deliveryTask", source = "deliveryStatus")
+    @Mapping(target = "deliveryStatus", source = "deliveryStatus")
     @Mapping(target = "adminId", source = "createdBy.id")
     DeliveryTaskDTO toDeliveryTaskDTO(DeliveryTask deliveryTask);
 
@@ -47,4 +44,39 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "recipientAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getRecipientAddress()))")
     @Mapping(target = "parcelDTO", expression = "java(ParcelDTO.parcelToDTO(deliveryTaskItem.getParcel()))")
     DeliveryTaskItemDTO toDeliveryTaskItemDTO(DeliveryTaskItem deliveryTaskItem);
+
+    // courier task...
+
+    @Mapping(target = "courierId", source = "courier.id")
+    @Mapping(target = "taskId", source = "id")
+    @Mapping(target = "taskType", source = "taskType")
+    @Mapping(target = "deliveryStatus", source = "deliveryStatus")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "completedAt", source = "completedAt")
+    @Mapping(target = "taskItemDTOS", source = "items", qualifiedByName = "mapDeliveryTaskItems")
+    CourierTaskDTO toCourierTaskDTO(DeliveryTask deliveryTask, @Context TaskType taskType);
+
+    @Named("mapDeliveryTaskItems")
+    default List<CourierTaskItemDTO> mapDeliveryTaskItems(List<DeliveryTaskItem> items, @Context TaskType taskType) {
+        if (items == null) return List.of();
+        return items.stream()
+                .map(i -> toCourierTaskItemDTO(i, taskType))
+                .toList();
+    }
+
+    @Named("toCourierTaskItemDTO")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "weight", source = "parcel.weight")
+    @Mapping(target = "dimensions", source = "parcel.dimensions")
+    @Mapping(target = "contents", source = "parcel.contents")
+    @Mapping(target = "deliveryPreference", source = "deliveryPreference")
+    @Mapping(target = "customerAddress", expression = "java(getCustomerAddress(item, taskType))")
+    CourierTaskItemDTO toCourierTaskItemDTO(DeliveryTaskItem item, @Context TaskType taskType);
+
+    default OrderAddressDTO getCustomerAddress(DeliveryTaskItem item, TaskType taskType) {
+        if (item == null) return null;
+        OrderAddress orderAddress = (taskType == TaskType.PICKUP ?
+                item.getSenderAddress() : item.getRecipientAddress());
+        return OrderAddressDTO.fromOrderAddress(orderAddress);
+    }
 }

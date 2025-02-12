@@ -1,9 +1,12 @@
 package com.example.courier.service;
 
 import com.example.courier.common.DeliveryStatus;
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.DeliveryTask;
+import com.example.courier.dto.CourierTaskDTO;
 import com.example.courier.dto.DeliveryTaskDTO;
 import com.example.courier.dto.mapper.DeliveryTaskMapper;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.DeliveryTaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +25,14 @@ public class CourierService {
     @Autowired
     private DeliveryTaskMapper deliveryTaskMapper;
 
-    public List<DeliveryTaskDTO> getCurrentTaskList(Long courierId) {
+    public List<CourierTaskDTO> getCurrentTaskList(Long courierId) {
+        if (courierId == null) {
+            throw new ResourceNotFoundException("Courier id is null");
+        }
         List<DeliveryTask> list = deliveryTaskRepository.findByCourierIdAndDeliveryStatus(courierId, DeliveryStatus.IN_PROGRESS);
 
         return list.stream()
-                .map(deliveryTaskMapper::toDeliveryTaskDTO)
+                .map(i -> DeliveryTaskMapper.INSTANCE.toCourierTaskDTO(i, i.getTaskType()))
                 .toList();
     }
 

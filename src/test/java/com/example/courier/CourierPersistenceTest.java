@@ -1,6 +1,5 @@
 package com.example.courier;
 
-import com.example.courier.common.Role;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.repository.CourierRepository;
@@ -31,7 +30,6 @@ public class CourierPersistenceTest {
         courier.setName("Courier Test");
         courier.setEmail("courier@test.com");
         courier.setPassword("password");
-        courier.setRole(Role.COURIER);
         courier.setHasActiveTask(false);
 
         personRepository.save(courier);

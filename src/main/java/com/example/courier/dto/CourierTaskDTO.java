@@ -6,6 +6,7 @@ import com.example.courier.common.TaskType;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record CourierTaskDTO(Long courierId, TaskType taskType, DeliveryStatus deliveryStatus,
-                             LocalDateTime createdAt, LocalDateTime completedAt) {
+public record CourierTaskDTO(
+        Long courierId, Long taskId, TaskType taskType, DeliveryStatus deliveryStatus,
+        LocalDateTime createdAt, LocalDateTime completedAt, List<CourierTaskItemDTO> taskItemDTOS ) {
 }

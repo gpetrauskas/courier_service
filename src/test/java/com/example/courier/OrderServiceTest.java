@@ -67,7 +67,7 @@ public class OrderServiceTest {
         order.setUser(user);
         order.setSenderAddress(new OrderAddress());
         order.setRecipientAddress(new OrderAddress());
-        order.setPackageDetails(new Parcel());
+        order.setParcelDetails(new Parcel());
         order.setCreateDate(LocalDateTime.now());
     }
 

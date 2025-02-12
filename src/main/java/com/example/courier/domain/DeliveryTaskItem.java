@@ -31,6 +31,8 @@ public class DeliveryTaskItem {
     @JoinColumn(name = "recipient_address_id", nullable = false)
     private OrderAddress recipientAddress;
 
+    @Column(name = "delivery_preference", nullable = false)
+    private String deliveryPreference;
 
     public Long getId() {
         return id;
@@ -78,5 +80,13 @@ public class DeliveryTaskItem {
 
     public void setRecipientAddress(OrderAddress recipientAddress) {
         this.recipientAddress = recipientAddress;
+    }
+
+    public String getDeliveryPreference() {
+        return deliveryPreference;
+    }
+
+    public void setDeliveryPreference(String deliveryPreference) {
+        this.deliveryPreference = deliveryPreference;
     }
 }

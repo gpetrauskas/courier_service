@@ -12,7 +12,7 @@ public record DeliveryTaskDTO(
         Long adminId,
         List<DeliveryTaskItemDTO> itemsList,
         TaskType tType,
-        DeliveryStatus deliveryTask,
+        DeliveryStatus deliveryStatus,
         LocalDateTime createdAt,
         LocalDateTime completedAt) {
 }

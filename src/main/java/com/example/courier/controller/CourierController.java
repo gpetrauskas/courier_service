@@ -1,6 +1,6 @@
 package com.example.courier.controller;
 
-import com.example.courier.dto.DeliveryTaskDTO;
+import com.example.courier.dto.CourierTaskDTO;
 import com.example.courier.service.CourierService;
 import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Principal;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
@@ -32,7 +31,7 @@ public class CourierController {
 
         logger.info("hello");
         Long courierId = AuthUtils.getAuthenticatedPersonId();
-        List<DeliveryTaskDTO> taskList = courierService.getCurrentTaskList(courierId);
+        List<CourierTaskDTO> taskList = courierService.getCurrentTaskList(courierId);
 
         return ResponseEntity.ok(taskList);
     }
