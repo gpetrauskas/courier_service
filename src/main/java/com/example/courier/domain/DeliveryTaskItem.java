@@ -3,6 +3,9 @@ package com.example.courier.domain;
 import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "delivery_task_items")
 public class DeliveryTaskItem {
@@ -33,6 +36,11 @@ public class DeliveryTaskItem {
 
     @Column(name = "delivery_preference", nullable = false)
     private String deliveryPreference;
+
+    @ElementCollection
+    @CollectionTable(name = "delivery_task_item_notes", joinColumns = @JoinColumn(name = "task_item_id"))
+    @Column(name = "notes")
+    private List<String> notes = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -88,5 +96,13 @@ public class DeliveryTaskItem {
 
     public void setDeliveryPreference(String deliveryPreference) {
         this.deliveryPreference = deliveryPreference;
+    }
+
+    public List<String> getNotes() {
+        return notes;
+    }
+
+    public void setNotes(List<String> notes) {
+        this.notes = notes;
     }
 }

@@ -16,7 +16,7 @@ public class AuthUtils {
         logger.info("check {}", authentication.getPrincipal().getClass().getName());
         logger.info("checkk {}", authentication.getClass());
 
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
             Person person = (Person) authentication.getPrincipal();
             logger.info("class {}", person.getClass());
             return person.getId();

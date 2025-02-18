@@ -70,6 +70,7 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "dimensions", source = "parcel.dimensions")
     @Mapping(target = "contents", source = "parcel.contents")
     @Mapping(target = "deliveryPreference", source = "deliveryPreference")
+    @Mapping(target = "notes", source = "notes")
     @Mapping(target = "customerAddress", expression = "java(getCustomerAddress(item, taskType))")
     CourierTaskItemDTO toCourierTaskItemDTO(DeliveryTaskItem item, @Context TaskType taskType);
 

@@ -13,6 +13,7 @@ public record DeliveryTaskDTO(
         List<DeliveryTaskItemDTO> itemsList,
         TaskType tType,
         DeliveryStatus deliveryStatus,
+        List<String> notes,
         LocalDateTime createdAt,
         LocalDateTime completedAt) {
 }
