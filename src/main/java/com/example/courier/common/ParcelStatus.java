@@ -21,4 +21,21 @@ public enum ParcelStatus {
         }
         return false;
     }
+
+    public static boolean isValidStatusChange(TaskType taskType, ParcelStatus newStatus) {
+        if (taskType == TaskType.PICKUP) {
+            return newStatus == PICKED_UP ||
+                    newStatus == PICKING_UP ||
+                    newStatus == FAILED_PICKUP ||
+                    newStatus == CANCELED;
+        } else if (taskType == TaskType.DELIVERY) {
+            return newStatus == DELIVERED ||
+                    newStatus == DELIVERING ||
+                    newStatus == FAILED_DELIVERY ||
+                    newStatus == CANCELED;
+        }
+        return false;
+    }
+
+
 }

@@ -1,19 +1,20 @@
 package com.example.courier.controller;
 
 import com.example.courier.dto.CourierTaskDTO;
+import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
+import com.example.courier.dto.request.UpdateTaskItemStatusRequest;
+import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
+import com.example.courier.dto.response.UpdateTaskItemStatusResponse;
 import com.example.courier.service.CourierService;
 import com.example.courier.util.AuthUtils;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
@@ -21,9 +22,11 @@ import java.util.Map;
 public class CourierController {
 
     private static final Logger logger = LoggerFactory.getLogger(CourierController.class);
-    @Autowired
-    private CourierService courierService;
+    private final CourierService courierService;
 
+    public CourierController(CourierService courierService) {
+        this.courierService = courierService;
+    }
 
     @PreAuthorize("hasRole('COURIER')")
     @GetMapping("/currentTaskList")
@@ -38,14 +41,28 @@ public class CourierController {
 
     @PreAuthorize("hasRole('COURIER')")
     @PostMapping("/updateTaskItemNotes/{taskItemId}")
-    public ResponseEntity<Map<String, String>> updateTaskItemNotes(
+    public ResponseEntity<UpdateTaskItemNotesResponse> updateTaskItemNotes(
             @PathVariable Long taskItemId,
-            @RequestBody Map<String, String> payLoad) {
+            @Valid @RequestBody UpdateTaskItemNotesRequest request) {
 
-        courierService.checkAndUpdateTaskItem(taskItemId, payLoad);
+        courierService.updateTaskItemNotes(taskItemId, request);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("success", "Note successfully added.");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(
+                new UpdateTaskItemNotesResponse("Successfully added note for item id: ", taskItemId)
+        );
     }
+
+    @PreAuthorize("hasRole('COURIER')")
+    @PostMapping("/updateTaskItemStatus/{taskItemId}")
+    public ResponseEntity<UpdateTaskItemStatusResponse> updateTaskItemStatus(
+            @PathVariable Long taskItemId,
+            @Valid @RequestBody UpdateTaskItemStatusRequest payLoad) {
+
+        courierService.updateTaskItemStatus(taskItemId, payLoad);
+
+        return ResponseEntity.ok(
+                new UpdateTaskItemStatusResponse("Status successfully changed")
+        );
+    }
+
 }
