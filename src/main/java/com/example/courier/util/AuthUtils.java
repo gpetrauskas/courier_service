@@ -1,6 +1,5 @@
 package com.example.courier.util;
 
-import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -6,17 +6,18 @@ import com.example.courier.domain.DeliveryTaskItem;
 import com.example.courier.dto.CourierTaskDTO;
 import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.exception.ResourceNotFoundException;
-import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.DeliveryTaskItemRepository;
 import com.example.courier.repository.DeliveryTaskRepository;
-import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CourierService {
@@ -27,6 +28,8 @@ public class CourierService {
     private DeliveryTaskRepository deliveryTaskRepository;
     @Autowired
     private DeliveryTaskItemRepository deliveryTaskItemRepository;
+    @Autowired
+    private AuthorizationService authorizationService;
 
     public List<CourierTaskDTO> getCurrentTaskList(Long courierId) {
         if (courierId == null) {
@@ -39,29 +42,35 @@ public class CourierService {
                 .toList();
     }
 
+    @Transactional
     public void checkAndUpdateTaskItem(Long taskItemId, Map<String, String> payLoad) {
+        logger.info("Tryin to update task item with ID: {}", taskItemId);
+
+        if (payLoad == null || !payLoad.containsKey("note") ||
+            payLoad.get("note") == null || payLoad.get("note").trim().isEmpty()) {
+            throw new IllegalArgumentException("note is required for updating.");
+        }
+
         DeliveryTaskItem taskItem = deliveryTaskItemRepository.findById(taskItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task item not found with id: " + taskItemId));
 
-        DeliveryTask deliveryTask = taskItem.getTask();
+        checkIfTaskCanBeUpdated(taskItem.getTask());
 
-        if (deliveryTask.getDeliveryStatus() != DeliveryStatus.CANCELED ||
-                deliveryTask.getDeliveryStatus() != DeliveryStatus.COMPLETED) {
+        authorizationService.validateCourierTaskAssignment(taskItem);
 
-            Long authenticatedCourierId = AuthUtils.getAuthenticatedPersonId();
+        updateTaskItemNotes(payLoad, taskItem);
+    }
 
-            if (deliveryTask.getCourier().getId().equals(authenticatedCourierId)) {
-                updateTaskItemNotes(payLoad, taskItem);
-            } else {
-                throw new UnauthorizedAccessException("Not authorized to update this task item");
-            }
-        } else {
-            throw new IllegalStateException("Cannot update update notes for canceled or completed tasks");
+    private void checkIfTaskCanBeUpdated(DeliveryTask deliveryTask) {
+        if (deliveryTask.getDeliveryStatus() == DeliveryStatus.COMPLETED ||
+            deliveryTask.getDeliveryStatus() == DeliveryStatus.CANCELED) {
+            throw new IllegalStateException("Cannot update notes for completed or canceled task");
         }
     }
 
     private void updateTaskItemNotes(Map<String, String> payLoad, DeliveryTaskItem taskItem) {
-        String newNote = payLoad.get("note");
+        String newNote = Optional.ofNullable(payLoad.get("note"))
+                .orElseThrow(() -> new IllegalArgumentException("Note cannot be null"));
 
         List<String> notes = taskItem.getNotes();
         notes.add(newNote);

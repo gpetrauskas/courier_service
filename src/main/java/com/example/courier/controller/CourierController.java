@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +38,14 @@ public class CourierController {
 
     @PreAuthorize("hasRole('COURIER')")
     @PostMapping("/updateTaskItemNotes/{taskItemId}")
-    public ResponseEntity<String> updateTaskItemNotes(
+    public ResponseEntity<Map<String, String>> updateTaskItemNotes(
             @PathVariable Long taskItemId,
             @RequestBody Map<String, String> payLoad) {
+
         courierService.checkAndUpdateTaskItem(taskItemId, payLoad);
-        return ResponseEntity.status(HttpStatus.OK).body("okkk");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("success", "Note successfully added.");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
