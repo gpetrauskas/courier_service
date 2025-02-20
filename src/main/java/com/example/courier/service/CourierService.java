@@ -70,13 +70,24 @@ public class CourierService {
 
         deliveryTaskItemRepository.save(taskItem);
 
+        if (ParcelStatus.isItemInFinalState(taskItem)) {
+            ifTaskListCompleted(taskItem.getTask());
+        }
+    }
+
+    private void ifTaskListCompleted(DeliveryTask task) {
+        boolean allItemsFinal = task.getItems().stream()
+                .allMatch(ParcelStatus::isItemInFinalState);
+
+        if (allItemsFinal) {
+            task.setDeliveryStatus(DeliveryStatus.COMPLETED);
+            deliveryTaskRepository.save(task);
+            logger.info("Task {} marked as completed", task.getId());
+        }
     }
 
     private void validateStatusChange(DeliveryTaskItem taskItem, ParcelStatus newStatus) {
-        if (taskItem.getStatus() == ParcelStatus.DELIVERED ||
-                taskItem.getStatus() == ParcelStatus.CANCELED ||
-                taskItem.getStatus() == ParcelStatus.PICKED_UP ||
-                taskItem.getStatus() == ParcelStatus.REMOVED_FROM_THE_LIST) {
+        if (taskItem.getStatus().isFinalState()) {
             throw new IllegalStateException("Cannot update status for canceled or completed task item");
         }
 

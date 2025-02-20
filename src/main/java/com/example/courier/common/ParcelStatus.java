@@ -1,5 +1,11 @@
 package com.example.courier.common;
 
+import com.example.courier.domain.DeliveryTaskItem;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+
 public enum ParcelStatus {
     WAITING_FOR_PAYMENT,
     PICKING_UP,
@@ -13,28 +19,26 @@ public enum ParcelStatus {
     REMOVED_FROM_THE_LIST,
     NOT_SHIPPED;
 
+    private static final Map<TaskType, Set<ParcelStatus>> VALID_TRANSITIONS = Map.of(
+            TaskType.PICKUP, Set.of(PICKED_UP, PICKING_UP, CANCELED, FAILED_PICKUP),
+            TaskType.DELIVERY, Set.of(DELIVERED, DELIVERING, CANCELED, FAILED_DELIVERY)
+    );
+
     public static boolean isValidStatus(String status) {
-        for (ParcelStatus parcelStatus : values()) {
-            if (parcelStatus.name().equalsIgnoreCase(status)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(values())
+                .anyMatch(parcelStatus -> parcelStatus.name().equalsIgnoreCase(status));
     }
 
     public static boolean isValidStatusChange(TaskType taskType, ParcelStatus newStatus) {
-        if (taskType == TaskType.PICKUP) {
-            return newStatus == PICKED_UP ||
-                    newStatus == PICKING_UP ||
-                    newStatus == FAILED_PICKUP ||
-                    newStatus == CANCELED;
-        } else if (taskType == TaskType.DELIVERY) {
-            return newStatus == DELIVERED ||
-                    newStatus == DELIVERING ||
-                    newStatus == FAILED_DELIVERY ||
-                    newStatus == CANCELED;
-        }
-        return false;
+        return VALID_TRANSITIONS.getOrDefault(taskType, Set.of()).contains(newStatus);
+    }
+
+    public boolean isFinalState() {
+        return Set.of(PICKED_UP, DELIVERED, CANCELED).contains(this);
+    }
+
+    public static boolean isItemInFinalState(DeliveryTaskItem taskItem) {
+        return taskItem.getStatus().isFinalState();
     }
 
 
