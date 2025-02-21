@@ -41,4 +41,10 @@ public class DeliveryTaskService {
                 .toList();
 
         return new PaginatedResponseDTO<>(taskDTOS, taskPage.getNumber(), taskPage.getTotalElements(), taskPage.getTotalPages());    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void changeTaskStatus(Long taskId, DeliveryStatus newStatus) {
+
+    }
+
 }

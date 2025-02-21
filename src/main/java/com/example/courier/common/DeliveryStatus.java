@@ -5,5 +5,6 @@ public enum DeliveryStatus {
     COMPLETED,
     ASSIGNED,
     CANCELED,
-    RETURNING_TO_STATION;
+    RETURNING_TO_STATION,
+    AT_CHECKPOINT
 }

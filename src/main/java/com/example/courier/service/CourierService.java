@@ -2,6 +2,7 @@ package com.example.courier.service;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.DeliveryTask;
 import com.example.courier.domain.DeliveryTaskItem;
 import com.example.courier.dto.CourierTaskDTO;
@@ -9,8 +10,11 @@ import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
 import com.example.courier.dto.request.UpdateTaskItemStatusRequest;
 import com.example.courier.exception.ResourceNotFoundException;
+import com.example.courier.exception.UnauthorizedAccessException;
+import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.DeliveryTaskItemRepository;
 import com.example.courier.repository.DeliveryTaskRepository;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,12 +30,17 @@ public class CourierService {
     private final DeliveryTaskRepository deliveryTaskRepository;
     private final DeliveryTaskItemRepository deliveryTaskItemRepository;
     private final AuthorizationService authorizationService;
+    private final CourierRepository courierRepository;
+    private final NotificationService notificationService;
 
     public CourierService(DeliveryTaskRepository deliveryTaskRepository, DeliveryTaskItemRepository deliveryTaskItemRepository,
-                          AuthorizationService authorizationService) {
+                          AuthorizationService authorizationService, CourierRepository courierRepository,
+                          NotificationService notificationService) {
         this.deliveryTaskRepository = deliveryTaskRepository;
         this.deliveryTaskItemRepository = deliveryTaskItemRepository;
         this.authorizationService = authorizationService;
+        this.courierRepository = courierRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -80,9 +89,9 @@ public class CourierService {
                 .allMatch(ParcelStatus::isItemInFinalState);
 
         if (allItemsFinal) {
-            task.setDeliveryStatus(DeliveryStatus.COMPLETED);
+            task.setDeliveryStatus(DeliveryStatus.RETURNING_TO_STATION);
             deliveryTaskRepository.save(task);
-            logger.info("Task {} marked as completed", task.getId());
+            logger.info("Task {} marked as returning to station", task.getId());
         }
     }
 
@@ -101,7 +110,7 @@ public class CourierService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item was not found"));
 
         checkIfTaskCanBeUpdated(taskItem.getTask());
-        authorizationService.validateCourierTaskAssignment(taskItem);
+        authorizationService.validateCourierTaskAssignmentByTaskItem(taskItem);
 
         return taskItem;
     }
@@ -111,5 +120,36 @@ public class CourierService {
             deliveryTask.getDeliveryStatus() == DeliveryStatus.CANCELED) {
             throw new IllegalStateException("Cannot update notes for completed or canceled task");
         }
+    }
+
+    @Transactional
+    public void processCourierCheckIn(Long taskId) {
+        DeliveryTask deliveryTask = validateAndFetchTask(taskId);
+
+        if (deliveryTask.getDeliveryStatus() != DeliveryStatus.RETURNING_TO_STATION) {
+            throw new IllegalStateException("Task is not RETURNING TO STATION status.");
+        }
+
+        deliveryTask.setDeliveryStatus(DeliveryStatus.AT_CHECKPOINT);
+        deliveryTaskRepository.save(deliveryTask);
+
+        Courier courier = deliveryTask.getCourier();
+        courier.setHasActiveTask(false);
+        courierRepository.save(courier);
+
+        notificationService.notifyAdmin(taskId, courier.getId());
+
+
+        logger.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId, courier.getId());
+    }
+
+    private DeliveryTask validateAndFetchTask(Long taskId) {
+        DeliveryTask task = deliveryTaskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("No task found with such id"));
+
+        checkIfTaskCanBeUpdated(task);
+        authorizationService.validateCourierTaskAssignment(task);
+
+        return task;
     }
 }

@@ -1,7 +1,6 @@
 package com.example.courier.controller;
 
 import com.example.courier.common.DeliveryStatus;
-import com.example.courier.common.TaskType;
 import com.example.courier.dto.DeliveryTaskDTO;
 import com.example.courier.dto.DeliveryTaskFilterDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
@@ -35,5 +34,17 @@ public class DeliveryTaskController {
                 filterDTO.taskType(), filterDTO.deliveryStatus());
 
         return ResponseEntity.ok(list);
+    }
+
+    @PostMapping("changeTaskStatus/{taskId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> changeTaskStatus(
+            @PathVariable Long taskId,
+            @RequestBody DeliveryStatus newStatus
+    ) {
+
+        deliveryTaskService.changeTaskStatus(taskId, newStatus);
+
+        return ResponseEntity.ok("success");
     }
 }

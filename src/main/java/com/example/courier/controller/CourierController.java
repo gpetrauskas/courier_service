@@ -65,4 +65,12 @@ public class CourierController {
         );
     }
 
+    @PreAuthorize("hasRole('COURIER')")
+    @PostMapping("/checkIn")
+    public ResponseEntity<String> checkIn(@PathVariable Long taskId) {
+        courierService.processCourierCheckIn(taskId);
+
+        return ResponseEntity.ok("Courier checked in successfully.");
+    }
+
 }
