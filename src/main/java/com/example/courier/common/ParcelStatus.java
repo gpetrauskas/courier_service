@@ -17,6 +17,7 @@ public enum ParcelStatus {
     FAILED_DELIVERY,
     CANCELED,
     REMOVED_FROM_THE_LIST,
+    RETURNED_TO_CHECKPOINT,
     NOT_SHIPPED;
 
     private static final Map<TaskType, Set<ParcelStatus>> VALID_TRANSITIONS = Map.of(

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Set;
 
 public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Long>, JpaSpecificationExecutor<DeliveryTask> {
 
@@ -16,5 +17,8 @@ public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Long
 
     @EntityGraph(attributePaths = {"items", "items.senderAddress", "items.recipientAddress", "courier"})
     List<DeliveryTask> findByCourierIdAndDeliveryStatus(Long courierId, DeliveryStatus deliveryStatus);
+
+    @EntityGraph(attributePaths = {"items", "items.senderAddress", "items.recipientAddress", "courier"})
+    List<DeliveryTask> findByCourierIdAndDeliveryStatusIn(Long courierId, Set<DeliveryStatus> statuses);
 
 }

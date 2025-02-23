@@ -10,17 +10,17 @@ import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
 import com.example.courier.dto.request.UpdateTaskItemStatusRequest;
 import com.example.courier.exception.ResourceNotFoundException;
-import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.DeliveryTaskItemRepository;
 import com.example.courier.repository.DeliveryTaskRepository;
-import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CourierService {
@@ -48,11 +48,30 @@ public class CourierService {
         if (courierId == null) {
             throw new ResourceNotFoundException("Courier id is null");
         }
-        List<DeliveryTask> list = deliveryTaskRepository.findByCourierIdAndDeliveryStatus(
-                courierId, DeliveryStatus.IN_PROGRESS
+        Set<DeliveryStatus> statuses = DeliveryStatus.currentStatuses();
+        List<DeliveryTask> list = deliveryTaskRepository.findByCourierIdAndDeliveryStatusIn(
+                courierId, statuses
         );
 
-        return list.stream()
+        return mapDeliveryTaskToDTO(list);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<CourierTaskDTO> getHistoricalTaskLists(Long courierId) {
+        if (courierId == null) {
+            throw new ResourceNotFoundException("Courier id is null");
+        }
+        Set<DeliveryStatus> statuses = DeliveryStatus.historicalStatuses();
+        List<DeliveryTask> list = deliveryTaskRepository.findByCourierIdAndDeliveryStatusIn(
+                courierId, statuses
+        );
+
+        return mapDeliveryTaskToDTO(list);
+    }
+
+    private List<CourierTaskDTO> mapDeliveryTaskToDTO(List<DeliveryTask> taskList) {
+        return taskList.stream()
                 .map(i -> DeliveryTaskMapper.INSTANCE.toCourierTaskDTO(i, i.getTaskType()))
                 .toList();
     }
@@ -115,6 +134,9 @@ public class CourierService {
         return taskItem;
     }
 
+    private void checkIfItemStatusCanBeUpdated(DeliveryTaskItem item) {
+    }
+
     private void checkIfTaskCanBeUpdated(DeliveryTask deliveryTask) {
         if (deliveryTask.getDeliveryStatus() == DeliveryStatus.COMPLETED ||
             deliveryTask.getDeliveryStatus() == DeliveryStatus.CANCELED) {
@@ -126,11 +148,12 @@ public class CourierService {
     public void processCourierCheckIn(Long taskId) {
         DeliveryTask deliveryTask = validateAndFetchTask(taskId);
 
-        if (deliveryTask.getDeliveryStatus() != DeliveryStatus.RETURNING_TO_STATION) {
-            throw new IllegalStateException("Task is not RETURNING TO STATION status.");
+        if (!DeliveryStatus.isValidToCheckIn(deliveryTask.getDeliveryStatus())) {
+            throw new IllegalStateException("Cannot check in.");
         }
 
         deliveryTask.setDeliveryStatus(DeliveryStatus.AT_CHECKPOINT);
+        deliveryTask.setCompletedAt(LocalDateTime.now());
         deliveryTaskRepository.save(deliveryTask);
 
         Courier courier = deliveryTask.getCourier();

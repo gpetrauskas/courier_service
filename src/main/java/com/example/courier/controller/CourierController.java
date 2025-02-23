@@ -30,7 +30,7 @@ public class CourierController {
 
     @PreAuthorize("hasRole('COURIER')")
     @GetMapping("/currentTaskList")
-    public ResponseEntity<?> getCurrentTaskList() {
+    public ResponseEntity<List<CourierTaskDTO>> getCurrentTaskList() {
 
         logger.info("hello");
         Long courierId = AuthUtils.getAuthenticatedPersonId();
@@ -66,7 +66,7 @@ public class CourierController {
     }
 
     @PreAuthorize("hasRole('COURIER')")
-    @PostMapping("/checkIn")
+    @PostMapping("/checkIn/{taskId}")
     public ResponseEntity<String> checkIn(@PathVariable Long taskId) {
         courierService.processCourierCheckIn(taskId);
 
