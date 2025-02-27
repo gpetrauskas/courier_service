@@ -6,17 +6,15 @@ import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import org.springframework.data.jpa.domain.Specification;
 
-public class UserSpecification {
+public class PersonSpecification {
     public static Specification<Person> hasRole(String role) {
         return (root, query, criteriaBuilder) -> {
             if (role == null || role.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
 
-            role.toUpperCase();
-
             Class<?> entityClass;
-            switch (role) {
+            switch (role.toUpperCase()) {
                 case "ADMIN":
                     entityClass = Admin.class;
                     break;

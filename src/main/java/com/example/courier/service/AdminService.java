@@ -12,7 +12,6 @@ import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.*;
 import com.example.courier.specification.OrderSpecification;
-import com.example.courier.specification.UserSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,94 +50,18 @@ public class AdminService {
     private CourierRepository courierRepository;
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private PersonMapper personMapper;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
-
-    private Page<PersonResponseDTO> findAllUsers(int page, int size, String role, String search) {
-        System.out.println("Fetching users with page: " + page + ", size: " + size + ", role: " + role + ", search:" + search);
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Specification<Person> specification = buildSpecification(role, search);
-
-        Page<Person> personPage = personRepository.findAll(specification, pageable);
-        List<Person> persons = personPage.getContent();
-
-        if (persons.isEmpty()) {
-            return Page.empty();
-        }
-
-        List<PersonResponseDTO> allPersonDTOs = persons.stream()
-                .map(PersonResponseDTO::fromPerson)
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(allPersonDTOs, pageable, personPage.getTotalElements());
-    }
-
-    public PaginatedResponseDTO<PersonResponseDTO> findAllUsersPaginated(int page, int size, String role, String search) {
-        Page<PersonResponseDTO> userPage = findAllUsers(page, size, role, search);
-
-        return new PaginatedResponseDTO<>(
-                userPage.getContent(),
-                userPage.getNumber(),
-                userPage.getTotalElements(),
-                userPage.getTotalPages()
-        );
-    }
 
     public PersonDetailsDTO findPersonById(Long id) {
         Person person = personRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("User was not found"));
 
         PersonDetailsDTO personDetailsDTO;
-        personDetailsDTO = PersonMapper.INSTANCE.toPersonDetailsDTO(person);
+        personDetailsDTO = personMapper.toPersonDetailsDTO(person);
 
         return personDetailsDTO;
-    }
-
-    public void updateUser(Long id, PersonDetailsDTO updatedUser) {
-
-        User existingUser = userRepository.findById(id).orElseThrow(() ->
-                new UserNotFoundException("User was not found."));
-
-        logger.info("AdminService: updateUser after findById");
-        updateUserFields(existingUser, updatedUser);
-        userRepository.save(existingUser);
-    }
-
-    private void updateUserFields(User existingUse, PersonDetailsDTO updatedUser) {
-        if (updatedUser.name() != null) {
-            existingUse.setName(updatedUser.name());
-        }
-        if (updatedUser.email() != null) {
-            existingUse.setEmail(updatedUser.email());
-        }
-    }
-
-    public void deleteUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() ->
-                new UserNotFoundException("User was not found."));
-        logger.info("User was found for deletion");
-        user.setDeleted(true);
-
-        userRepository.save(user);
-    }
-
-    public void banUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new RuntimeException("User was not found."));
-
-        user.setBlocked(true);
-        userRepository.save(user);
-
-        logger.info("User: name {} - id {}, was banned successfully.", user.getName(), user.getId());
-    }
-
-    public void unbanUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new RuntimeException("User was not found"));
-
-        user.setBlocked(false);
-        userRepository.save(user);
-        logger.info("User: name {} - id {}, was unbanned successfully", user.getName(), userId);
     }
 
     public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
@@ -477,14 +400,15 @@ public class AdminService {
         throw new RuntimeException("No authenticated admin found");
     }
 
+/*
     private Specification<Person> buildSpecification(String role, String search) {
-        Specification<Person> specification = Specification.where(UserSpecification.isNotDeleted());
+        Specification<Person> specification = Specification.where(PersonSpecification.isNotDeleted());
 
         if (role != null) {
-            specification = specification.and(UserSpecification.hasRole(role));
+            specification = specification.and(PersonSpecification.hasRole(role));
         }
         if (search != null && !search.isEmpty()) {
-            specification = specification.and(UserSpecification.hasKeyword(search));
+            specification = specification.and(PersonSpecification.hasKeyword(search));
         }
 
         specification = specification.and((root, query, criteriaBuilder) ->
@@ -492,6 +416,7 @@ public class AdminService {
 
         return specification;
     }
+*/
 
     public void deleteDeliveryTaskItem(Long taskId, Long itemId) {
         DeliveryTask task = deliveryTaskRepository.getReferenceById(taskId);

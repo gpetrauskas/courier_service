@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class PricingOptionService {
 
+    private static final String DELIVERY_KEYWORD = "delivery";
+
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
 
@@ -66,5 +68,12 @@ public class PricingOptionService {
         return pricingOptionRepository.findById(Long.parseLong(id))
                 .map(PricingOption::getDescription)
                 .orElseThrow(() -> new RuntimeException("Pricing option not found."));
+    }
+
+    public List<String> getDeliveryPreferences() {
+        return pricingOptionRepository.findAll().stream()
+                .filter(o -> o.getDescription().contains(DELIVERY_KEYWORD))
+                .map(PricingOption::getDescription)
+                .toList();
     }
 }

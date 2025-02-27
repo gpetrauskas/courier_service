@@ -2,8 +2,10 @@ package com.example.courier.dto.mapper;
 
 import com.example.courier.domain.Order;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.request.OrderSectionUpdateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -18,4 +20,8 @@ public interface OrderMapper {
     @Mapping(target = "senderAddress", ignore = true)
     @Mapping(target = "recipientAddress", ignore = true)
     Order toOrder(OrderDTO orderDTO);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "sectionToUpdate", ignore = true)
+    void updateOrderSectionFromRequest(OrderSectionUpdateRequest updateRequest, @MappingTarget Order order);
 }

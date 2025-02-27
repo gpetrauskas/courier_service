@@ -11,9 +11,6 @@ import java.util.stream.Collectors;
 @Table(name = "users")
 public class User extends Person {
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "default_address_id")
     private Address defaultAddress;
@@ -62,14 +59,6 @@ public class User extends Person {
         }
 
         return savedPaymentMethods;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 
     public List<Address> getAddresses() {

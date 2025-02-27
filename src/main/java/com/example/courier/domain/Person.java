@@ -24,6 +24,9 @@ public abstract class Person implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -120,4 +123,12 @@ public abstract class Person implements UserDetails {
     }
 
     public abstract String getRole();
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.courier.service;
+package com.example.courier.service.order;
 
 import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
@@ -9,10 +9,15 @@ import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
+import com.example.courier.dto.request.OrderSectionUpdateRequest;
 import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.*;
+import com.example.courier.service.AddressService;
+import com.example.courier.service.AuthService;
+import com.example.courier.service.PaymentService;
+import com.example.courier.service.PricingOptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +28,7 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -31,8 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
     @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
     @Autowired
     private AddressService addressService;
     @Autowired
@@ -40,7 +45,31 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private AuthService authService;
     @Autowired
-    private  PricingOptionService pricingOptionService;
+    private PricingOptionService pricingOptionService;
+
+    public OrderServiceImpl(OrderMapper orderMapper) {
+        this.orderMapper = orderMapper;
+    }
+
+
+
+    @Transactional
+    public void orderSectionUpdate(OrderSectionUpdateRequest updateRequest) {
+        Order order = findOrderById(updateRequest.id());
+        OrderStatus.isValidStatus(updateRequest.status());
+
+        List<String> deliveryPrefList = pricingOptionService.getDeliveryPreferences();
+        if (!deliveryPrefList.contains(updateRequest.deliveryPreferences())) {
+            throw new IllegalArgumentException("No such delivery preference");
+        }
+
+
+        orderMapper.updateOrderSectionFromRequest(updateRequest, order);
+        orderRepository.save(order);
+    }
+
+
+
 
     @Transactional
     public Long placeOrder(Long userId, OrderDTO orderDTO) {

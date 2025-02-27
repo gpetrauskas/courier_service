@@ -27,4 +27,8 @@ public enum DeliveryStatus {
     public static boolean isAdminUpdatable(DeliveryStatus status) {
         return status == AT_CHECKPOINT;
     }
+
+    public static boolean isTaskItemUpdatable(DeliveryStatus status) {
+        return status == IN_PROGRESS;
+    }
 }

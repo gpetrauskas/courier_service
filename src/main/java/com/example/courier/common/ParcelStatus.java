@@ -42,5 +42,4 @@ public enum ParcelStatus {
         return taskItem.getStatus().isFinalState();
     }
 
-
 }

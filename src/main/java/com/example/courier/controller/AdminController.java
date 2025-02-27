@@ -39,7 +39,7 @@ public class AdminController {
     private AuthService authService;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
-    @PostMapping("/updateProductStatus/{trackingNumber}")
+/*    @PostMapping("/updateProductStatus/{trackingNumber}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> updateProductStatus(@PathVariable String trackingNumber, @RequestParam ParcelStatus newStatus) {
         Map<String, String> response = new HashMap<>();
@@ -64,7 +64,7 @@ public class AdminController {
             response.put("error", "Problem occurred during parcel status change: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    }
+    }*/
 
     @GetMapping("/test")
     @PreAuthorize("hasRole('ADMIN')")
@@ -73,22 +73,6 @@ public class AdminController {
         System.out.println(authentication.getAuthorities());
 
         return ResponseEntity.ok(authentication.getAuthorities());
-    }
-
-    @GetMapping("/getAllUsers")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<PersonResponseDTO>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String role,
-            @RequestParam(required = false) String search) {
-
-        logger.info("role {}, search {}", role, search);
-
-        PaginatedResponseDTO<PersonResponseDTO> response = adminService
-                .findAllUsersPaginated(page, size, role, search);
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/getUserById/{id}")
@@ -108,19 +92,6 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/updateUser/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> updateUser(@PathVariable Long id, @RequestBody PersonDetailsDTO personDetailsDTO) {
-        Map<String, String> response = new HashMap<>();
-
-        logger.info("Admin controller: before userUpdate");
-        adminService.updateUser(id, personDetailsDTO);
-        logger.info("User updated successfully.");
-
-        response.put("message", "User was updated successfully");
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping("/updateOrder/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseDTO> updateOrderSection(@PathVariable Long id, @RequestBody Map<String, Object> updateData) {
@@ -128,35 +99,6 @@ public class AdminController {
         adminService.updateSection(updateData);
         logger.info("Order with id: {} updated successfully", id);
         ApiResponseDTO response = new ApiResponseDTO("success", "Order updated successfully");
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/deleteUser/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        logger.info("Request to delete user with id: {}", id);
-        adminService.deleteUser(id);
-        ApiResponseDTO response = new ApiResponseDTO("success", "User deleted successfully.");
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/banUser/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> banUser(@PathVariable Long id) {
-        logger.info("Request to ban user with id {}", id);
-        adminService.banUser(id);
-
-        ApiResponseDTO response = new ApiResponseDTO("success", "User with id " + id + ", was successfully banned.");
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/unbanUser/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> unbanUser(@PathVariable Long id) {
-        logger.info("Request to unban user with id {}", id);
-        adminService.unbanUser(id);
-
-        ApiResponseDTO response = new ApiResponseDTO("success", "User with id" +  id + " was unbanned successfully.");
         return ResponseEntity.ok(response);
     }
 
