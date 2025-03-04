@@ -5,6 +5,7 @@ import com.example.courier.domain.DeliveryTaskItem;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum ParcelStatus {
     WAITING_FOR_PAYMENT,
@@ -25,9 +26,14 @@ public enum ParcelStatus {
             TaskType.DELIVERY, Set.of(DELIVERED, DELIVERING, CANCELED, FAILED_DELIVERY)
     );
 
-    public static boolean isValidStatus(String status) {
-        return Arrays.stream(values())
-                .anyMatch(parcelStatus -> parcelStatus.name().equalsIgnoreCase(status));
+    private static final Set<String> STATUS_NAMES = Arrays.stream(values())
+            .map(Enum::name)
+            .collect(Collectors.toSet());
+
+    public static void isValidStatus(String status) {
+        if (status != null && !STATUS_NAMES.contains(status)) {
+            throw new IllegalArgumentException("Invalid status");
+        }
     }
 
     public static boolean isValidStatusChange(TaskType taskType, ParcelStatus newStatus) {
