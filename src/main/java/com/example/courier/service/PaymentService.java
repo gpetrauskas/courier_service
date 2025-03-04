@@ -6,6 +6,8 @@ import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.dto.PaymentDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
+import com.example.courier.dto.mapper.PaymentMapper;
+import com.example.courier.dto.request.PaymentSectionUpdateRequest;
 import com.example.courier.exception.*;
 import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;
@@ -25,12 +27,16 @@ import java.util.List;
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private final List<PaymentHandler> paymentHandlers;
+    private final PaymentRepository paymentRepository;
+    private final PaymentMapper paymentMapper;
 
-    @Autowired
-    private List<PaymentHandler> paymentHandlers;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
+    public PaymentService(List<PaymentHandler> paymentHandlers, PaymentRepository paymentRepository,
+                          PaymentMapper paymentMapper) {
+        this.paymentHandlers = paymentHandlers;
+        this.paymentRepository = paymentRepository;
+        this.paymentMapper = paymentMapper;
+    }
 
     @Transactional
     public ResponseEntity<String> processPayment(PaymentDTO paymentDTO, Long orderId, Principal principal) {
@@ -107,13 +113,24 @@ public class PaymentService {
 
     public Payment getPaymentByOrderId(Long orderId) {
         return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment not found for order id {} " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order id {} " + orderId));
+    }
+
+    private Payment getPaymentById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment was not found"));
     }
 
     public PaymentDetailsDTO getPaymentDetails(Long orderId) {
         Payment payment = getPaymentByOrderId(orderId);
-        PaymentDetailsDTO paymentDetailsDTO = PaymentDetailsDTO.fromPayment(payment);
+        return PaymentDetailsDTO.fromPayment(payment);
+    }
 
-        return paymentDetailsDTO;
+    public void paymentSectionUpdate(PaymentSectionUpdateRequest updateRequest) {
+        PaymentStatus.isValidStatus(updateRequest.status());
+        Payment payment = getPaymentById(updateRequest.id());
+
+        paymentMapper.updatePaymentSectionFromRequest(updateRequest, payment);
+        paymentRepository.save(payment);
     }
 }

@@ -134,12 +134,8 @@ public class CourierService {
         return taskItem;
     }
 
-    private void checkIfItemStatusCanBeUpdated(DeliveryTaskItem item) {
-    }
-
     private void checkIfTaskCanBeUpdated(DeliveryTask deliveryTask) {
-        if (deliveryTask.getDeliveryStatus() == DeliveryStatus.COMPLETED ||
-            deliveryTask.getDeliveryStatus() == DeliveryStatus.CANCELED) {
+        if (!DeliveryStatus.isTaskItemUpdatable(deliveryTask.getDeliveryStatus())) {
             throw new IllegalStateException("Cannot update notes for completed or canceled task");
         }
     }

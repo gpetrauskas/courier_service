@@ -7,13 +7,21 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class OrderSpecification {
     public static Specification<Order> hasParcelStatus(String parcelStatus) {
-        return (root, query, criteriaBuilder) -> {
+
+        ParcelStatus.isValidStatus(parcelStatus);
+        return ((root, query, criteriaBuilder) -> {
+            Join<Object, Object> parcelJoin = root.join("parcelDetails");
+            return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
+        });
+
+
+/*        return (root, query, criteriaBuilder) -> {
             if (parcelStatus != null && !parcelStatus.isEmpty() && ParcelStatus.isValidStatus(parcelStatus)) {
                 Join<Object, Object> parcelJoin = root.join("parcelDetails");
                 return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
             }
             return criteriaBuilder.conjunction();
-        };
+        };*/
     }
 
     public static Specification<Order> hasParcelIsAssignedFalse() {

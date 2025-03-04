@@ -15,7 +15,7 @@ public enum OrderStatus {
 
     public static void isValidStatus(String status) {
         if (status == null || !STATUS_NAMES.contains(status.toUpperCase())) {
-            throw new IllegalArgumentException("Invalid order status");
+            throw new IllegalArgumentException("Invalid order status: " + status);
         }
     }
 }

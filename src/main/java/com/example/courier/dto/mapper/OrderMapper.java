@@ -22,6 +22,5 @@ public interface OrderMapper {
     Order toOrder(OrderDTO orderDTO);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "sectionToUpdate", ignore = true)
     void updateOrderSectionFromRequest(OrderSectionUpdateRequest updateRequest, @MappingTarget Order order);
 }

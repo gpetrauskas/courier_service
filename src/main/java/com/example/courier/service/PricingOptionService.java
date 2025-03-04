@@ -5,18 +5,24 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.repository.PricingOptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class PricingOptionService {
 
     private static final String DELIVERY_KEYWORD = "delivery";
+    private static final String SIZE_KEYWORD = "size";
+    private static final String WEIGHT_KEYWORD = "weight";
+    private static final String PREFERENCE_KEYWORD = "preference";
 
     @Autowired
     private PricingOptionRepository pricingOptionRepository;
@@ -27,12 +33,12 @@ public class PricingOptionService {
         Map<String, List<PricingOption>> categorizedOptions = allOptions
                 .stream()
                 .collect(Collectors.groupingBy(option -> {
-                    if (option.getName().contains("weight")) {
-                        return "weight";
-                    } else if (option.getName().contains("size")) {
-                        return "size";
+                    if (option.getName().contains(WEIGHT_KEYWORD)) {
+                        return WEIGHT_KEYWORD;
+                    } else if (option.getName().contains(SIZE_KEYWORD)) {
+                        return SIZE_KEYWORD;
                     } else {
-                        return "preference";
+                        return PREFERENCE_KEYWORD;
                     }
                 }));
 
@@ -70,10 +76,8 @@ public class PricingOptionService {
                 .orElseThrow(() -> new RuntimeException("Pricing option not found."));
     }
 
-    public List<String> getDeliveryPreferences() {
-        return pricingOptionRepository.findAll().stream()
-                .filter(o -> o.getDescription().contains(DELIVERY_KEYWORD))
-                .map(PricingOption::getDescription)
-                .toList();
+    @Cacheable("deliveryPreferences")
+    public Set<String> getDeliveryPreferences() {
+        return new HashSet<>(pricingOptionRepository.findDeliveryPreferences(DELIVERY_KEYWORD));
     }
 }

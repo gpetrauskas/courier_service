@@ -46,5 +46,4 @@ public class DeliveryTaskService {
     public void changeTaskStatus(Long taskId, DeliveryStatus newStatus) {
 
     }
-
 }

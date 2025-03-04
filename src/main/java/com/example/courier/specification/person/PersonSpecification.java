@@ -1,4 +1,4 @@
-package com.example.courier.specification;
+package com.example.courier.specification.person;
 
 import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;

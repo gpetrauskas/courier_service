@@ -16,7 +16,7 @@ public class NotificationController {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    @GetMapping
+    @GetMapping("/getAdminNotifications")
     public List<Notification> notifyAdmin() {
         return notificationRepository.findAll();
     }

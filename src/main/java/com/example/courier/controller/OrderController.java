@@ -5,6 +5,9 @@ import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.request.BaseOrderUpdateRequest;
+import com.example.courier.dto.request.OrderSectionUpdateRequest;
+import com.example.courier.service.order.OrderFacadeService;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.PricingOptionService;
 import com.example.courier.service.TrackingService;
@@ -38,6 +41,16 @@ public class OrderController {
     private AuthService authService;
     @Autowired
     private PricingOptionService pricingOptionService;
+    @Autowired
+    private OrderFacadeService orderFacadeService;
+
+    @PostMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody BaseOrderUpdateRequest updateRequest) {
+        logger.info("Received update request: {}", updateRequest);
+        orderFacadeService.updateSection(updateRequest);
+        return ResponseEntity.ok("Order and/or its related information was updated");
+    }
 
     @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")

@@ -10,6 +10,7 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.OrderSectionUpdateRequest;
+import com.example.courier.exception.InvalidDeliveryPreferenceException;
 import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
@@ -18,6 +19,8 @@ import com.example.courier.service.AddressService;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.PaymentService;
 import com.example.courier.service.PricingOptionService;
+import com.example.courier.validator.OrderUpdateValidator;
+import com.example.courier.validator.PricingOptionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -46,27 +50,28 @@ public class OrderServiceImpl implements OrderService {
     private AuthService authService;
     @Autowired
     private PricingOptionService pricingOptionService;
+    private final OrderUpdateValidator orderUpdateValidator;
+    private final PricingOptionValidator pricingOptionValidator;
 
-    public OrderServiceImpl(OrderMapper orderMapper) {
+    public OrderServiceImpl(OrderMapper orderMapper, OrderUpdateValidator orderUpdateValidator,
+                            PricingOptionValidator pricingOptionValidator) {
         this.orderMapper = orderMapper;
+        this.orderUpdateValidator = orderUpdateValidator;
+        this.pricingOptionValidator = pricingOptionValidator;
     }
-
-
 
     @Transactional
     public void orderSectionUpdate(OrderSectionUpdateRequest updateRequest) {
         Order order = findOrderById(updateRequest.id());
-        OrderStatus.isValidStatus(updateRequest.status());
 
-        List<String> deliveryPrefList = pricingOptionService.getDeliveryPreferences();
-        if (!deliveryPrefList.contains(updateRequest.deliveryPreferences())) {
-            throw new IllegalArgumentException("No such delivery preference");
-        }
-
+        pricingOptionValidator.validateDeliveryPrefForOrderStatusUpdate(updateRequest, order);
+        orderUpdateValidator.validateOrderSectionUpdate(updateRequest, order);
 
         orderMapper.updateOrderSectionFromRequest(updateRequest, order);
         orderRepository.save(order);
     }
+
+
 
 
 
