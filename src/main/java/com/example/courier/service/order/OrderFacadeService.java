@@ -1,9 +1,6 @@
 package com.example.courier.service.order;
 
-import com.example.courier.dto.request.BaseOrderUpdateRequest;
-import com.example.courier.dto.request.OrderSectionUpdateRequest;
-import com.example.courier.dto.request.ParcelSectionUpdateRequest;
-import com.example.courier.dto.request.PaymentSectionUpdateRequest;
+import com.example.courier.dto.request.*;
 import com.example.courier.service.AddressService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.PaymentService;
@@ -44,6 +41,11 @@ public class OrderFacadeService {
             case "paymentSection" -> {
                 if (updatedData instanceof PaymentSectionUpdateRequest paymentSectionUpdateRequest) {
                     paymentService.paymentSectionUpdate(paymentSectionUpdateRequest);
+                }
+            }
+            case "addressSection" -> {
+                if (updatedData instanceof AddressSectionUpdateRequest addressSectionUpdateRequest) {
+                    addressService.addressSectionUpdate(addressSectionUpdateRequest);
                 }
             }
         }

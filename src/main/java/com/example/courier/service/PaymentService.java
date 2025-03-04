@@ -129,7 +129,6 @@ public class PaymentService {
     public void paymentSectionUpdate(PaymentSectionUpdateRequest updateRequest) {
         PaymentStatus.isValidStatus(updateRequest.status());
         Payment payment = getPaymentById(updateRequest.id());
-
         paymentMapper.updatePaymentSectionFromRequest(updateRequest, payment);
         paymentRepository.save(payment);
     }

@@ -5,6 +5,7 @@ import com.example.courier.domain.OrderAddress;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
+import com.example.courier.dto.request.AddressSectionUpdateRequest;
 import com.example.courier.exception.AddressNotFoundException;
 import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.exception.UserNotFoundException;
@@ -33,6 +34,13 @@ public class AddressService {
     private AuthService authService;
     @Autowired
     private OrderAddressRepository orderAddressRepository;
+
+    @Transactional
+    public void addressSectionUpdate(AddressSectionUpdateRequest updateRequest) {
+        OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
+        addressMapper.updateAddressSectionFromRequest(updateRequest, orderAddress);
+        orderAddressRepository.save(orderAddress);
+    }
 
     @Transactional(readOnly = true)
     public List<AddressDTO> getAllMyAddresses(String email) {
@@ -136,6 +144,11 @@ public class AddressService {
     private OrderAddress createOrderAddressFromAddress(Address address) {
         OrderAddress orderAddress = addressMapper.toOrderAddress(address);
         return orderAddressRepository.saveAndFlush(orderAddress);
+    }
+
+    private OrderAddress getOrderAddressById(Long id) {
+        return orderAddressRepository.findById(id)
+                .orElseThrow(() -> new AddressNotFoundException("No address with such id."));
     }
 
 

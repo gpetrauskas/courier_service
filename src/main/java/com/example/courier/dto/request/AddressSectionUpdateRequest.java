@@ -1,8 +1,11 @@
 package com.example.courier.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public record AddressSectionUpdateRequest(
-        Long id,
-        String sectionToEdit,
+        @NotNull Long id,
+        @NotBlank String sectionToEdit,
         String name,
         String street,
         String houseNumber,
