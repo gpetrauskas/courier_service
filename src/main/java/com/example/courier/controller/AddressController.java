@@ -3,7 +3,7 @@ package com.example.courier.controller;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.exception.AddressNotFoundException;
 import com.example.courier.exception.UserAddressMismatchException;
-import com.example.courier.service.AddressService;
+import com.example.courier.service.address.AddressService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

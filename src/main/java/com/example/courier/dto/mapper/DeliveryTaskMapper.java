@@ -42,7 +42,7 @@ public interface DeliveryTaskMapper {
 
     @Mapping(target = "senderAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getSenderAddress()))")
     @Mapping(target = "recipientAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getRecipientAddress()))")
-    @Mapping(target = "parcelDTO", expression = "java(ParcelDTO.parcelToDTO(deliveryTaskItem.getParcel()))")
+    @Mapping(target = "parcelDTO", source = "parcel") // Use ParcelMapper to map Parcel to ParcelDTO
     DeliveryTaskItemDTO toDeliveryTaskItemDTO(DeliveryTaskItem deliveryTaskItem);
 
     // courier task...

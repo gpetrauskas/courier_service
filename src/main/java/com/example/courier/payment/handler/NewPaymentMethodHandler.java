@@ -5,7 +5,7 @@ import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.Payment;
 import com.example.courier.domain.User;
 import com.example.courier.dto.CreditCardDTO;
-import com.example.courier.dto.PaymentDTO;
+import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.exception.PaymentFailedException;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.service.CreditCardService;
@@ -23,14 +23,14 @@ public class NewPaymentMethodHandler implements PaymentHandler {
     private PaymentMethodRepository paymentMethodRepository;
 
     @Override
-    public boolean isSupported(PaymentDTO paymentDTO) {
-        return paymentDTO.newPaymentMethod() != null;
+    public boolean isSupported(PaymentRequestDTO paymentRequestDTO) {
+        return paymentRequestDTO.newPaymentMethod() != null;
     }
 
     @Override
-    public ResponseEntity<String> handle(PaymentDTO paymentDTO, Payment payment) {
+    public ResponseEntity<String> handle(PaymentRequestDTO paymentRequestDTO, Payment payment) {
         User user = payment.getOrder().getUser();
-        CreditCardDTO creditCardDTO = (CreditCardDTO) paymentDTO.newPaymentMethod();
+        CreditCardDTO creditCardDTO = (CreditCardDTO) paymentRequestDTO.newPaymentMethod();
         CreditCard card = creditCardService.setupCreditCard(creditCardDTO, user);
 
         ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, creditCardDTO.cvc());

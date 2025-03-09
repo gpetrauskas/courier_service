@@ -1,8 +1,7 @@
 package com.example.courier.config;
 
+import com.example.courier.service.AuthService;
 import com.example.courier.service.JwtService;
-import com.example.courier.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +20,19 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
 
     @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
+    @Autowired
+    private final AuthService authService;
+    @Autowired
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+
+    public SecurityConfig(JwtService jwtService, AuthService authService) {
+        this.jwtService = jwtService;
+        this.authService = authService;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, CorsConfigurationSource corsConfigurationSource) throws Exception {
@@ -32,22 +43,27 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                         auth
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/courier/components/**", "/courier/**").permitAll()
                                 .requestMatchers("/*", "/testpage/**").permitAll()
-                                .requestMatchers("/api/user/register", "/api/user/login",
-                                        "/api/orders/trackOrder/{id}", "/api/orders/**",
-                                        "/api/paymentMethods/**", "/api/user/cc/*", "/api/addresses/**").permitAll()
+                                .requestMatchers("/api/registration/**", "/api/auth/login",
+                                        "/api/orders/trackOrder/{id}", "/api/orders/**", "/api/person/**",
+                                        "/api/paymentMethods/**", "/api/auth/cc/*", "/api/addresses/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/courier/**").hasAnyRole("COURIER", "ADMIN")
+                                .requestMatchers("/api/courier/**", "/api/deliveryTaskManagement/").hasAnyRole("COURIER", "ADMIN")
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, authService),
                         UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(e -> e.authenticationEntryPoint((request, response, authException) -> {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-                }))
-                .logout((logout) -> logout.logoutUrl("/api/user/logout")
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .logout((logout) -> logout
+                        .logoutUrl("/api/auth/logout")
                         .deleteCookies("jwt", "authToken")
                         .invalidateHttpSession(true)
-                        .clearAuthentication(true));
+                        .clearAuthentication(true)
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        })
+                );
         return httpSecurity.build();
     }
 }

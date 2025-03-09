@@ -10,20 +10,25 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.OrderSectionUpdateRequest;
-import com.example.courier.exception.InvalidDeliveryPreferenceException;
+import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.*;
-import com.example.courier.service.AddressService;
+import com.example.courier.service.address.AddressService;
 import com.example.courier.service.AuthService;
-import com.example.courier.service.PaymentService;
-import com.example.courier.service.PricingOptionService;
-import com.example.courier.validator.OrderUpdateValidator;
-import com.example.courier.validator.PricingOptionValidator;
+import com.example.courier.service.payment.PaymentService;
+import com.example.courier.service.pricingoption.PricingOptionService;
+import com.example.courier.specification.order.OrderSpecificationBuilder;
+import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
+import com.example.courier.validation.PricingOptionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +37,8 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -69,6 +74,35 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.updateOrderSectionFromRequest(updateRequest, order);
         orderRepository.save(order);
+    }
+
+    @Transactional
+    public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, Long userId, String role) {
+        Pageable pageable = PageRequest.of(page, size);
+        Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecification(userId, role);
+
+        Page<Order> orderPage = orderRepository.findAll(specification, pageable);
+        if (orderPage.isEmpty()) {
+            return Page.empty();
+        }
+
+        List<Long> orderIds = orderPage.stream()
+                .map(Order::getId)
+                .toList();
+
+        List<Payment> payments = paymentService.findAllByIds(orderIds);
+
+        Map<Long, Payment> paymentMap = payments.stream()
+                .collect(Collectors.toMap(
+                        payment -> payment.getOrder().getId(),
+                        payment -> payment
+                ));
+
+        return orderPage.map(order -> {
+            Payment payment = paymentMap.get(order.getId());
+            return orderMapper.toAdminOrderResponseDTO(order, payment);
+        });
+
     }
 
 

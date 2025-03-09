@@ -1,13 +1,13 @@
 package com.example.courier.controller;
 
 import com.example.courier.domain.PricingOption;
-import com.example.courier.service.PricingOptionService;
+import com.example.courier.dto.PricingOptionDTO;
+import com.example.courier.service.pricingoption.PricingOptionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -31,4 +31,14 @@ public class PricingOptionController {
         List<PricingOption> list = pricingOptionService.getPricingOptionsNotCategorized();
         return ResponseEntity.ok(list);
     }
+
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> updatePricingOption(@PathVariable Long id, @Valid @RequestBody PricingOptionDTO pricingOptionDTO) {
+        pricingOptionService.updatePricingOption(id, pricingOptionDTO);
+
+        return ResponseEntity.ok("Pricing option (id:" + id + ") successfully updated.");
+    }
+
+
 }

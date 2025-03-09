@@ -1,4 +1,4 @@
-package com.example.courier.service;
+package com.example.courier.service.address;
 
 import com.example.courier.domain.Address;
 import com.example.courier.domain.OrderAddress;
@@ -11,6 +11,7 @@ import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.repository.OrderAddressRepository;
+import com.example.courier.service.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

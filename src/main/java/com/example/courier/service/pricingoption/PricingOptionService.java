@@ -1,7 +1,10 @@
-package com.example.courier.service;
+package com.example.courier.service.pricingoption;
 
+import com.example.courier.common.PricingOptionCategory;
 import com.example.courier.domain.PricingOption;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PricingOptionDTO;
+import com.example.courier.dto.mapper.PricingOptionMapper;
 import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.repository.PricingOptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +12,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,13 +25,18 @@ public class PricingOptionService {
     private static final String WEIGHT_KEYWORD = "weight";
     private static final String PREFERENCE_KEYWORD = "preference";
 
-    @Autowired
-    private PricingOptionRepository pricingOptionRepository;
+    private final PricingOptionRepository pricingOptionRepository;
+    private final PricingOptionMapper pricingOptionMapper;
+
+    public PricingOptionService(PricingOptionRepository pricingOptionRepository, PricingOptionMapper pricingOptionMapper) {
+        this.pricingOptionRepository = pricingOptionRepository;
+        this.pricingOptionMapper = pricingOptionMapper;
+    }
 
     public Map<String, List<PricingOption>> getAllPricingOptions() {
         List<PricingOption> allOptions =  pricingOptionRepository.findAll();
 
-        Map<String, List<PricingOption>> categorizedOptions = allOptions
+        return allOptions
                 .stream()
                 .collect(Collectors.groupingBy(option -> {
                     if (option.getName().contains(WEIGHT_KEYWORD)) {
@@ -41,15 +47,29 @@ public class PricingOptionService {
                         return PREFERENCE_KEYWORD;
                     }
                 }));
-
-        return categorizedOptions;
     }
 
     public List<PricingOption> getPricingOptionsNotCategorized() {
         List<PricingOption> list = pricingOptionRepository.findAll();
+        if (list.isEmpty()) {
+            return List.of();
+        }
 
         return list;
     }
+
+    public void updatePricingOption(Long id, PricingOptionDTO pricingOptionDTO) {
+        PricingOption existingPricingOption = getPricingOptionById(id);
+        pricingOptionMapper.updatePricingOptionFromDTO(pricingOptionDTO, existingPricingOption);
+        pricingOptionRepository.save(existingPricingOption);
+    }
+
+
+
+
+
+
+
 
     @Transactional
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws PricingOptionNotFoundException {
@@ -68,6 +88,11 @@ public class PricingOptionService {
         return pricingOptionRepository.findById(Long.parseLong(id))
                 .map(PricingOption::getPrice)
                 .orElseThrow(() -> new RuntimeException("price by pricing options not found"));
+    }
+
+    private PricingOption getPricingOptionById(Long id) {
+        return pricingOptionRepository.findById(id).orElseThrow(() ->
+                new PricingOptionNotFoundException("Pricing option was not found with id " + id));
     }
 
     public String getDescriptionById(String id) {

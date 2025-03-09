@@ -1,9 +1,9 @@
-package com.example.courier.validator;
+package com.example.courier.validation.adminorderupdate;
 
 import com.example.courier.common.OrderStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.dto.request.OrderSectionUpdateRequest;
-import com.example.courier.service.PricingOptionService;
+import com.example.courier.service.pricingoption.PricingOptionService;
 import org.springframework.stereotype.Component;
 
 @Component

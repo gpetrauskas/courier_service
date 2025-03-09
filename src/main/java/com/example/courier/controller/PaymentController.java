@@ -1,8 +1,8 @@
 package com.example.courier.controller;
 
-import com.example.courier.dto.PaymentDTO;
+import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
-import com.example.courier.service.PaymentService;
+import com.example.courier.service.payment.PaymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +23,9 @@ public class PaymentController {
 
     @PostMapping("/pay/{orderId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentDTO paymentDTO, Principal principal) {
+    public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentRequestDTO paymentRequestDTO, Principal principal) {
         try {
-            return paymentService.processPayment(paymentDTO, orderId, principal);
+            return paymentService.processPayment(paymentRequestDTO, orderId, principal);
         } catch (RuntimeException e) {
             log.error("Unexpected error during payment: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error durin payent");
@@ -34,7 +34,7 @@ public class PaymentController {
 
     @PostMapping("/processPayment")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> processPayment(@RequestBody PaymentDTO paymentDTO) {
+    public ResponseEntity<?> processPayment(@RequestBody PaymentRequestDTO paymentRequestDTO) {
         try {
           //  paymentService.processPayment(paymentDTO);
             return ResponseEntity.ok("Payment processed successfully.");

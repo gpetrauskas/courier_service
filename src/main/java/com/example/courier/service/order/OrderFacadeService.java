@@ -1,9 +1,9 @@
 package com.example.courier.service.order;
 
 import com.example.courier.dto.request.*;
-import com.example.courier.service.AddressService;
+import com.example.courier.service.address.AddressService;
 import com.example.courier.service.parcel.ParcelService;
-import com.example.courier.service.PaymentService;
+import com.example.courier.service.payment.PaymentService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

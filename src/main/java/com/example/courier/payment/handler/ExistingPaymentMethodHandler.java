@@ -4,7 +4,7 @@ import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.Payment;
 import com.example.courier.domain.PaymentMethod;
-import com.example.courier.dto.PaymentDTO;
+import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.exception.PaymentFailedException;
 import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.UnauthorizedPaymentMethodException;
@@ -24,13 +24,13 @@ public class ExistingPaymentMethodHandler implements PaymentHandler {
     private CreditCardService creditCardService;
 
     @Override
-    public boolean isSupported(PaymentDTO paymentDTO) {
-        return paymentDTO.paymentMethodId() != null;
+    public boolean isSupported(PaymentRequestDTO paymentRequestDTO) {
+        return paymentRequestDTO.paymentMethodId() != null;
     }
 
     @Override
-    public ResponseEntity<String> handle(PaymentDTO paymentDTO, Payment payment) {
-        Long paymentMethodId = paymentDTO.paymentMethodId();
+    public ResponseEntity<String> handle(PaymentRequestDTO paymentRequestDTO, Payment payment) {
+        Long paymentMethodId = paymentRequestDTO.paymentMethodId();
         PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentMethodId)
                 .orElseThrow(() -> new PaymentMethodNotFoundException("Payment method not found"));
         if (!paymentMethod.getUser().equals(payment.getOrder().getUser())) {
@@ -39,7 +39,7 @@ public class ExistingPaymentMethodHandler implements PaymentHandler {
 
         if (paymentMethod instanceof CreditCard) {
             CreditCard card = (CreditCard) paymentMethod;
-            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentDTO.cvc());
+            ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, paymentRequestDTO.cvc());
             if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
                 payment.setStatus(PaymentStatus.FAILED);
                 throw new PaymentFailedException(responseEntity.getBody());

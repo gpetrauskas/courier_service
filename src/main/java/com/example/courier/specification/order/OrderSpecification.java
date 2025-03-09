@@ -1,4 +1,4 @@
-package com.example.courier.specification;
+package com.example.courier.specification.order;
 
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
@@ -13,15 +13,11 @@ public class OrderSpecification {
             Join<Object, Object> parcelJoin = root.join("parcelDetails");
             return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
         });
+    }
 
-
-/*        return (root, query, criteriaBuilder) -> {
-            if (parcelStatus != null && !parcelStatus.isEmpty() && ParcelStatus.isValidStatus(parcelStatus)) {
-                Join<Object, Object> parcelJoin = root.join("parcelDetails");
-                return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
-            }
-            return criteriaBuilder.conjunction();
-        };*/
+    public static Specification<Order> hasPersonId(Long personId) {
+        return ((root, query, criteriaBuilder) ->
+            criteriaBuilder.equal(root.get("id"), personId));
     }
 
     public static Specification<Order> hasParcelIsAssignedFalse() {

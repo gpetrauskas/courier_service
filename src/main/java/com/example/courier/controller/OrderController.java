@@ -5,16 +5,19 @@ import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.BaseOrderUpdateRequest;
-import com.example.courier.dto.request.OrderSectionUpdateRequest;
+import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.service.order.OrderFacadeService;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.PricingOptionService;
+import com.example.courier.service.pricingoption.PricingOptionService;
 import com.example.courier.service.TrackingService;
 import com.example.courier.service.AuthService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,11 +49,36 @@ public class OrderController {
 
     @PostMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> update(@PathVariable Long id, @RequestBody BaseOrderUpdateRequest updateRequest) {
+    public ResponseEntity<String> update(@PathVariable Long id, @Valid @RequestBody BaseOrderUpdateRequest updateRequest) {
         logger.info("Received update request: {}", updateRequest);
         orderFacadeService.updateSection(updateRequest);
         return ResponseEntity.ok("Order and/or its related information was updated");
     }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PaginatedResponseDTO<AdminOrderResponseDTO>> getAllOrdersForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String role
+    ) {
+        Page<AdminOrderResponseDTO> orderDTOPage = orderService.getAllOrdersForAdmin(page, size, userId, role);
+
+        return ResponseEntity.ok(new PaginatedResponseDTO<>(
+                orderDTOPage.getContent(),
+                orderDTOPage.getNumber(),
+                orderDTOPage.getTotalElements(),
+                orderDTOPage.getTotalPages()
+        ));
+    }
+
+
+
+
+
+
+
 
     @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")

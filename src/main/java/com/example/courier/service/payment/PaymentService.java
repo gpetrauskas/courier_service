@@ -1,10 +1,10 @@
-package com.example.courier.service;
+package com.example.courier.service.payment;
 
 import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
-import com.example.courier.dto.PaymentDTO;
+import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
 import com.example.courier.dto.mapper.PaymentMapper;
 import com.example.courier.dto.request.PaymentSectionUpdateRequest;
@@ -13,7 +13,6 @@ import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -39,7 +38,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public ResponseEntity<String> processPayment(PaymentDTO paymentDTO, Long orderId, Principal principal) {
+    public ResponseEntity<String> processPayment(PaymentRequestDTO paymentRequestDTO, Long orderId, Principal principal) {
         try {
             Payment payment = getPaymentByOrderId(orderId);
             Order order = payment.getOrder();
@@ -48,7 +47,7 @@ public class PaymentService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No valid payment founded.");
             }
 
-            ResponseEntity<String> response = processPaymentHandler(paymentDTO, payment);
+            ResponseEntity<String> response = processPaymentHandler(paymentRequestDTO, payment);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
                 handlePaymentSuccess(payment, order);
             } else {
@@ -66,10 +65,10 @@ public class PaymentService {
         }
     }
 
-    private ResponseEntity<String> processPaymentHandler(PaymentDTO paymentDTO, Payment payment) {
+    private ResponseEntity<String> processPaymentHandler(PaymentRequestDTO paymentRequestDTO, Payment payment) {
         for (PaymentHandler handler : paymentHandlers) {
-            if (handler.isSupported(paymentDTO)) {
-                ResponseEntity<String> response = handler.handle(paymentDTO, payment);
+            if (handler.isSupported(paymentRequestDTO)) {
+                ResponseEntity<String> response = handler.handle(paymentRequestDTO, payment);
                 if (!response.getStatusCode().equals(HttpStatus.OK)) {
                     throw new PaymentFailedException(response.getBody());
                 }
@@ -131,5 +130,9 @@ public class PaymentService {
         Payment payment = getPaymentById(updateRequest.id());
         paymentMapper.updatePaymentSectionFromRequest(updateRequest, payment);
         paymentRepository.save(payment);
+    }
+
+    public List<Payment> findAllByIds(List<Long> ids) {
+        return paymentRepository.findAllByOrderIdIn(ids);
     }
 }

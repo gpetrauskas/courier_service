@@ -3,7 +3,7 @@ package com.example.courier.controller;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
-import com.example.courier.service.PersonService;
+import com.example.courier.service.person.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

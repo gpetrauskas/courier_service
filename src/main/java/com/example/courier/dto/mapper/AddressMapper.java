@@ -19,7 +19,6 @@ public interface AddressMapper {
     @Mapping(target = "id", ignore = true)
     Address toAddress(AddressDTO addressDTO);
 
-    @Mapping(target = "id", ignore = true)
     OrderAddress toOrderAddress(Address address);
 
     @Mapping(target = "id", ignore = true)

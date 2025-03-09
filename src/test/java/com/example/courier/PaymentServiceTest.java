@@ -8,9 +8,10 @@ import com.example.courier.domain.Order;
 import com.example.courier.domain.Payment;
 import com.example.courier.domain.User;
 import com.example.courier.dto.*;
+import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;
-import com.example.courier.service.PaymentService;
+import com.example.courier.service.payment.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -47,7 +48,7 @@ public class PaymentServiceTest {
     @Mock
     private Principal principal;
 
-    private PaymentDTO paymentDTO;
+    private PaymentRequestDTO paymentRequestDTO;
     private Payment payment;
     private Order order;
     private User user;
@@ -78,7 +79,7 @@ public class PaymentServiceTest {
 
         CreditCardDTO paymentMethodDTO = new CreditCardDTO(66L, "1111111111119",
                 "12/30", "Vardas Pavarde", "121", false);
-        paymentDTO = new PaymentDTO(orderDTO, 77L, paymentMethodDTO, new BigDecimal("100"),
+        paymentRequestDTO = new PaymentRequestDTO(orderDTO, 77L, paymentMethodDTO, new BigDecimal("100"),
                 PaymentStatus.NOT_PAID, "123");
     }
 
@@ -86,12 +87,12 @@ public class PaymentServiceTest {
     public void toProcessPayment_Success() {
         when(paymentRepository.findByOrderId(any(Long.class))).thenReturn(Optional.of(payment));
         when(paymentHandlers.stream()).thenReturn(List.of(paymentHandler).stream());
-        when(paymentHandler.isSupported(any(PaymentDTO.class))).thenReturn(true);
-        when(paymentHandler.handle(any(PaymentDTO.class), any(Payment.class)))
+        when(paymentHandler.isSupported(any(PaymentRequestDTO.class))).thenReturn(true);
+        when(paymentHandler.handle(any(PaymentRequestDTO.class), any(Payment.class)))
                 .thenReturn(new ResponseEntity<>("Success", HttpStatus.OK));
         when(principal.getName()).thenReturn("myemail@email.com");
 
-        ResponseEntity<String> response = paymentService.processPayment(paymentDTO, order.getId(), principal);
+        ResponseEntity<String> response = paymentService.processPayment(paymentRequestDTO, order.getId(), principal);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Success", response.getBody());

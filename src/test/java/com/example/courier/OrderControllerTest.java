@@ -4,7 +4,7 @@ import com.example.courier.controller.OrderController;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.PricingOptionService;
+import com.example.courier.service.pricingoption.PricingOptionService;
 import com.example.courier.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

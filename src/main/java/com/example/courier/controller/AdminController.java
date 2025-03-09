@@ -27,8 +27,6 @@ import java.util.*;
 public class AdminController {
 
     @Autowired
-    private ParcelRepository parcelRepository;
-    @Autowired
     private AdminService adminService;
     @Autowired
     private RegistrationService registrationService;
@@ -38,33 +36,6 @@ public class AdminController {
     @Autowired
     private AuthService authService;
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
-
-/*    @PostMapping("/updateProductStatus/{trackingNumber}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> updateProductStatus(@PathVariable String trackingNumber, @RequestParam ParcelStatus newStatus) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            if (!ParcelStatus.isValidStatus(newStatus.name())) {
-                response.put("error", "Invalid status.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
-
-            Parcel parcelDetails = parcelRepository.findByTrackingNumber(trackingNumber).orElseThrow(() ->
-                    new NoSuchElementException("Parcel not found."));
-
-            parcelDetails.setStatus(newStatus);
-            parcelRepository.save(parcelDetails);
-
-            response.put("success", "Parcel status updated successfully");
-            return ResponseEntity.ok(response);
-        } catch (NoSuchElementException e) {
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        } catch (Exception e) {
-            response.put("error", "Problem occurred during parcel status change: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }*/
 
     @GetMapping("/test")
     @PreAuthorize("hasRole('ADMIN')")
@@ -79,49 +50,6 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PersonDetailsDTO> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.findPersonById(id));
-    }
-
-    @PostMapping("/createUser")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> createUser(@RequestBody RegistrationDTO registrationDTO) {
-        try {
-            //userService.registerUser(registrationDTO);
-            return ResponseEntity.ok("User registered successfully.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Where was an error during registration: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/updateOrder/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> updateOrderSection(@PathVariable Long id, @RequestBody Map<String, Object> updateData) {
-        logger.info("Trying to edit order with id: {}", id);
-        adminService.updateSection(updateData);
-        logger.info("Order with id: {} updated successfully", id);
-        ApiResponseDTO response = new ApiResponseDTO("success", "Order updated successfully");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/orders")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<AdminOrderDTO>> getAllOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String status
-    ) {
-        logger.info("Fetching orders for page: {}, size: {}, userId: {}, status: {}", page, size, userId, status);
-        Page<AdminOrderDTO> orderPage = adminService.getAllOrders(page, size, userId, status);
-
-        PaginatedResponseDTO<AdminOrderDTO> response = new PaginatedResponseDTO<>(
-                orderPage.getContent(),
-                orderPage.getNumber(),
-                orderPage.getTotalElements(),
-                orderPage.getTotalPages()
-        );
-
-        logger.info("Fetched {} orders out of {}", orderPage.getNumberOfElements(), orderPage.getTotalElements());
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/orders/{id}")
@@ -157,14 +85,6 @@ public class AdminController {
     public ResponseEntity<ApiResponseDTO> createPricingOption(@RequestBody PricingOption pricingOption) {
         adminService.createPricingOption(pricingOption);
         return ResponseEntity.ok(new ApiResponseDTO("success", "Pricing option created successfully."));
-    }
-
-    @PutMapping("/updatePricingOption/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> updatePricingOption(@PathVariable Long id,
-                                                      @RequestBody PricingOption pricingOption) {
-        adminService.updatePricingOption(id, pricingOption);
-        return ResponseEntity.ok(new ApiResponseDTO("success", "Pricing option updated successfully."));
     }
 
     @DeleteMapping("/deletePricingOption/{id}")

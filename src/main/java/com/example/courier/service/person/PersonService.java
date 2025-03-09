@@ -1,4 +1,4 @@
-package com.example.courier.service;
+package com.example.courier.service.person;
 
 import com.example.courier.domain.Person;
 import com.example.courier.dto.PaginatedResponseDTO;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 @Service
 public class PersonService {
@@ -43,7 +42,7 @@ public class PersonService {
     private PaginatedResponseDTO<PersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
         List<PersonResponseDTO> content = personPage.getContent()
                 .stream()
-                .map(PersonResponseDTO::fromPerson)
+                .map(personMapper::toPersonResponseDTO)
                 .toList();
 
         return new PaginatedResponseDTO<>(

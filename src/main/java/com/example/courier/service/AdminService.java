@@ -11,7 +11,7 @@ import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.PricingOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.*;
-import com.example.courier.specification.OrderSpecification;
+import com.example.courier.specification.order.OrderSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,11 +48,14 @@ public class AdminService {
     private ParcelRepository parcelRepository;
     @Autowired
     private CourierRepository courierRepository;
-    @Autowired
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
     @Autowired
     private PersonMapper personMapper;
     private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
+
+    public AdminService(OrderMapper orderMapper) {
+        this.orderMapper = orderMapper;
+    }
 
     public PersonDetailsDTO findPersonById(Long id) {
         Person person = personRepository.findById(id).orElseThrow(() ->
@@ -64,48 +67,12 @@ public class AdminService {
         return personDetailsDTO;
     }
 
-    public Page<AdminOrderDTO> getAllOrders(int page, int size, Long userId, String status) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
-        Specification<Order> specification = Specification.where(null);
-
-        if (userId != null) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("user").get("id"), userId));
-        }
-
-        if (status != null && !status.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("status"), status));
-        }
-
-        Page<Order> orderPage = orderRepository.findAll(specification, pageable);
-
-        if (orderPage.isEmpty()) {
-            return Page.empty();
-        }
-
-        List<Long> orderIds =   orderPage.stream()
-                .map(Order::getId)
-                .collect(Collectors.toList());
-
-        List<Payment> allPayments = paymentRepository.findAllByOrderIdIn(orderIds);
-
-        Map<Long, Payment> paymentMap = allPayments.stream()
-                .collect(Collectors.toMap(
-                        payment -> payment.getOrder().getId(),
-                        payment -> payment
-                ));
-
-
-        return orderPage.map(order -> AdminOrderDTO.fromOrder(order, paymentMap.get(order.getId())));
-    }
-
     public AdminOrderDTO getOrderById(Long id) {
         Order order = orderRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Order was not found."));
         Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
                 new PaymentMethodNotFoundException("Payment not found"));
-        return AdminOrderDTO.fromOrder(order, payment);
+        return orderMapper.toAdminOrderDTO(order, payment);
     }
 
     public String generateUserReport() {
@@ -177,23 +144,6 @@ public class AdminService {
         logger.info("New pricing option was added successfully. {}", newPricingOption.getName());
     }
 
-    public void updatePricingOption(Long id, PricingOption newValues) {
-            PricingOption pricingOption = pricingOptionRepository.findById(id).orElseThrow(() ->
-                    new PricingOptionNotFoundException("Pricing option with id: " + id + " was not found."));
-
-            if (newValues.getName() != null) {
-                pricingOption.setName(newValues.getName());
-            }
-            if (newValues.getDescription() != null) {
-                pricingOption.setDescription(newValues.getDescription());
-            }
-            if (newValues.getPrice() != null) {
-                pricingOption.setPrice(newValues.getPrice());
-            }
-
-            pricingOptionRepository.save(pricingOption);
-    }
-
     public String deletePricingOption(Long id) {
         if (!pricingOptionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Pricing option was not found.");
@@ -201,85 +151,6 @@ public class AdminService {
 
         pricingOptionRepository.deleteById(id);
         return "Pricing option deleted successfully.";
-    }
-
-    public void updateSection(Map<String, Object> updatedData) {
-        Order order = orderRepository.findById(Long.valueOf((Integer) updatedData.get("id"))).orElseThrow(() ->
-                new ResourceNotFoundException("Order with usch id was not found"));
-
-        System.out.println(updatedData.entrySet());
-        System.out.println(updatedData);
-        System.out.println(updatedData.values());
-        System.out.println(updatedData.get("status"));
-        System.out.println(updatedData.get("deliveryPreferences"));
-
-        String section = updatedData.get("sectionToEdit").toString();
-        System.out.println(section);
-
-        switch (section) {
-            case "orderSection" -> updateOrderSection(updatedData, order);
-            case "paymentSection" -> updatePaymentSection(updatedData, order);
-            case "parcelSection" -> updateParcelSection(updatedData, order);
-            case "senderSection" -> updateAddressSection(updatedData, order, true);
-            case "recipientSection" -> updateAddressSection(updatedData, order, false);
-        }
-
-    }
-
-    private void updateOrderSection(Map<String, Object> updatedData, Order order) {
-
-        String statusString = (String) updatedData.get("status");
-        OrderStatus statusEnum = OrderStatus.valueOf(statusString.toUpperCase());
-
-        order.setStatus(statusEnum);
-        order.setDeliveryPreferences(updatedData.get("deliveryPreferences").toString());
-        logger.info("order successfully updated");
-        orderRepository.save(order);
-    }
-
-    private void updatePaymentSection(Map<String, Object> updatedData, Order order) {
-        Payment payment = paymentRepository.findByOrderId(order.getId()).orElseThrow(() ->
-                new PaymentMethodNotFoundException("Payment not found"));
-
-        String paymentStatus = (String) updatedData.get("status");
-        PaymentStatus statusEnum = PaymentStatus.valueOf(paymentStatus.toUpperCase());
-        payment.setStatus(statusEnum);
-        logger.info("payment successfully updated");
-
-        paymentRepository.save(payment);
-    }
-
-    private void updateParcelSection(Map<String, Object> updatedData, Order order) {
-        String parcelStatus = (String) updatedData.get("status");
-        ParcelStatus parcelStatusEnum = ParcelStatus.valueOf(parcelStatus);
-        String contents = (String) updatedData.get("contents");
-
-        order.getParcelDetails().setStatus(parcelStatusEnum);
-        order.getParcelDetails().setContents(contents);
-
-        orderRepository.save(order);
-    }
-
-    private void updateAddressSection(Map<String, Object> updatedData, Order order, boolean isSender) {
-        OrderAddress orderAddress = isSender ? order.getSenderAddress() : order.getRecipientAddress();
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> addressData = (Map<String, Object>) updatedData.get("address");
-        logger.info("Address Data: " + addressData);
-
-        orderAddress.setName((String) addressData.get("name"));
-        orderAddress.setStreet((String) addressData.get("street"));
-        orderAddress.setHouseNumber((String) addressData.get("houseNumber"));
-        orderAddress.setCity((String) addressData.get("city"));
-        orderAddress.setPostCode((String) addressData.get("postCode"));
-        orderAddress.setPhoneNumber((String) addressData.get("phoneNumber"));
-        orderAddress.setFlatNumber((String) addressData.get("flatNumber"));
-
-        if (isSender) order.setSenderAddress(orderAddress);
-        else order.setRecipientAddress(orderAddress);
-
-        logger.info((isSender ? "Sender" : "Recipient") + " address successfully updated");
-        orderRepository.save(order);
     }
 
     @Transactional

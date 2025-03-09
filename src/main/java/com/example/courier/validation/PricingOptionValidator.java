@@ -1,9 +1,9 @@
-package com.example.courier.validator;
+package com.example.courier.validation;
 
 import com.example.courier.domain.Order;
 import com.example.courier.dto.request.OrderSectionUpdateRequest;
 import com.example.courier.exception.InvalidDeliveryPreferenceException;
-import com.example.courier.service.PricingOptionService;
+import com.example.courier.service.pricingoption.PricingOptionService;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;

@@ -32,15 +32,17 @@ public class CourierService {
     private final AuthorizationService authorizationService;
     private final CourierRepository courierRepository;
     private final NotificationService notificationService;
+    private final DeliveryTaskMapper deliveryTaskMapper;
 
     public CourierService(DeliveryTaskRepository deliveryTaskRepository, DeliveryTaskItemRepository deliveryTaskItemRepository,
                           AuthorizationService authorizationService, CourierRepository courierRepository,
-                          NotificationService notificationService) {
+                          NotificationService notificationService, DeliveryTaskMapper deliveryTaskMapper) {
         this.deliveryTaskRepository = deliveryTaskRepository;
         this.deliveryTaskItemRepository = deliveryTaskItemRepository;
         this.authorizationService = authorizationService;
         this.courierRepository = courierRepository;
         this.notificationService = notificationService;
+        this.deliveryTaskMapper = deliveryTaskMapper;
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +74,7 @@ public class CourierService {
 
     private List<CourierTaskDTO> mapDeliveryTaskToDTO(List<DeliveryTask> taskList) {
         return taskList.stream()
-                .map(i -> DeliveryTaskMapper.INSTANCE.toCourierTaskDTO(i, i.getTaskType()))
+                .map(i -> deliveryTaskMapper.toCourierTaskDTO(i, i.getTaskType()))
                 .toList();
     }
 

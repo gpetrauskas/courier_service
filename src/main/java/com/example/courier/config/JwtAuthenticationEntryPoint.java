@@ -1,4 +1,4 @@
-package com.example.courier.exception;
+package com.example.courier.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
