@@ -19,7 +19,7 @@ public interface OrderService {
     OrderDTO findUserOrderDTOById(Long orderId, Principal principal);
     List<OrderDTO> findAllOrders();
     void orderSectionUpdate(OrderSectionUpdateRequest updateRequest);
-    Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, Long userId, String role);
+    Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, String parcelStatus, Long id);
     List<Order> fetchAllByParcelDetails(List<Parcel> parcels);
     //void saveOrder(Order order);
    // void updateAndSaveOrderStatusConfirmed(Long orderId);

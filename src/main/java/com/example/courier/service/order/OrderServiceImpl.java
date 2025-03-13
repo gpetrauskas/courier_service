@@ -77,9 +77,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, Long userId, String role) {
+    public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, String parcelStatus, Long id) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecification(userId, role);
+        Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecification(orderStatus, id);
 
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
         if (orderPage.isEmpty()) {
@@ -104,7 +104,6 @@ public class OrderServiceImpl implements OrderService {
         });
 
     }
-
 
 
 

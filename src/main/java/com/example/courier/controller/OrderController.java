@@ -60,10 +60,11 @@ public class OrderController {
     public ResponseEntity<PaginatedResponseDTO<AdminOrderResponseDTO>> getAllOrdersForAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String role
+            @RequestParam(required = false) String orderStatus,
+            @RequestParam(required = false) String parcelStatus,
+            @RequestParam(required = false) Long id
     ) {
-        Page<AdminOrderResponseDTO> orderDTOPage = orderService.getAllOrdersForAdmin(page, size, userId, role);
+        Page<AdminOrderResponseDTO> orderDTOPage = orderService.getAllOrdersForAdmin(page, size, orderStatus, parcelStatus, id);
 
         return ResponseEntity.ok(new PaginatedResponseDTO<>(
                 orderDTOPage.getContent(),

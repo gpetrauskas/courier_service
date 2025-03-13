@@ -5,13 +5,13 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class OrderSpecificationBuilder {
 
-    public static Specification<Order> buildOrderSpecification(Long userId, String status) {
+    public static Specification<Order> buildOrderSpecification(String status, Long id) {
         Specification<Order> specification = Specification.where(null);
-        if (userId != null) {
-            specification = specification.and(OrderSpecification.hasPersonId(userId));
+        if (id != null) {
+            specification = specification.and(OrderSpecification.hasPersonId(id));
         }
         if (status != null) {
-            specification = specification.and(OrderSpecification.hasParcelStatus(status));
+            specification = specification.and(OrderSpecification.hasOrderStatus(status));
         }
 
         return specification;

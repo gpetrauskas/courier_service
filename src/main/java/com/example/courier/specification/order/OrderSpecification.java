@@ -1,5 +1,6 @@
 package com.example.courier.specification.order;
 
+import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import jakarta.persistence.criteria.Join;
@@ -13,6 +14,12 @@ public class OrderSpecification {
             Join<Object, Object> parcelJoin = root.join("parcelDetails");
             return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));
         });
+    }
+
+    public static Specification<Order> hasOrderStatus(String orderStatus) {
+        OrderStatus.isValidStatus(orderStatus);
+        return ((root, query, criteriaBuilder) ->
+            criteriaBuilder.equal(root.get("status"), orderStatus));
     }
 
     public static Specification<Order> hasPersonId(Long personId) {
