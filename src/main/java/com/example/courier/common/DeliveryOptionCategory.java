@@ -1,6 +1,6 @@
 package com.example.courier.common;
 
-public enum PricingOptionCategory {
+public enum DeliveryOptionCategory {
     DELIVERY,
     SIZE,
     WEIGHT,

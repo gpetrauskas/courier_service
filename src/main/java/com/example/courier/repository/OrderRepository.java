@@ -19,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o FROM Order o JOIN o.parcelDetails p WHERE p.status = :status")
     List<Order> findByParcelStatus(@Param("status") ParcelStatus status);
 
+    @Query("SELECT o FROM Order o WHERE o.parcelDetails IN :parcels")
+    List<Order> findAllByParcelDetails(@Param("parcels") List<Parcel> parcels);
 }

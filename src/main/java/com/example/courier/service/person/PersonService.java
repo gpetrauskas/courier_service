@@ -1,6 +1,9 @@
 package com.example.courier.service.person;
 
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
+import com.example.courier.domain.User;
+import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
 import com.example.courier.dto.mapper.PersonMapper;
@@ -90,5 +93,14 @@ public class PersonService {
     private Person fetchById(Long personId) {
         return personRepository.findById(personId).orElseThrow(() ->
                 new ResourceNotFoundException("User was not found."));
+    }
+
+    public <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType) {
+        Person person = fetchById(id);
+        if (!personType.isInstance(person)) {
+            throw new IllegalArgumentException("The person is not instance of " + personType.getSimpleName());
+        }
+
+        return personType.cast(person);
     }
 }

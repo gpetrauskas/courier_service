@@ -3,13 +3,14 @@ package com.example.courier.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "pricing_options")
-public class PricingOption implements Serializable {
+@Table(name = "delivery_options")
+public class DeliveryOption implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,13 +24,18 @@ public class PricingOption implements Serializable {
     @Column
     @NotNull
     private BigDecimal price;
+    @Column
+    @ColumnDefault("false")
+    private boolean disabled;
 
-    public PricingOption() {}
+    public DeliveryOption() {
+    }
 
-    public PricingOption(String name, String description, BigDecimal price) {
+    public DeliveryOption(String name, String description, BigDecimal price, boolean disabled) {
         this.name = name;
         this.description = description;
         this.price = price;
+        this.disabled = disabled;
     }
 
     public Long getId() {
@@ -58,5 +64,13 @@ public class PricingOption implements Serializable {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 }

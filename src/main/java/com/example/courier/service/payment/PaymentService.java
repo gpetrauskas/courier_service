@@ -7,7 +7,7 @@ import com.example.courier.domain.*;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
 import com.example.courier.dto.mapper.PaymentMapper;
-import com.example.courier.dto.request.PaymentSectionUpdateRequest;
+import com.example.courier.dto.request.order.PaymentSectionUpdateRequest;
 import com.example.courier.exception.*;
 import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;

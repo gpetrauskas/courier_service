@@ -5,6 +5,7 @@ import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
+import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
@@ -13,6 +14,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,35 +42,25 @@ public class AuthService {
             var person = personRepository.findByEmail(loginDTO.email()).orElseThrow(() ->
                     new RuntimeException("Invalid credentials"));
 
-            if (passwordEncoder.matches(loginDTO.password(), person.getPassword())) {
-                String role = getRole(person);
+            if (!passwordEncoder.matches(loginDTO.password(), person.getPassword())) {
+                throw new BadCredentialsException("Invalid credentials");
+            }
 
-                String jwt = jwtService.createToken(loginDTO.email(), role, person.getName());
-                Map<String, String> tokenDetails = jwtService.validateToken(jwt);
-                String authToken = tokenDetails.get("authToken");
-                String encryptedAuthToken = jwtService.encryptAuthToken(authToken);
+                String jwt = jwtService.createToken(loginDTO.email(), person.getRole(), person.getName());
+                JwtClaims tokenDetails = jwtService.validateToken(jwt);
+                String encryptedAuthToken = jwtService.encryptAuthToken(tokenDetails.authToken());
 
                 setCookies(response, jwt, encryptedAuthToken);
 
-                Map<String, String> responseMap = new HashMap<>();
-                responseMap.put("message", "Login successfully");
-                return responseMap;
-            }
+                return Map.of("message", "Login successfully.");
+        } catch (UsernameNotFoundException | BadCredentialsException e) {
+            logger.warn("Login failed: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            logger.error("Error occurred during login", e);
+            logger.error("Unexpected error during login.", e);
+            throw new RuntimeException("Unexpected error occurred during login");
         }
-        throw new RuntimeException("Invalid credentials.");
     }
-
-    private String getRole(Person person) {
-        return switch (person) {
-            case Admin ignored -> "ADMIN";
-            case Courier ignored -> "COURIER";
-            case User ignored -> "USER";
-                default -> throw new IllegalArgumentException("Unknown person type: " + person.getClass());
-        };
-    }
-
 
     private void setCookies(HttpServletResponse response, String jwtToken, String encryptedAuthToken) {
         setCookie(response, jwtToken, "jwt");

@@ -3,10 +3,12 @@ package com.example.courier.service.parcel;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Parcel;
 import com.example.courier.dto.mapper.ParcelMapper;
-import com.example.courier.dto.request.ParcelSectionUpdateRequest;
+import com.example.courier.dto.request.order.ParcelSectionUpdateRequest;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.ParcelRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ParcelService {
@@ -29,5 +31,18 @@ public class ParcelService {
     private Parcel fetchById(Long id) {
         return parcelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parcel was not found"));
+    }
+
+    public List<Parcel> fetchParcelsByIdBatch(List<Long> ids) {
+        List<Parcel> parcels = parcelRepository.findAllById(ids);
+        if (parcels.isEmpty()) {
+            return List.of();
+        }
+
+        return parcels;
+    }
+
+    public Long getAvailableItemsCountByStatus(ParcelStatus status) {
+        return parcelRepository.countByStatusAndIsAssignedFalse(status);
     }
 }

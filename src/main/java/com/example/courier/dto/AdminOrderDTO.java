@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public record AdminOrderDTO(
         Long id, PersonResponseDTO user, OrderAddress senderAddress, OrderAddress recipientAddress,
-        Parcel parcelDetails, String deliveryPreferences, OrderStatus status,
+        Parcel parcelDetails, String deliveryMethod, OrderStatus status,
         LocalDateTime createTime, AdminPaymentDTO paymentDetails
 ) {
 
@@ -18,7 +18,7 @@ public record AdminOrderDTO(
                 ? AdminPaymentDTO.fromPayment(payment) : null;
 
         return new AdminOrderDTO(order.getId(), user, order.getSenderAddress(), order.getRecipientAddress(),
-                order.getParcelDetails(), order.getDeliveryPreferences(), order.getStatus(), order.getCreateDate(),
+                order.getParcelDetails(), order.getDeliveryMethod(), order.getStatus(), order.getCreateDate(),
                 paymentDetailsDTO);
     }*/
 }

@@ -4,7 +4,7 @@ import com.example.courier.controller.OrderController;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.pricingoption.PricingOptionService;
+import com.example.courier.service.deliveryoption.DeliveryOptionService;
 import com.example.courier.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ public class OrderControllerTest {
     @Mock
     private AuthService authService;
     @Mock
-    private PricingOptionService pricingOptionService;
+    private DeliveryOptionService deliveryOptionService;
     @Mock
     private OrderService orderService;
     @Mock
@@ -52,7 +52,7 @@ public class OrderControllerTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("myemail@mail.com");
         when(authService.getUserByEmail("myemail@mail.com")).thenReturn(user);
-        when(pricingOptionService.calculateShippingCost(orderDTO)).thenReturn(shippingCost);
+        when(deliveryOptionService.calculateShippingCost(orderDTO)).thenReturn(shippingCost);
 
         ResponseEntity<?> response = orderController.addOrder(orderDTO);
 

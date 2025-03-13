@@ -2,7 +2,7 @@ package com.example.courier.dto.mapper;
 
 import com.example.courier.domain.Payment;
 import com.example.courier.dto.AdminPaymentDTO;
-import com.example.courier.dto.request.PaymentSectionUpdateRequest;
+import com.example.courier.dto.request.order.PaymentSectionUpdateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

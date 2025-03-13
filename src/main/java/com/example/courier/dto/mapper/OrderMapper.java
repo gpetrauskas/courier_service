@@ -4,7 +4,7 @@ import com.example.courier.domain.Order;
 import com.example.courier.domain.Payment;
 import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.request.OrderSectionUpdateRequest;
+import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -35,7 +35,7 @@ public interface OrderMapper {
     @Mapping(source = "order.user", target = "personResponseDTO")
     @Mapping(source = "order.senderAddress", target = "senderAddress")
     @Mapping(source = "order.recipientAddress", target = "recipientAddress")
-    @Mapping(source = "order.deliveryPreferences", target = "deliveryPreferences")
+    @Mapping(source = "order.deliveryMethod", target = "deliveryMethod")
     @Mapping(source = "order.parcelDetails", target = "parcelResponseDTO")
     @Mapping(source = "order.status", target = "orderStatus")
     @Mapping(source = "order.createDate", target = "createTime")

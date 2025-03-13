@@ -6,11 +6,11 @@ import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.request.BaseOrderUpdateRequest;
+import com.example.courier.dto.request.order.BaseOrderUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.service.order.OrderFacadeService;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.pricingoption.PricingOptionService;
+import com.example.courier.service.deliveryoption.DeliveryOptionService;
 import com.example.courier.service.TrackingService;
 import com.example.courier.service.AuthService;
 import jakarta.validation.Valid;
@@ -43,7 +43,7 @@ public class OrderController {
     @Autowired
     private AuthService authService;
     @Autowired
-    private PricingOptionService pricingOptionService;
+    private DeliveryOptionService deliveryOptionService;
     @Autowired
     private OrderFacadeService orderFacadeService;
 
@@ -130,7 +130,7 @@ public class OrderController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = authService.getUserByEmail(auth.getName());
-            BigDecimal shippingCost = pricingOptionService.calculateShippingCost(orderDTO);
+            BigDecimal shippingCost = deliveryOptionService.calculateShippingCost(orderDTO);
             Long orderId = orderService.placeOrder(user.getId(), orderDTO);
 
             Map<String, Object> response = new HashMap<>();

@@ -5,7 +5,7 @@ import com.example.courier.domain.OrderAddress;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
-import com.example.courier.dto.request.AddressSectionUpdateRequest;
+import com.example.courier.dto.request.order.AddressSectionUpdateRequest;
 import com.example.courier.exception.AddressNotFoundException;
 import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.exception.UserNotFoundException;

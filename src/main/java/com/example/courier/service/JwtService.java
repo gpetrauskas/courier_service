@@ -1,8 +1,9 @@
 package com.example.courier.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.example.courier.dto.jwt.JwtClaims;
+import io.jsonwebtoken.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
@@ -10,52 +11,47 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Instant;
 import java.util.*;
 
 @Service
 public class JwtService {
 
-    private SecretKey secretKey = generateKey();
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+    private final SecretKey secretKey = generateKey();
 
     public String createToken(String email, String role, String name) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiry = now.plusHours(1);
-        String authToken = generateAuthToken();
+        Instant now = Instant.now();
+        Instant expiry = now.plusSeconds(7200);
+        String authToken = UUID.randomUUID().toString();
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
                 .claim("name", name)
                 .claim("authToken", authToken)
-                .issuedAt(convertToDateViaInstant(now))
-                .expiration(convertToDateViaInstant(expiry))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(secretKey)
                 .compact();
     }
 
-    private String generateAuthToken() {
-        return UUID.randomUUID().toString();
-    }
+    public JwtClaims validateToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+            String subject = claims.getSubject();
+            String role = claims.get("role", String.class);
+            String name = claims.get("name", String.class);
+            String authToken = claims.get("authToken", String.class);
 
-    private Date convertToDateViaInstant(LocalDateTime dateToConvert) {
-        return Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
-    }
-
-    public Map<String, String> validateToken(String token) {
-        Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
-        String subject = claims.getSubject();
-        String role = claims.get("role", String.class);
-        String name = claims.get("name", String.class);
-        String authToken = claims.get("authToken", String.class);
-
-        Map<String, String> authDetails = new HashMap<>();
-        authDetails.put("subject", subject);
-        authDetails.put("role", role);
-        authDetails.put("name", name);
-        authDetails.put("authToken", authToken);
-
-        return authDetails;
+            return new JwtClaims(subject, role, name, authToken);
+        } catch (ExpiredJwtException e) {
+            logger.warn("JWT expired: {}", e.getMessage());
+            throw new RuntimeException("JWT expired");
+        } catch (JwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+            throw new RuntimeException("Invalid JWT token");
+        }
     }
 
     private SecretKey generateKey() {

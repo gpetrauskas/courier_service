@@ -41,7 +41,7 @@ public class User extends Person {
 
     public List<PaymentMethod> test() {
         return this.paymentMethods.stream()
-                .filter(paymentMethod -> paymentMethod.isCreditCard())
+                .filter(PaymentMethod::isCreditCard)
                 .map(paymentMethod -> (CreditCard) paymentMethod)
                 .filter(CreditCard::isSaved)
                 .collect(Collectors.toList());

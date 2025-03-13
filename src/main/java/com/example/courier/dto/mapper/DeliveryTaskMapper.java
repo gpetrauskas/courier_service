@@ -28,7 +28,7 @@ public interface DeliveryTaskMapper {
     @Named("mapCourier")
     default CourierDTO mapCourier(Courier courier) {
         if (courier == null) return null;
-        return new CourierDTO(courier.getId(), courier.getName(), courier.getEmail());
+        return new CourierDTO(courier.getId(), courier.getName(), courier.getEmail(), courier.hasActiveTask());
     }
 
     @Named("mapItems")

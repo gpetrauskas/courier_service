@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "addresses")
-public class Address extends BaseAddress implements Serializable {
+public class Address extends BaseAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,11 +1,8 @@
 package com.example.courier.controller;
 
-import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.*;
-import com.example.courier.domain.Parcel;
 import com.example.courier.dto.*;
 import com.example.courier.repository.DeliveryTaskItemRepository;
-import com.example.courier.repository.ParcelRepository;
 import com.example.courier.service.AdminService;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.RegistrationService;
@@ -73,40 +70,13 @@ public class AdminController {
         return ResponseEntity.ok(report);
     }
 
-    @GetMapping("/pricing-options/{id}")
+    @GetMapping("/delivery-options/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PricingOptionDTO> getPricingOptionById(@PathVariable Long id) {
-        PricingOptionDTO option = adminService.getPricingOptionById(id);
+    public ResponseEntity<DeliveryOptionBaseDTO> getDeliveryOptionById(@PathVariable Long id) {
+        DeliveryOptionBaseDTO option = adminService.getDeliveryOptionById(id);
         return ResponseEntity.ok(option);
     }
 
-    @PostMapping("/create-pricing-option")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> createPricingOption(@RequestBody PricingOption pricingOption) {
-        adminService.createPricingOption(pricingOption);
-        return ResponseEntity.ok(new ApiResponseDTO("success", "Pricing option created successfully."));
-    }
-
-    @DeleteMapping("/deletePricingOption/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> deletePricingOption(@PathVariable Long id) {
-        String message = adminService.deletePricingOption(id);
-        return ResponseEntity.ok(new ApiResponseDTO("success", message));
-    }
-
-    @PostMapping("/createCourierDeliveryList")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> createCourierDeliveryList(@RequestBody CreateTaskDTO taskDTO) {
-            adminService.createNewCourierTask(taskDTO);
-
-            return ResponseEntity.ok(new ApiResponseDTO("success", "Courier Task List was created successfully!"));
-    }
-
-    @GetMapping("/getItemsForTheListCount")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Long>> getItemsForTheListCount() {
-        return ResponseEntity.ok(adminService.getItemsForTheListCount());
-    }
 
     @GetMapping("/getItemsByStatus")
     @PreAuthorize("hasRole('ADMIN')")

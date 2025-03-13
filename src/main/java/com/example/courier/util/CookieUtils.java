@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class CookieUtils {
 
-    private static Logger logger = LoggerFactory.getLogger(CookieUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(CookieUtils.class);
 
     private static void clearCookie(HttpServletResponse response, String cookieName) {
         Cookie cookie = new Cookie(cookieName, "");

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 public record AdminOrderResponseDTO(
         Long id, PersonResponseDTO personResponseDTO, AddressDTO senderAddress,
-        AddressDTO recipientAddress, String deliveryPreferences, ParcelDTO parcelResponseDTO,
+        AddressDTO recipientAddress, String deliveryMethod, ParcelDTO parcelResponseDTO,
         OrderStatus orderStatus, LocalDateTime createTime, AdminPaymentResponseDTO adminPaymentResponseDTO
 ) {
 

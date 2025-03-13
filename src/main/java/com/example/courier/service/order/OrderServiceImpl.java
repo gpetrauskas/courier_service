@@ -9,7 +9,7 @@ import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
-import com.example.courier.dto.request.OrderSectionUpdateRequest;
+import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
@@ -18,10 +18,10 @@ import com.example.courier.repository.*;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.payment.PaymentService;
-import com.example.courier.service.pricingoption.PricingOptionService;
+import com.example.courier.service.deliveryoption.DeliveryOptionService;
 import com.example.courier.specification.order.OrderSpecificationBuilder;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
-import com.example.courier.validation.PricingOptionValidator;
+import com.example.courier.validation.DeliveryOptionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,22 +54,22 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private AuthService authService;
     @Autowired
-    private PricingOptionService pricingOptionService;
+    private DeliveryOptionService deliveryOptionService;
     private final OrderUpdateValidator orderUpdateValidator;
-    private final PricingOptionValidator pricingOptionValidator;
+    private final DeliveryOptionValidator deliveryOptionValidator;
 
     public OrderServiceImpl(OrderMapper orderMapper, OrderUpdateValidator orderUpdateValidator,
-                            PricingOptionValidator pricingOptionValidator) {
+                            DeliveryOptionValidator deliveryOptionValidator) {
         this.orderMapper = orderMapper;
         this.orderUpdateValidator = orderUpdateValidator;
-        this.pricingOptionValidator = pricingOptionValidator;
+        this.deliveryOptionValidator = deliveryOptionValidator;
     }
 
     @Transactional
     public void orderSectionUpdate(OrderSectionUpdateRequest updateRequest) {
         Order order = findOrderById(updateRequest.id());
 
-        pricingOptionValidator.validateDeliveryPrefForOrderStatusUpdate(updateRequest, order);
+        deliveryOptionValidator.validateDeliveryPrefForOrderStatusUpdate(updateRequest, order);
         orderUpdateValidator.validateOrderSectionUpdate(updateRequest, order);
 
         orderMapper.updateOrderSectionFromRequest(updateRequest, order);
@@ -121,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
         Parcel parcelDetails = createParcelFromDTO(orderDTO.parcelDetails());
         order.setParcelDetails(parcelDetails);
 
-        BigDecimal amount = pricingOptionService.calculateShippingCost(orderDTO);
+        BigDecimal amount = deliveryOptionService.calculateShippingCost(orderDTO);
 
         saveOrder(order);
         paymentService.createPayment(order, amount);
@@ -138,21 +138,21 @@ public class OrderServiceImpl implements OrderService {
         order.setUser(user);
         order.setSenderAddress(senderAddress);
         order.setRecipientAddress(recipientAddress);
-        order.setDeliveryPreferences(getPricingOptionDescription(orderDTO.deliveryPreferences()));
+        order.setDeliveryMethod(getDeliveryOptionDescription(orderDTO.deliveryPreferences()));
         order.setStatus(OrderStatus.PENDING);
         order.setCreateDate(LocalDateTime.now().withNano(0));
 
         return order;
     }
 
-    private String getPricingOptionDescription(String id) {
-        return pricingOptionService.getDescriptionById(id);
+    private String getDeliveryOptionDescription(String id) {
+        return deliveryOptionService.getDescriptionById(id);
     }
 
     private Parcel createParcelFromDTO(ParcelDTO parcelDTO) {
         Parcel parcelDetails = new Parcel();
-        parcelDetails.setWeight(getPricingOptionDescription(parcelDTO.weight()));
-        parcelDetails.setDimensions(getPricingOptionDescription(parcelDTO.dimensions()));
+        parcelDetails.setWeight(getDeliveryOptionDescription(parcelDTO.weight()));
+        parcelDetails.setDimensions(getDeliveryOptionDescription(parcelDTO.dimensions()));
         parcelDetails.setContents(parcelDTO.contents());
         parcelDetails.setTrackingNumber(UUID.randomUUID().toString());
         parcelDetails.setStatus(ParcelStatus.WAITING_FOR_PAYMENT);
@@ -226,5 +226,9 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
 
         return allOrdersDTO;
+    }
+    
+    public List<Order> fetchAllByParcelDetails(List<Parcel> parcels) {
+        return orderRepository.findAllByParcelDetails(parcels);
     }
 }

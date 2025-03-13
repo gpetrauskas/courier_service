@@ -24,7 +24,7 @@ public class OrderTest {
         assertEquals("Bag End", order.getSenderAddress());
         assertEquals("Bagshot Row", order.getRecipientAddress());
         assertEquals(packageDetails, order.getPackageDetails());
-        assertEquals("Express", order.getDeliveryPreferences());
+        assertEquals("Express", order.getDeliveryMethod());
         assertEquals("Pending", order.getStatus());
         assertEquals(createdDate, order.getCreateDate());
     }

@@ -8,7 +8,7 @@ import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.PaymentMethodNotFoundException;
-import com.example.courier.exception.PricingOptionNotFoundException;
+import com.example.courier.exception.DeliveryOptionNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.*;
 import com.example.courier.specification.order.OrderSpecification;
@@ -43,7 +43,7 @@ public class AdminService {
     @Autowired
     private DeliveryTaskRepository deliveryTaskRepository;
     @Autowired
-    private PricingOptionRepository pricingOptionRepository;
+    private DeliveryOptionRepository deliveryOptionRepository;
     @Autowired
     private ParcelRepository parcelRepository;
     @Autowired
@@ -107,7 +107,7 @@ public class AdminService {
             report.append(order.getUser().getId()).append("\t");
             report.append(order.getSenderAddress()).append("\t");
             report.append(order.getRecipientAddress()).append("\t");
-            report.append(order.getDeliveryPreferences()).append("\t");
+            report.append(order.getDeliveryMethod()).append("\t");
             report.append(order.getStatus()).append("\t");
             report.append(order.getCreateDate()).append("\t");
             report.append(parcelDetails.getId()).append("\t");
@@ -128,113 +128,10 @@ public class AdminService {
         return report.toString();
     }
 
-    public PricingOptionDTO getPricingOptionById(Long id) {
-            return pricingOptionRepository.findById(id)
-                    .map(PricingOptionDTO::fromPricingOption)
-                    .orElseThrow(() -> new PricingOptionNotFoundException("Pricing option not found."));
-    }
-
-    public void createPricingOption(PricingOption pricingOption) {
-        PricingOption newPricingOption = new PricingOption();
-        newPricingOption.setName(pricingOption.getName());
-        newPricingOption.setDescription(pricingOption.getDescription());
-        newPricingOption.setPrice(pricingOption.getPrice());
-
-        pricingOptionRepository.save(newPricingOption);
-        logger.info("New pricing option was added successfully. {}", newPricingOption.getName());
-    }
-
-    public String deletePricingOption(Long id) {
-        if (!pricingOptionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Pricing option was not found.");
-        }
-
-        pricingOptionRepository.deleteById(id);
-        return "Pricing option deleted successfully.";
-    }
-
-    @Transactional
-    public void createNewCourierTask(CreateTaskDTO taskDTO) {
-        validateCreateTaskInput(taskDTO);
-
-        Admin admin = getAuthenticatedAdmin();
-        Courier courier = findCourierById(taskDTO.courierId());
-
-        logger.info(taskDTO.parcelsIds().toString());
-
-        DeliveryTask deliveryTask = createDeliveryTask(taskDTO, admin, courier);
-        List<Parcel> parcelList = parcelRepository.findAllById(taskDTO.parcelsIds());
-        List<DeliveryTaskItem> items = createDeliveryTaskItems(parcelList, deliveryTask, taskDTO);
-
-        deliveryTask.setItems(items);
-        courier.setHasActiveTask(true);
-
-        deliveryTaskRepository.save(deliveryTask);
-        courierRepository.save(courier);
-        parcelRepository.saveAll(parcelList);
-    }
-
-    private Courier findCourierById(Long id) {
-        return courierRepository.findById(id).orElseThrow(() ->
-                new ResourceNotFoundException("Courier not found with id: " + id));
-    }
-
-    private void validateCreateTaskInput(CreateTaskDTO taskDTO) {
-        if (taskDTO.parcelsIds() == null || taskDTO.parcelsIds().isEmpty()) {
-            throw new IllegalArgumentException("Parcel IDs cannot be null or empty");
-        }
-    }
-
-    private DeliveryTask createDeliveryTask(CreateTaskDTO createTaskDTO, Admin admin, Courier courier) {
-        DeliveryTask deliveryTask = new DeliveryTask();
-        deliveryTask.setTaskType(createTaskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
-                TaskType.PICKUP : TaskType.DELIVERY);
-        deliveryTask.setCreatedBy(admin);
-        deliveryTask.setCourier(courier);
-        deliveryTask.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
-
-        return deliveryTask;
-    }
-
-    private List<DeliveryTaskItem> createDeliveryTaskItems(
-            List<Parcel> parcelList, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
-        return parcelList.stream()
-                .map(p -> createDeliveryTaskItem(p, deliveryTask, taskDTO))
-                .toList();
-    }
-
-    private DeliveryTaskItem createDeliveryTaskItem(Parcel p, DeliveryTask deliveryTask, CreateTaskDTO taskDTO) {
-        p.setStatus(taskDTO.taskType().equalsIgnoreCase("PICKING_UP") ?
-                ParcelStatus.PICKING_UP : ParcelStatus.DELIVERING);
-        p.setAssigned(true);
-
-        DeliveryTaskItem item = new DeliveryTaskItem();
-        item.setParcel(p);
-        item.setTask(deliveryTask);
-        item.setStatus(p.getStatus());
-
-        Order order = orderRepository.findByParcelDetails(p)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found for parcel: " + p.getId()));
-
-        item.setSenderAddress(order.getSenderAddress());
-        item.setRecipientAddress(order.getRecipientAddress());
-
-        item.setDeliveryPreference(order.getDeliveryPreferences());
-        return item;
-    }
-
-    public Map<String, Long> getItemsForTheListCount() {
-        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.DELIVERING);
-        logger.info("fetching items count");
-
-        Map<String, Long> response = statuses.stream()
-                .collect(Collectors.toMap(
-                        status -> status.name().toLowerCase(),
-                        status -> parcelRepository.countByStatusAndIsAssignedFalse(status)
-                ));
-
-        logger.info("Items count fetched successfully: {}", response);
-        return response;
+    public DeliveryOptionBaseDTO getDeliveryOptionById(Long id) {
+            return deliveryOptionRepository.findById(id)
+                    .map(DeliveryOptionBaseDTO::fromDeliveryOption)
+                    .orElseThrow(() -> new DeliveryOptionNotFoundException("Delivery option not found."));
     }
 
     public Page<OrderDTO> getItemsByStatus(int page, int size, String status) {
@@ -257,7 +154,7 @@ public class AdminService {
         List<Courier> allCouriers = courierRepository.findByHasActiveTaskFalse();
 
         return allCouriers.stream()
-                .map(c -> new CourierDTO(c.getId(), c.getName(), c.getEmail()))
+                .map(c -> new CourierDTO(c.getId(), c.getName(), c.getEmail(), c.hasActiveTask()))
                 .toList();
     }
 

@@ -1,4 +1,4 @@
-package com.example.courier.dto.request;
+package com.example.courier.dto.request.order;
 
 import com.example.courier.validation.shared.AtLeastOneField;
 

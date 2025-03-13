@@ -1,6 +1,7 @@
 package com.example.courier.exception;
 
 import com.example.courier.dto.ApiResponseDTO;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
             logger.warn("Validation error on field {}: {}", error.getField(), error.getDefaultMessage());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiResponseDTO> handleValidationException(ValidationException ex) {
+        logger.warn("Validation error: {}", ex.getMessage(), ex);
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -76,4 +84,12 @@ public class GlobalExceptionHandler {
         ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", "Unexpected error occurred.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponseDTO);
     }
+
+    @ExceptionHandler(DeliveryOptionNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO> handleDeliveryOptionNotFoundException(DeliveryOptionNotFoundException ex) {
+        logger.error("Delivery Option error: {}", ex.getMessage(), ex);
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponseDTO);
+    }
+
 }

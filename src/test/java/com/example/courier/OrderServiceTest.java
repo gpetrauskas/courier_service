@@ -16,7 +16,7 @@ import com.example.courier.service.*;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.order.OrderServiceImpl;
 import com.example.courier.service.payment.PaymentService;
-import com.example.courier.service.pricingoption.PricingOptionService;
+import com.example.courier.service.deliveryoption.DeliveryOptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -41,7 +41,7 @@ public class OrderServiceTest {
     @Mock
     private OrderMapper orderMapper;
     @Mock
-    private PricingOptionService pricingOptionService;
+    private DeliveryOptionService deliveryOptionService;
     @Mock
     private PaymentService paymentService;
     @Mock
@@ -81,7 +81,7 @@ public class OrderServiceTest {
         when(addressService.fetchOrCreateOrderAddress(any(AddressDTO.class), eq(user)))
                 .thenReturn(new OrderAddress());
         when(orderMapper.toOrder(orderDTO)).thenReturn(order);
-        when(pricingOptionService.calculateShippingCost(orderDTO)).thenReturn(new BigDecimal("19"));
+        when(deliveryOptionService.calculateShippingCost(orderDTO)).thenReturn(new BigDecimal("19"));
 
         orderService.placeOrder(1L, orderDTO);
 

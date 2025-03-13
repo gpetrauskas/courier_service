@@ -32,7 +32,7 @@ public class Order implements Serializable {
     private Parcel parcelDetails;
 
     @Column(nullable = false)
-    private String deliveryPreferences;
+    private String deliveryMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,12 +44,12 @@ public class Order implements Serializable {
 
     public Order() {}
 
-    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Parcel parcelDetails, String deliveryPreferences, OrderStatus status, LocalDateTime createDate) {
+    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Parcel parcelDetails, String deliveryMethod, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
         this.parcelDetails = parcelDetails;
-        this.deliveryPreferences = deliveryPreferences;
+        this.deliveryMethod = deliveryMethod;
         this.status = status;
         this.createDate = createDate;
     }
@@ -86,12 +86,12 @@ public class Order implements Serializable {
         this.parcelDetails = parcelDetails;
     }
 
-    public String getDeliveryPreferences() {
-        return deliveryPreferences;
+    public String getDeliveryMethod() {
+        return deliveryMethod;
     }
 
-    public void setDeliveryPreferences(String deliveryPreferences) {
-        this.deliveryPreferences = deliveryPreferences;
+    public void setDeliveryMethod(String deliveryMethod) {
+        this.deliveryMethod = deliveryMethod;
     }
 
     public OrderStatus getStatus() {

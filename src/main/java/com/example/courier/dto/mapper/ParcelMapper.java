@@ -2,7 +2,7 @@ package com.example.courier.dto.mapper;
 
 import com.example.courier.domain.Parcel;
 import com.example.courier.dto.ParcelDTO;
-import com.example.courier.dto.request.ParcelSectionUpdateRequest;
+import com.example.courier.dto.request.order.ParcelSectionUpdateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

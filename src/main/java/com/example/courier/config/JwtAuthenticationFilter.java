@@ -1,6 +1,7 @@
 package com.example.courier.config;
 
 import com.example.courier.domain.Person;
+import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.JwtService;
@@ -16,24 +17,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-
     private final AuthService authService;
-
     private Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     public JwtAuthenticationFilter(JwtService jwtService, AuthService authService) {
@@ -44,34 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain)  throws ServletException, IOException {
-
         String token = extractTokenFromCookies(request, "jwt");
         String authToken = extractTokenFromCookies(request, "authToken");
 
-
-        if (token != null && !token.isEmpty() && authToken != null && !authToken.isEmpty()) {
+        if (StringUtils.hasText(token) && StringUtils.hasText(authToken)) {
             try {
-                logger.info("Ready to validate token");
-                Map<String, String> authDetails = jwtService.validateToken(token);
-                logger.info("Token passed validation");
-                String subject = authDetails.get("subject");
-                String role = authDetails.get("role");
-                String name = authDetails.get("name");
-                String authTokenFromJWT = authDetails.get("authToken");
+                logger.info("validating JWT and Auth token");
 
-                if (!jwtService.decryptAuthToken(authToken).equals(authTokenFromJWT)) {
-                    logger.warn("Auth token mismatch detected. logging user out");
-                    logger.info("auth token {} authTokenFromJWT {}", authToken, authTokenFromJWT);
-                    logoutOnWrongCookies(request, response);
-                    throw new AccessDeniedException("Auth token mismatch");
+                if (!validateTokens(token, authToken)) {
+                    logoutOnWrongCookies(response);
+                    return;
                 }
 
-                Person person = authService.findByUsername(subject);
-
-                Authentication authentication = new UsernamePasswordAuthenticationToken(person, null, person.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                logger.info("Authenticated user: {}", name);
+                JwtClaims claims = jwtService.validateToken(token);
+                authenticatePerson(claims.subject());
 
             } catch (SignatureException e) {
                 handleJwtException(request, response, "Invalid JWT signature: " + e.getMessage());
@@ -90,17 +72,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void logoutOnWrongCookies(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void authenticatePerson(String subject) {
+        Person person = authService.findByUsername(subject);
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                person, null, person.getAuthorities()
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        logger.info("Authenticated user: {}", subject);
+    }
+
+    private boolean validateTokens(String token, String authToken) {
+        try {
+            JwtClaims claims = jwtService.validateToken(token);
+            String expectedAuthToken = claims.authToken();
+            String decryptedAuthToken = jwtService.decryptAuthToken(authToken);
+
+            if (!decryptedAuthToken.equals(expectedAuthToken)) {
+                logger.warn("Auth token mismatch detected. Logging user off");
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            logger.warn("Token validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private void logoutOnWrongCookies(HttpServletResponse response) throws IOException {
+        if (response.isCommitted()) {
+            logger.warn("Resposne already commited, skipping logout");
+            return;
+        }
+
         CookieUtils.clearAllCookies(response);
         SecurityContextHolder.clearContext();
-        request.getSession().invalidate();
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT or AUTH token mismatch. Please login in again");
     }
 
     private String extractTokenFromCookies(HttpServletRequest request, String tokenName) {
-        if (request.getCookies() == null) {
-            return null;
-        }
+        if (request.getCookies() == null) return null;
 
         return Arrays.stream(request.getCookies())
                 .filter(c ->tokenName.equals(c.getName()))
@@ -111,6 +122,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void handleJwtException(HttpServletRequest request, HttpServletResponse response, String errorMessage) throws IOException {
         logger.warn(errorMessage);
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, errorMessage);
+        if (!response.isCommitted()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"" + errorMessage + "\"}");
+            response.getWriter().flush();
+        } else {
+            logger.warn("Response already commited, skipping sendError()");
+        }
     }
 }
