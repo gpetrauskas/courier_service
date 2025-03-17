@@ -2,7 +2,6 @@ package com.example.courier.service.person;
 
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
-import com.example.courier.domain.User;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
@@ -65,6 +64,35 @@ public class PersonService {
         personMapper.updatePersonFromRequest(updateRequest, person);
         personRepository.save(person);
     }
+
+    public List<CourierDTO> getAvailableCouriers() {
+        Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
+        List<Person> personList = personRepository.findAll(specification);
+
+        return personList.stream()
+                .map(personMapper::toCourierDTO)
+                .toList();
+    }
+
+    public Long availableCouriersCount() {
+        Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
+        return personRepository.countAvailableCouriers(specification);
+    }
+
+
+
+
+    public <T extends Person> void save(T person) {
+        personRepository.save(person);
+    }
+
+    public void hasCourierActiveTask(Courier courier) {
+        if (courier.hasActiveTask()) throw new IllegalArgumentException("Courier already have assigned task.");
+    }
+
+
+
+
 
     @Transactional
     public void delete(Long personId) {

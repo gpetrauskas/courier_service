@@ -5,5 +5,5 @@ import com.example.courier.common.OrderStatus;
 import java.time.LocalDateTime;
 
 public record OrderDTO(Long id, AddressDTO senderAddress, AddressDTO recipientAddress, ParcelDTO parcelDetails,
-                       String deliveryPreferences, OrderStatus status, LocalDateTime createTime) {
+                       String deliveryMethod, OrderStatus status, LocalDateTime createTime) {
 }

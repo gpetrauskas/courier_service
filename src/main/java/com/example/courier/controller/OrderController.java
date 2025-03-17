@@ -10,7 +10,7 @@ import com.example.courier.dto.request.order.BaseOrderUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.service.order.OrderFacadeService;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.deliveryoption.DeliveryOptionService;
+import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.TrackingService;
 import com.example.courier.service.AuthService;
 import jakarta.validation.Valid;
@@ -43,7 +43,7 @@ public class OrderController {
     @Autowired
     private AuthService authService;
     @Autowired
-    private DeliveryOptionService deliveryOptionService;
+    private DeliveryMethodService deliveryMethodService;
     @Autowired
     private OrderFacadeService orderFacadeService;
 
@@ -60,11 +60,10 @@ public class OrderController {
     public ResponseEntity<PaginatedResponseDTO<AdminOrderResponseDTO>> getAllOrdersForAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String orderStatus,
-            @RequestParam(required = false) String parcelStatus,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) Long id
     ) {
-        Page<AdminOrderResponseDTO> orderDTOPage = orderService.getAllOrdersForAdmin(page, size, orderStatus, parcelStatus, id);
+        Page<AdminOrderResponseDTO> orderDTOPage = orderService.getAllOrdersForAdmin(page, size, status, id);
 
         return ResponseEntity.ok(new PaginatedResponseDTO<>(
                 orderDTOPage.getContent(),
@@ -72,6 +71,18 @@ public class OrderController {
                 orderDTOPage.getTotalElements(),
                 orderDTOPage.getTotalPages()
         ));
+    }
+
+    @GetMapping("/taskOrdersByTaskType")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PaginatedResponseDTO<OrderDTO>> getAllOrdersByTaskType(
+            @RequestParam (defaultValue = "10") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam String taskType
+    ) {
+        PaginatedResponseDTO<OrderDTO> responseDTO = orderService.fetchAllTaskOrdersByTaskType(page, size, taskType);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
 
@@ -131,7 +142,7 @@ public class OrderController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = authService.getUserByEmail(auth.getName());
-            BigDecimal shippingCost = deliveryOptionService.calculateShippingCost(orderDTO);
+            BigDecimal shippingCost = deliveryMethodService.calculateShippingCost(orderDTO);
             Long orderId = orderService.placeOrder(user.getId(), orderDTO);
 
             Map<String, Object> response = new HashMap<>();

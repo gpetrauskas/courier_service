@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/person")
@@ -52,6 +55,19 @@ public class PersonController {
     public ResponseEntity<String> banUnban(@PathVariable Long id) {
         String action = this.personService.banUnban(id);
         return ResponseEntity.ok(action);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/availableCouriers")
+    public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
+        List<CourierDTO> list = personService.getAvailableCouriers();
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/availableCouriersCount")
+    public ResponseEntity<Long> availableCouriersCount() {
+        Long count = personService.availableCouriersCount();
+        return ResponseEntity.ok(count);
     }
 
 }

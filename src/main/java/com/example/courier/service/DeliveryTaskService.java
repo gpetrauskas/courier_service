@@ -8,6 +8,7 @@ import com.example.courier.dto.CreateTaskDTO;
 import com.example.courier.dto.DeliveryTaskDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.DeliveryTaskMapper;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.DeliveryTaskRepository;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
@@ -54,7 +55,7 @@ public class DeliveryTaskService {
     @Transactional
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
         Courier courier = personService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
-        hasActiveTask(courier);
+        personService.hasCourierActiveTask(courier);
         Admin admin = AuthUtils.getAuthenticated(Admin.class);
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
         List<Order> orders = orderService.fetchAllByParcelDetails(parcels);
@@ -72,6 +73,8 @@ public class DeliveryTaskService {
         List<DeliveryTaskItem> deliveryTaskItems = deliveryTaskItemService.createTaskItems(parcels, orders, deliveryTask);
         deliveryTask.setItems(deliveryTaskItems);
 
+        courier.setHasActiveTask(true);
+        personService.save(courier);
 
         deliveryTask.setItems(deliveryTaskItems);
         deliveryTaskItemService.saveAll(deliveryTaskItems);
@@ -89,8 +92,6 @@ public class DeliveryTaskService {
         return response;
     }
 
-
-
     @PreAuthorize("hasRole('ADMIN')")
     public PaginatedResponseDTO<DeliveryTaskDTO> getAllDeliveryLists(
             int page, int size, Long courierId, Long taskListId, TaskType tType, DeliveryStatus status
@@ -106,14 +107,38 @@ public class DeliveryTaskService {
 
         return new PaginatedResponseDTO<>(taskDTOS, taskPage.getNumber(), taskPage.getTotalElements(), taskPage.getTotalPages());    }
 
+    public void cancel(Long id) {
+        Specification<DeliveryTask> specification = DeliveryTaskSpecification.ifTaskActive(id)
+                .and(DeliveryTaskSpecification.canBeCanceled());
+        DeliveryTask deliveryTask = deliveryTaskRepository.findOne(specification)
+                .orElseThrow(() -> new ResourceNotFoundException("No such Task with id: " + id));
+
+        deliveryTask.getItems()
+                .forEach(item -> {
+                    if (!ParcelStatus.getStatusesPreventingRemoval().contains(item.getStatus())) {
+                        item.setStatus(ParcelStatus.CANCELED);
+                        item.getParcel().setAssigned(false);
+                    }
+                });
+
+        boolean allItemsCanceled = deliveryTask.getItems().stream()
+                .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED);
+
+        if (allItemsCanceled) {
+            Long adminId = AuthUtils.getAuthenticatedPersonId();
+            deliveryTask.getCourier().setHasActiveTask(false);
+            deliveryTask.setDeliveryStatus(DeliveryStatus.CANCELED);
+            deliveryTask.setCanceledByAdminId(adminId);
+            deliveryTaskRepository.save(deliveryTask);
+        }
+    }
+
+
+
+
+
     @PreAuthorize("hasRole('ADMIN')")
     public void changeTaskStatus(Long taskId, DeliveryStatus newStatus) {
 
-    }
-
-    private void hasActiveTask(Courier courier) {
-        if (courier.hasActiveTask()) {
-            throw new IllegalArgumentException("Courier already is assigned for the task");
-        }
     }
 }

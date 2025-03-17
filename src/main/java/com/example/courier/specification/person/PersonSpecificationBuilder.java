@@ -23,4 +23,10 @@ public class PersonSpecificationBuilder {
 
         return specification;
     }
+
+    public static Specification<Person> buildAvailableCourierSpecification() {
+        return Specification.where(PersonSpecification.isNotDeleted().and(
+                PersonSpecification.hasRole("COURIER").and(PersonSpecification.hasNoActiveTask())
+        ));
+    }
 }

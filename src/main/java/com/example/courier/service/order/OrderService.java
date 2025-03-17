@@ -4,6 +4,7 @@ import com.example.courier.domain.Order;
 import com.example.courier.domain.Parcel;
 import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import org.springframework.data.domain.Page;
@@ -19,8 +20,9 @@ public interface OrderService {
     OrderDTO findUserOrderDTOById(Long orderId, Principal principal);
     List<OrderDTO> findAllOrders();
     void orderSectionUpdate(OrderSectionUpdateRequest updateRequest);
-    Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, String parcelStatus, Long id);
+    Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id);
     List<Order> fetchAllByParcelDetails(List<Parcel> parcels);
+    PaginatedResponseDTO<OrderDTO> fetchAllTaskOrdersByTaskType(int page, int size, String taskType);
     //void saveOrder(Order order);
    // void updateAndSaveOrderStatusConfirmed(Long orderId);
 }

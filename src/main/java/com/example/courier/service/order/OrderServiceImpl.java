@@ -7,6 +7,7 @@ import com.example.courier.domain.*;
 import com.example.courier.domain.Parcel;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
@@ -18,7 +19,7 @@ import com.example.courier.repository.*;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.AuthService;
 import com.example.courier.service.payment.PaymentService;
-import com.example.courier.service.deliveryoption.DeliveryOptionService;
+import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.specification.order.OrderSpecificationBuilder;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import com.example.courier.validation.DeliveryOptionValidator;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private AuthService authService;
     @Autowired
-    private DeliveryOptionService deliveryOptionService;
+    private DeliveryMethodService deliveryMethodService;
     private final OrderUpdateValidator orderUpdateValidator;
     private final DeliveryOptionValidator deliveryOptionValidator;
 
@@ -77,10 +79,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, String parcelStatus, Long id) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate"));
         Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecification(orderStatus, id);
-
+        log.info("test status {}", orderStatus);
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
         if (orderPage.isEmpty()) {
             return Page.empty();
@@ -105,6 +107,21 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    public PaginatedResponseDTO<OrderDTO> fetchAllTaskOrdersByTaskType(int page, int size, String taskType) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createDate"));
+        Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecificationByTaskType(taskType);
+
+        Page<Order> orders = orderRepository.findAll(specification, pageable);
+        Page<OrderDTO> orderDTOPage = orders.map(orderMapper::toOrderDTO);
+
+        return new PaginatedResponseDTO<>(
+                orderDTOPage.getContent(),
+                orderDTOPage.getNumber(),
+                orderDTOPage.getTotalElements(),
+                orderDTOPage.getTotalPages()
+        );
+    }
+
 
 
 
@@ -120,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
         Parcel parcelDetails = createParcelFromDTO(orderDTO.parcelDetails());
         order.setParcelDetails(parcelDetails);
 
-        BigDecimal amount = deliveryOptionService.calculateShippingCost(orderDTO);
+        BigDecimal amount = deliveryMethodService.calculateShippingCost(orderDTO);
 
         saveOrder(order);
         paymentService.createPayment(order, amount);
@@ -137,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
         order.setUser(user);
         order.setSenderAddress(senderAddress);
         order.setRecipientAddress(recipientAddress);
-        order.setDeliveryMethod(getDeliveryOptionDescription(orderDTO.deliveryPreferences()));
+        order.setDeliveryMethod(getDeliveryOptionDescription(orderDTO.deliveryMethod()));
         order.setStatus(OrderStatus.PENDING);
         order.setCreateDate(LocalDateTime.now().withNano(0));
 
@@ -145,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private String getDeliveryOptionDescription(String id) {
-        return deliveryOptionService.getDescriptionById(id);
+        return deliveryMethodService.getDescriptionById(id);
     }
 
     private Parcel createParcelFromDTO(ParcelDTO parcelDTO) {
@@ -192,7 +209,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void checkIfOrderBelongsToUser(Order order, Principal principal) {
         if (!order.getUser().getEmail().equals(principal.getName())) {
-            throw new UnauthorizedAccessException("You are not authorized to cancel this oerder");
+            throw new UnauthorizedAccessException("You are not authorized to cancel this order.");
         }
     }
 

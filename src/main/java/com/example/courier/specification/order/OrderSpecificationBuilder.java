@@ -16,4 +16,12 @@ public class OrderSpecificationBuilder {
 
         return specification;
     }
+
+    public static Specification<Order> buildOrderSpecificationByTaskType(String taskType) {
+        Specification<Order> specification = OrderSpecification.hasParcelIsAssignedFalse();
+        if (taskType != null) {
+            specification = specification.and(OrderSpecification.hasParcelStatus(taskType));
+        }
+        return specification;
+    }
 }

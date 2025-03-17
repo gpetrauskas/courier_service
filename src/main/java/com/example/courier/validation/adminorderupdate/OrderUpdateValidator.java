@@ -3,15 +3,15 @@ package com.example.courier.validation.adminorderupdate;
 import com.example.courier.common.OrderStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
-import com.example.courier.service.deliveryoption.DeliveryOptionService;
+import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class OrderUpdateValidator {
-    private final DeliveryOptionService deliveryOptionService;
+    private final DeliveryMethodService deliveryMethodService;
 
-    public OrderUpdateValidator(DeliveryOptionService deliveryOptionService) {
-        this.deliveryOptionService = deliveryOptionService;
+    public OrderUpdateValidator(DeliveryMethodService deliveryMethodService) {
+        this.deliveryMethodService = deliveryMethodService;
     }
 
     public void validateOrderSectionUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {

@@ -39,11 +39,6 @@ public class DeliveryTaskController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
-
-
     @GetMapping("getAllDeliveryTaskLists")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedResponseDTO<DeliveryTaskDTO>> getAllDeliveryTaskLists(
@@ -57,6 +52,20 @@ public class DeliveryTaskController {
         return ResponseEntity.ok(list);
     }
 
+    @PostMapping("/cancel/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponseDTO> cancel(@PathVariable Long id) {
+
+        deliveryTaskService.cancel(id);
+
+        return ResponseEntity.ok(new ApiResponseDTO("success", "Task was successfully canceled. IDL " + id));
+    }
+
+
+
+
+
+
     @PostMapping("changeTaskStatus/{taskId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> changeTaskStatus(
@@ -65,7 +74,6 @@ public class DeliveryTaskController {
     ) {
 
         deliveryTaskService.changeTaskStatus(taskId, newStatus);
-
         return ResponseEntity.ok("success");
     }
 }

@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class DeliveryOptionService {
+public class DeliveryMethodService {
 
     private static final String DELIVERY_KEYWORD = "delivery";
     private static final String SIZE_KEYWORD = "size";
@@ -31,7 +31,7 @@ public class DeliveryOptionService {
     private final DeliveryOptionMapper deliveryOptionMapper;
     private final DeliveryOptionValidator validator;
 
-    public DeliveryOptionService(
+    public DeliveryMethodService(
             DeliveryOptionRepository deliveryOptionRepository,
             DeliveryOptionMapper deliveryOptionMapper,
             DeliveryOptionValidator validator) {
@@ -101,7 +101,7 @@ public class DeliveryOptionService {
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws DeliveryOptionNotFoundException {
         BigDecimal shippingCost = new BigDecimal(0);
 
-        BigDecimal deliveryPrice = getPriceById(orderDTO.deliveryPreferences());
+        BigDecimal deliveryPrice = getPriceById(orderDTO.deliveryMethod());
         BigDecimal weightPrice = getPriceById(orderDTO.parcelDetails().weight());
         BigDecimal sizePricing = getPriceById(orderDTO.parcelDetails().dimensions());
 

@@ -43,7 +43,7 @@ public final class AuthUtils {
 
        Object principal = authentication.getPrincipal();
 
-       if (principal instanceof Person person) {
+       if (principal instanceof Person) {
            if (tClass.isInstance(principal)) {
                logger.info("Authorized person is {}", tClass.getSimpleName());
                return tClass.cast(principal);

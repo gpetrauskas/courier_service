@@ -4,7 +4,6 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public class NotEmptyFieldValidator implements ConstraintValidator<NotEmptyField, Object> {
@@ -25,6 +24,10 @@ public class NotEmptyFieldValidator implements ConstraintValidator<NotEmptyField
 
         if (value instanceof Map<?,?> map) {
             return !map.isEmpty();
+        }
+
+        if (value instanceof Object[] array) {
+            return array.length > 0;
         }
 
         return true;

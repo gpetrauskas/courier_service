@@ -4,6 +4,7 @@ import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.CourierDTO;
 import org.springframework.data.jpa.domain.Specification;
 
 public class PersonSpecification {
@@ -55,5 +56,10 @@ public class PersonSpecification {
     public static Specification<Person> isNotDeleted() {
         return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));
+    }
+
+    public static Specification<Person> hasNoActiveTask() {
+        return (((root, query, criteriaBuilder) ->
+                criteriaBuilder.isFalse(root.get("hasActiveTask"))));
     }
 }

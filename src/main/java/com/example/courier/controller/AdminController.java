@@ -77,29 +77,6 @@ public class AdminController {
         return ResponseEntity.ok(option);
     }
 
-
-    @GetMapping("/getItemsByStatus")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<OrderDTO>> getItemsByStatus(@RequestParam("status") String status,
-                                              @RequestParam(defaultValue = "0") int page,
-                                              @RequestParam(defaultValue = "10") int size) {
-        
-        Page<OrderDTO> orderPage = adminService.getItemsByStatus(page, size, status);
-        PaginatedResponseDTO<OrderDTO> response = new PaginatedResponseDTO<>(
-                orderPage.getContent(),
-                orderPage.getNumber(),
-                orderPage.getTotalElements(),
-                orderPage.getTotalPages()
-        );
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/getAvailableCouriers")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
-        return ResponseEntity.ok(adminService.getAvailableCouriers());
-    }
-
     @GetMapping("/testGet")
     public ResponseEntity<?> getTest() {
 
@@ -107,43 +84,11 @@ public class AdminController {
         return ResponseEntity.ok(list);
     }
 
-    @PostMapping("/deleteDeliveryTaskItemFromTheTask/{taskId}/item/{itemId}/remove")
-    public ResponseEntity<?> deleteDeliveryTaskItemFromTheTask(@PathVariable Long taskId, @PathVariable Long itemId) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            adminService.deleteDeliveryTaskItem(taskId, itemId);
-            logger.info("Successfully deleted delivery task item. Task ID: {}, Item ID: {}", taskId, itemId);
-            response.put("message", "Delivery task item removed successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error while deleting delivery task item", e);
-            response.put("error", "Failed to delete delivery task item: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
     @GetMapping("/testinu")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> testinu() {
         logger.info("testinu");
         return ResponseEntity.ok().body("ok");
-    }
-
-    @PostMapping("/cancelTask/{taskId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> cancelTask(@PathVariable Long taskId) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            adminService.cancelTask(taskId);
-
-            response.put("message", "Task with ID: " + taskId + " successfully canceled,");
-            logger.info("Task with ID {} successfully canceled", taskId);
-            return ResponseEntity.ok().body(response);
-        } catch (Exception e) {
-            logger.error("Error while canceling task with id {}: {}", taskId, e.getMessage(), e);
-            response.put("error", "An error occrred while canceling the task: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
 
     @PostMapping("registerCourier")
