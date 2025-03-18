@@ -43,12 +43,6 @@ public class AdminController {
         return ResponseEntity.ok(authentication.getAuthorities());
     }
 
-    @GetMapping("/getUserById/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PersonDetailsDTO> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.findPersonById(id));
-    }
-
     @GetMapping("/orders/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdminOrderDTO> getOrderById(@PathVariable Long id) {
@@ -89,21 +83,6 @@ public class AdminController {
     public ResponseEntity<?> testinu() {
         logger.info("testinu");
         return ResponseEntity.ok().body("ok");
-    }
-
-    @PostMapping("registerCourier")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> registerCourier(@RequestBody RegistrationDTO registrationDTO) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            registrationService.createCourier(registrationDTO);
-            response.put("success", "Courier registered successfully");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.warn("Error while registering courier");
-            response.put("error", "Error while registering courier: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
 }
 

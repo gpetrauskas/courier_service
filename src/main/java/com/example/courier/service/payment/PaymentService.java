@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
@@ -36,6 +38,25 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
     }
+
+
+    public Map<Long, Payment> getPaymentsForOrders(List<Long> ordersId) {
+        List<Payment> payments = paymentRepository.findAllByOrderIdIn(ordersId);
+
+        if (payments.isEmpty()) {
+            throw new ResourceNotFoundException("No payments found for the given order");
+        }
+        return payments.stream()
+                .collect(Collectors.toMap(
+                        payment -> payment.getOrder().getId(),
+                        payment -> payment
+                ));
+    }
+
+
+
+
+
 
     @Transactional
     public ResponseEntity<String> processPayment(PaymentRequestDTO paymentRequestDTO, Long orderId, Principal principal) {

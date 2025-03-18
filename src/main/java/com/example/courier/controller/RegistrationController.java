@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.RegistrationDTO;
 import com.example.courier.service.RegistrationService;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -34,5 +36,12 @@ public class RegistrationController {
             response.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/registerCourier")
+    public ResponseEntity<ApiResponseDTO> registerCourier(@Valid @RequestBody RegistrationDTO registrationDTO) {
+        registrationService.registerCourier(registrationDTO);
+        return ResponseEntity.ok(new ApiResponseDTO("success", "Courier registered successfully"));
     }
 }

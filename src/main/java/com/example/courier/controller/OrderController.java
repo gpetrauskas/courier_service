@@ -4,6 +4,7 @@ import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.User;
+import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.order.BaseOrderUpdateRequest;
@@ -85,6 +86,13 @@ public class OrderController {
         return ResponseEntity.ok(responseDTO);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<AdminOrderDTO> getOrderById(@PathVariable Long id) {
+       AdminOrderDTO adminOrderDTO  = orderService.getAdminOrderById(id);
+       return ResponseEntity.ok(adminOrderDTO);
+    }
+
 
 
 
@@ -123,6 +131,7 @@ public class OrderController {
         return ResponseEntity.ok(orderDTO);
     }
 
+    //used in user service ts
     @GetMapping("/getAllOrders")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<OrderDTO>> getOrders() {

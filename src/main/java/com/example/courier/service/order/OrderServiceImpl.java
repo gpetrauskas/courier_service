@@ -5,10 +5,7 @@ import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Parcel;
-import com.example.courier.dto.AddressDTO;
-import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.ParcelDTO;
+import com.example.courier.dto.*;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
@@ -92,13 +89,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(Order::getId)
                 .toList();
 
-        List<Payment> payments = paymentService.findAllByIds(orderIds);
-
-        Map<Long, Payment> paymentMap = payments.stream()
-                .collect(Collectors.toMap(
-                        payment -> payment.getOrder().getId(),
-                        payment -> payment
-                ));
+        Map<Long, Payment> paymentMap = paymentService.getPaymentsForOrders(orderIds);
 
         return orderPage.map(order -> {
             Payment payment = paymentMap.get(order.getId());
@@ -122,6 +113,11 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+    public AdminOrderDTO getAdminOrderById(Long id) {
+        Order order = findOrderById(id);
+        Map<Long, Payment> paymentMao = paymentService.getPaymentsForOrders(List.of(id));
+        return orderMapper.toAdminOrderDTO(order, paymentMao.get(id));
+    }
 
 
 

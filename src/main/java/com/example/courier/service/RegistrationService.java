@@ -46,6 +46,16 @@ public class RegistrationService {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public void registerCourier(RegistrationDTO registrationDTO) {
+        logger.info("Trying to register courier");
+        validateUserRegistration(registrationDTO);
+        Courier newCourier = createPersonFromDTO(registrationDTO, Courier.class);
+        courierRepository.save(newCourier);
+        logger.info("Courier registered successfully {}", newCourier.getEmail());
+    }
+
     private void validateUserRegistration(RegistrationDTO registrationDTO) {
         logger.info("Checking if user exists with email: {}", registrationDTO.email());
 
@@ -77,24 +87,6 @@ public class RegistrationService {
         } catch (Exception e) {
             logger.error("Failed to create person from dto: {}", e.getMessage());
             throw new RuntimeException("Failed to create person from dto.");
-        }
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    public void createCourier(RegistrationDTO registrationDTO) {
-        try {
-            logger.info("Courier register request");
-            validateUserRegistration(registrationDTO);
-            Courier courier = createPersonFromDTO(registrationDTO, Courier.class);
-            courierRepository.save(courier);
-            logger.info("Courier registration successful");
-        } catch (ValidationException e) {
-            logger.error("Validation error during registration {}", e.getMessage());
-            throw e;
-        } catch (RuntimeException e) {
-            logger.error("Unexpected error during registration {}", e.getMessage());
-            throw new RuntimeException("Failed to register courier");
         }
     }
 }

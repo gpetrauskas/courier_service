@@ -122,7 +122,8 @@ public class DeliveryTaskService {
                 });
 
         boolean allItemsCanceled = deliveryTask.getItems().stream()
-                .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED);
+                .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED
+                        || item.getStatus() == ParcelStatus.REMOVED_FROM_THE_LIST);
 
         if (allItemsCanceled) {
             Long adminId = AuthUtils.getAuthenticatedPersonId();

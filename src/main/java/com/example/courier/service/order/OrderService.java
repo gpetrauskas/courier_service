@@ -3,6 +3,7 @@ package com.example.courier.service.order;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Parcel;
 import com.example.courier.domain.User;
+import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
@@ -23,6 +24,7 @@ public interface OrderService {
     Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id);
     List<Order> fetchAllByParcelDetails(List<Parcel> parcels);
     PaginatedResponseDTO<OrderDTO> fetchAllTaskOrdersByTaskType(int page, int size, String taskType);
+    AdminOrderDTO getAdminOrderById(Long id);
     //void saveOrder(Order order);
    // void updateAndSaveOrderStatusConfirmed(Long orderId);
 }

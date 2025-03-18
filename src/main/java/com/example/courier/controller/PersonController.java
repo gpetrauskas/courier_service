@@ -1,8 +1,6 @@
 package com.example.courier.controller;
 
-import com.example.courier.dto.CourierDTO;
-import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.PersonResponseDTO;
+import com.example.courier.dto.*;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.service.person.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;

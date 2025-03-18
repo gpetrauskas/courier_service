@@ -7,9 +7,15 @@ import com.example.courier.domain.Parcel;
 import java.time.LocalDateTime;
 
 public record AdminOrderDTO(
-        Long id, PersonResponseDTO user, OrderAddress senderAddress, OrderAddress recipientAddress,
-        Parcel parcelDetails, String deliveryMethod, OrderStatus status,
-        LocalDateTime createTime, AdminPaymentDTO paymentDetails
+        Long id,
+        PersonResponseDTO user,
+        OrderAddress senderAddress,
+        OrderAddress recipientAddress,
+        Parcel parcelDetails,
+        String deliveryMethod,
+        OrderStatus status,
+        LocalDateTime createTime,
+        AdminPaymentDTO paymentDetails
 ) {
 
 /*    public static AdminOrderDTO fromOrder(Order order, Payment payment) {

@@ -5,16 +5,19 @@ import com.example.courier.domain.Person;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
+import com.example.courier.dto.RegistrationDTO;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.PersonRepository;
+import com.example.courier.service.RegistrationService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +29,13 @@ public class PersonService {
     private static final Logger logger = LoggerFactory.getLogger(PersonService.class);
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
+    private final RegistrationService registrationService;
 
-    public PersonService(PersonRepository personRepository, PersonMapper personMapper) {
+    public PersonService(PersonRepository personRepository, PersonMapper personMapper,
+                         RegistrationService registrationService) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
+        this.registrationService = registrationService;
     }
 
     public PaginatedResponseDTO<PersonResponseDTO> findAllPaginated(int page, int size, String role, String searchKeyword) {
@@ -78,9 +84,6 @@ public class PersonService {
         Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
         return personRepository.countAvailableCouriers(specification);
     }
-
-
-
 
     public <T extends Person> void save(T person) {
         personRepository.save(person);
