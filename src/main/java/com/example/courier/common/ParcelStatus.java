@@ -1,6 +1,6 @@
 package com.example.courier.common;
 
-import com.example.courier.domain.DeliveryTaskItem;
+import com.example.courier.domain.TaskItem;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +50,7 @@ public enum ParcelStatus {
         return Set.of(PICKED_UP, DELIVERED, CANCELED).contains(this);
     }
 
-    public static boolean isItemInFinalState(DeliveryTaskItem taskItem) {
+    public static boolean isItemInFinalState(TaskItem taskItem) {
         return taskItem.getStatus().isFinalState();
     }
 

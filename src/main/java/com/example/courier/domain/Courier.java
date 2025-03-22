@@ -10,7 +10,7 @@ import java.util.List;
     public class Courier extends Person {
 
         @OneToMany(mappedBy = "courier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        private List<DeliveryTask> assignedTasks = new ArrayList<>();
+        private List<Task> assignedTasks = new ArrayList<>();
 
         @Column(nullable = false)
         private boolean hasActiveTask = false;
@@ -20,11 +20,11 @@ import java.util.List;
             return "COURIER";
         }
 
-    public List<DeliveryTask> getTasks() {
+    public List<Task> getTasks() {
         return assignedTasks;
     }
 
-    public void setTasks(List<DeliveryTask> tasks) {
+    public void setTasks(List<Task> tasks) {
         this.assignedTasks = tasks;
     }
 

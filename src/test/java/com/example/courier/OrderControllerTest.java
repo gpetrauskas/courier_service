@@ -5,7 +5,7 @@ import com.example.courier.domain.User;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
-import com.example.courier.service.AuthService;
+import com.example.courier.service.auth.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

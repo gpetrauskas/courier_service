@@ -1,12 +1,11 @@
 package com.example.courier.controller;
 
-import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.repository.UserRepository;
-import com.example.courier.service.PaymentMethodService;
+import com.example.courier.service.payment.PaymentMethodService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

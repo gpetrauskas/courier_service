@@ -10,18 +10,18 @@ import java.util.List;
 public class Admin extends Person {
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DeliveryTask> createdTasks = new ArrayList<>();
+    private List<Task> createdTasks = new ArrayList<>();
 
     @Override
     public String getRole() {
         return "ADMIN";
     }
 
-    public List<DeliveryTask> getCreatedTasks() {
+    public List<Task> getCreatedTasks() {
         return createdTasks;
     }
 
-    public void setCreatedTasks(List<DeliveryTask> createdTasks) {
+    public void setCreatedTasks(List<Task> createdTasks) {
         this.createdTasks = createdTasks;
     }
 }

@@ -8,7 +8,7 @@ import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.exception.PaymentFailedException;
 import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.service.CreditCardService;
+import com.example.courier.service.payment.CreditCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

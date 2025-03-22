@@ -1,11 +1,12 @@
 package com.example.courier.service.deliveryoption;
 
-import com.example.courier.domain.DeliveryOption;
+import com.example.courier.domain.DeliveryMethod;
 import com.example.courier.dto.OrderDTO;
-import com.example.courier.dto.mapper.DeliveryOptionMapper;
-import com.example.courier.dto.request.deliveryoption.CreateDeliveryOptionDTO;
-import com.example.courier.dto.request.deliveryoption.UpdateDeliveryOptionDTO;
-import com.example.courier.dto.response.deliveryoption.DeliveryOptionDTO;
+import com.example.courier.dto.mapper.DeliveryMethodMapper;
+import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
+import com.example.courier.dto.request.deliverymethod.UpdateDeliveryMethodDTO;
+import com.example.courier.dto.response.deliverymethod.DeliveryMethodAdminResponseDTO;
+import com.example.courier.dto.response.deliverymethod.DeliveryMethodDTO;
 import com.example.courier.exception.DeliveryOptionNotFoundException;
 import com.example.courier.repository.DeliveryOptionRepository;
 import com.example.courier.util.AuthUtils;
@@ -28,27 +29,27 @@ public class DeliveryMethodService {
     private static final String PREFERENCE_KEYWORD = "preference";
 
     private final DeliveryOptionRepository deliveryOptionRepository;
-    private final DeliveryOptionMapper deliveryOptionMapper;
+    private final DeliveryMethodMapper deliveryMethodMapper;
     private final DeliveryOptionValidator validator;
 
     public DeliveryMethodService(
             DeliveryOptionRepository deliveryOptionRepository,
-            DeliveryOptionMapper deliveryOptionMapper,
+            DeliveryMethodMapper deliveryMethodMapper,
             DeliveryOptionValidator validator) {
         this.deliveryOptionRepository = deliveryOptionRepository;
-        this.deliveryOptionMapper = deliveryOptionMapper;
+        this.deliveryMethodMapper = deliveryMethodMapper;
         this.validator = validator;
     }
 
-    public Map<String, List<DeliveryOptionDTO>> getAllDeliveryOptions() {
-        List<DeliveryOption> allOptions =  deliveryOptionRepository.findAll();
+    public Map<String, List<DeliveryMethodDTO>> getAllDeliveryOptions() {
+        List<DeliveryMethod> allOptions =  deliveryOptionRepository.findAll();
         boolean isAdmin = AuthUtils.isAdmin();
 
         return allOptions
                 .stream()
                 .map(option -> isAdmin ?
-                        deliveryOptionMapper.toAdminDeliveryOptionResponseDTO(option) :
-                        deliveryOptionMapper.toUserDeliveryOptionResponseDTO(option))
+                        deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(option) :
+                        deliveryMethodMapper.toUserDeliveryOptionResponseDTO(option))
                 .collect(Collectors.groupingBy(option -> {
                     if (option.name().contains(WEIGHT_KEYWORD)) {
                         return WEIGHT_KEYWORD;
@@ -60,27 +61,29 @@ public class DeliveryMethodService {
                 }));
     }
 
-    public List<DeliveryOption> getDeliveryOptionsNotCategorized() {
-        List<DeliveryOption> list = deliveryOptionRepository.findAll();
+    public List<DeliveryMethodAdminResponseDTO> getDeliveryOptionsNotCategorized() {
+        List<DeliveryMethod> list = deliveryOptionRepository.findAll();
         if (list.isEmpty()) {
             return List.of();
         }
 
-        return list;
+        return list.stream()
+                .map(deliveryMethodMapper::toAdminDeliveryOptionResponseDTO)
+                .toList();
     }
 
-    public void updateDeliveryOption(Long id, UpdateDeliveryOptionDTO deliveryOptionDTO) {
-        DeliveryOption existingDeliveryOption = getDeliveryOptionById(id);
-        deliveryOptionMapper.updateDeliveryOptionFromDTO(deliveryOptionDTO, existingDeliveryOption);
-        deliveryOptionRepository.save(existingDeliveryOption);
+    public void updateDeliveryOption(Long id, UpdateDeliveryMethodDTO deliveryOptionDTO) {
+        DeliveryMethod existingDeliveryMethod = getDeliveryOptionById(id);
+        deliveryMethodMapper.updateDeliveryOptionFromDTO(deliveryOptionDTO, existingDeliveryMethod);
+        deliveryOptionRepository.save(existingDeliveryMethod);
     }
 
     @Transactional
-    public void addNewDeliveryOption(CreateDeliveryOptionDTO createDeliveryOptionDTO) {
-        existsByName(createDeliveryOptionDTO.name());
-        validator.validateDeliveryOptionForCreation(createDeliveryOptionDTO);
-        DeliveryOption deliveryOption = deliveryOptionMapper.toNewEntity(createDeliveryOptionDTO);
-        deliveryOptionRepository.save(deliveryOption);
+    public void addNewDeliveryOption(CreateDeliveryMethodDTO createDeliveryMethodDTO) {
+        existsByName(createDeliveryMethodDTO.name());
+        validator.validateDeliveryOptionForCreation(createDeliveryMethodDTO);
+        DeliveryMethod deliveryMethod = deliveryMethodMapper.toNewEntity(createDeliveryMethodDTO);
+        deliveryOptionRepository.save(deliveryMethod);
     }
 
     @Transactional
@@ -90,6 +93,13 @@ public class DeliveryMethodService {
         }
 
         deliveryOptionRepository.deleteById(id);
+    }
+
+    public DeliveryMethodDTO getById(Long id) {
+        DeliveryMethod option = deliveryOptionRepository.findById(id)
+                .orElseThrow(() -> new DeliveryOptionNotFoundException("No delivery method with ID: " + id));
+
+        return deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(option);
     }
 
 
@@ -112,18 +122,18 @@ public class DeliveryMethodService {
 
     private BigDecimal getPriceById(String id) {
         return deliveryOptionRepository.findById(Long.parseLong(id))
-                .map(DeliveryOption::getPrice)
+                .map(DeliveryMethod::getPrice)
                 .orElseThrow(() -> new RuntimeException("price by delivery options not found"));
     }
 
-    private DeliveryOption getDeliveryOptionById(Long id) {
+    private DeliveryMethod getDeliveryOptionById(Long id) {
         return deliveryOptionRepository.findById(id).orElseThrow(() ->
                 new DeliveryOptionNotFoundException("Delivery option was not found with id " + id));
     }
 
     public String getDescriptionById(String id) {
         return deliveryOptionRepository.findById(Long.parseLong(id))
-                .map(DeliveryOption::getDescription)
+                .map(DeliveryMethod::getDescription)
                 .orElseThrow(() -> new RuntimeException("Delivery option not found."));
     }
 

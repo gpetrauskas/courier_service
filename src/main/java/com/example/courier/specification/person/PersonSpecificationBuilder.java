@@ -6,10 +6,10 @@ import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import org.springframework.data.jpa.domain.Specification;
 
-public class PersonSpecificationBuilder {
+public class PersonSpecificationBuilder<T extends Person> {
 
-    public static Specification<Person> buildPersonSpecification(String role, String searchKeyword) {
-        Specification<Person> specification = Specification.where(PersonSpecification.isNotDeleted());
+    public static <T extends Person> Specification<T> buildPersonSpecification(String role, String searchKeyword) {
+        Specification<T> specification = Specification.where(PersonSpecification.isNotDeleted());
 
         if (role != null) {
             specification = specification.and(PersonSpecification.hasRole(role));
@@ -24,9 +24,9 @@ public class PersonSpecificationBuilder {
         return specification;
     }
 
-    public static Specification<Person> buildAvailableCourierSpecification() {
-        return Specification.where(PersonSpecification.isNotDeleted().and(
-                PersonSpecification.hasRole("COURIER").and(PersonSpecification.hasNoActiveTask())
+    public static <T extends Person> Specification<T> buildAvailableCourierSpecification() {
+        return Specification.where(PersonSpecification.<T>isNotDeleted().and(
+                PersonSpecification.<T>hasRole("COURIER").and(PersonSpecification.hasNoActiveTask())
         ));
     }
 }

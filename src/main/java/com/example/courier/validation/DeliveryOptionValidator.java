@@ -2,7 +2,7 @@ package com.example.courier.validation;
 
 import com.example.courier.domain.Order;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
-import com.example.courier.dto.request.deliveryoption.CreateDeliveryOptionDTO;
+import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
 
@@ -29,10 +29,10 @@ public class DeliveryOptionValidator {
         //validateDeliveryPreference(newPreference);
     }
 
-    public void validateDeliveryOptionForCreation(CreateDeliveryOptionDTO createDeliveryOptionDTO) {
-        validateString(createDeliveryOptionDTO.name(), "name", 20, NAME_PATTERN, "can opnly contain letters");
-        validateString(createDeliveryOptionDTO.description(), "description", 40, DESCRIPTION_PATTERN, "contains invalid characters");
-        validatePositive(createDeliveryOptionDTO.price(), "price");
+    public void validateDeliveryOptionForCreation(CreateDeliveryMethodDTO createDeliveryMethodDTO) {
+        validateString(createDeliveryMethodDTO.name(), "name", 20, NAME_PATTERN, "can opnly contain letters");
+        validateString(createDeliveryMethodDTO.description(), "description", 40, DESCRIPTION_PATTERN, "contains invalid characters");
+        validatePositive(createDeliveryMethodDTO.price(), "price");
     }
 
     private void validateString(String value, String fieldName, int maxLength, Pattern pattern, String errorMsg) {

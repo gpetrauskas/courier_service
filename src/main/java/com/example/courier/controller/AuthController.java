@@ -4,7 +4,7 @@ import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.repository.UserRepository;
-import com.example.courier.service.AuthService;
+import com.example.courier.service.auth.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

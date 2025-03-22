@@ -3,10 +3,12 @@ package com.example.courier.dto.mapper;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
 import com.example.courier.domain.Courier;
-import com.example.courier.domain.DeliveryTask;
-import com.example.courier.domain.DeliveryTaskItem;
+import com.example.courier.domain.Task;
+import com.example.courier.domain.TaskItem;
 import com.example.courier.domain.OrderAddress;
 import com.example.courier.dto.*;
+import com.example.courier.dto.response.task.CourierTaskDTO;
+import com.example.courier.dto.response.task.AdminTaskDTO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -20,10 +22,10 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "taskId", source = "id")
     @Mapping(target = "courierDTO", source = "courier", qualifiedByName = "mapCourier")
     @Mapping(target = "itemsList", source = "items", qualifiedByName = "mapItems")
-    @Mapping(target = "tType", source = "taskType")
+    @Mapping(target = "taskType", source = "taskType")
     @Mapping(target = "deliveryStatus", source = "deliveryStatus")
     @Mapping(target = "adminId", source = "createdBy.id")
-    DeliveryTaskDTO toDeliveryTaskDTO(DeliveryTask deliveryTask);
+    AdminTaskDTO toDeliveryTaskDTO(Task task);
 
     @Named("mapCourier")
     default CourierDTO mapCourier(Courier courier) {
@@ -32,7 +34,7 @@ public interface DeliveryTaskMapper {
     }
 
     @Named("mapItems")
-    default List<DeliveryTaskItemDTO> mapItems(List<DeliveryTaskItem> items) {
+    default List<DeliveryTaskItemDTO> mapItems(List<TaskItem> items) {
         if (items == null) return List.of();
         return items.stream()
                 .filter(item -> item.getStatus() != ParcelStatus.REMOVED_FROM_THE_LIST)
@@ -40,10 +42,10 @@ public interface DeliveryTaskMapper {
                 .toList();
     }
 
-    @Mapping(target = "senderAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getSenderAddress()))")
-    @Mapping(target = "recipientAddress", expression = "java(OrderAddressDTO.fromOrderAddress(deliveryTaskItem.getRecipientAddress()))")
+    @Mapping(target = "senderAddress", expression = "java(OrderAddressDTO.fromOrderAddress(taskItem.getSenderAddress()))")
+    @Mapping(target = "recipientAddress", expression = "java(OrderAddressDTO.fromOrderAddress(taskItem.getRecipientAddress()))")
     @Mapping(target = "parcelDTO", source = "parcel") // Use ParcelMapper to map Parcel to ParcelDTO
-    DeliveryTaskItemDTO toDeliveryTaskItemDTO(DeliveryTaskItem deliveryTaskItem);
+    DeliveryTaskItemDTO toDeliveryTaskItemDTO(TaskItem taskItem);
 
     // courier task...
 
@@ -54,10 +56,10 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "completedAt", source = "completedAt")
     @Mapping(target = "taskItemDTOS", source = "items", qualifiedByName = "mapDeliveryTaskItems")
-    CourierTaskDTO toCourierTaskDTO(DeliveryTask deliveryTask, @Context TaskType taskType);
+    CourierTaskDTO toCourierTaskDTO(Task task, @Context TaskType taskType);
 
     @Named("mapDeliveryTaskItems")
-    default List<CourierTaskItemDTO> mapDeliveryTaskItems(List<DeliveryTaskItem> items, @Context TaskType taskType) {
+    default List<CourierTaskItemDTO> mapDeliveryTaskItems(List<TaskItem> items, @Context TaskType taskType) {
         if (items == null) return List.of();
         return items.stream()
                 .map(i -> toCourierTaskItemDTO(i, taskType))
@@ -73,9 +75,9 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "status", source = "status")
     @Mapping(target = "notes", source = "notes")
     @Mapping(target = "customerAddress", expression = "java(getCustomerAddress(item, taskType))")
-    CourierTaskItemDTO toCourierTaskItemDTO(DeliveryTaskItem item, @Context TaskType taskType);
+    CourierTaskItemDTO toCourierTaskItemDTO(TaskItem item, @Context TaskType taskType);
 
-    default OrderAddressDTO getCustomerAddress(DeliveryTaskItem item, TaskType taskType) {
+    default OrderAddressDTO getCustomerAddress(TaskItem item, TaskType taskType) {
         if (item == null) return null;
         OrderAddress orderAddress = (taskType == TaskType.PICKUP ?
                 item.getSenderAddress() : item.getRecipientAddress());

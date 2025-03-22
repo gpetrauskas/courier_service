@@ -14,7 +14,7 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.*;
 import com.example.courier.service.address.AddressService;
-import com.example.courier.service.AuthService;
+import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.payment.PaymentService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.specification.order.OrderSpecificationBuilder;
@@ -37,7 +37,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {

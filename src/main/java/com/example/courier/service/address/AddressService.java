@@ -11,7 +11,7 @@ import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.repository.OrderAddressRepository;
-import com.example.courier.service.AuthService;
+import com.example.courier.service.auth.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

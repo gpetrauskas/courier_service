@@ -4,11 +4,10 @@ import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
-import com.example.courier.dto.CourierDTO;
 import org.springframework.data.jpa.domain.Specification;
 
-public class PersonSpecification {
-    public static Specification<Person> hasRole(String role) {
+public class PersonSpecification<T extends Person> {
+    public static <T extends Person> Specification<T> hasRole(String role) {
         return (root, query, criteriaBuilder) -> {
             if (role == null || role.isEmpty()) {
                 return criteriaBuilder.conjunction();
@@ -32,7 +31,7 @@ public class PersonSpecification {
         };
     }
 
-    public static Specification<Person> hasUserId(Long userId) {
+    public static <T extends Person> Specification<T> hasUserId(Long userId) {
         return (root, query, criteriaBuilder) ->
                 userId != null ?
                         criteriaBuilder.equal(root.get("id"), userId)
@@ -40,7 +39,7 @@ public class PersonSpecification {
                         criteriaBuilder.conjunction();
     }
 
-    public static Specification<Person> hasKeyword(String searchWording) {
+    public static <T extends Person> Specification<T> hasKeyword(String searchWording) {
         return ((root, query, criteriaBuilder) -> {
             if (searchWording == null || searchWording.isEmpty()) {
                 return criteriaBuilder.conjunction();
@@ -53,12 +52,12 @@ public class PersonSpecification {
         });
     }
 
-    public static Specification<Person> isNotDeleted() {
+    public static <T extends Person> Specification<T> isNotDeleted() {
         return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted")));
     }
 
-    public static Specification<Person> hasNoActiveTask() {
+    public static <T extends Person> Specification<T> hasNoActiveTask() {
         return (((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("hasActiveTask"))));
     }

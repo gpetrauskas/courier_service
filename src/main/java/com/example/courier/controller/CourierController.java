@@ -1,20 +1,16 @@
 package com.example.courier.controller;
 
-import com.example.courier.dto.CourierTaskDTO;
 import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
 import com.example.courier.dto.request.UpdateTaskItemStatusRequest;
 import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
 import com.example.courier.dto.response.UpdateTaskItemStatusResponse;
-import com.example.courier.service.CourierService;
-import com.example.courier.util.AuthUtils;
+import com.example.courier.service.person.CourierService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
@@ -26,17 +22,6 @@ public class CourierController {
 
     public CourierController(CourierService courierService) {
         this.courierService = courierService;
-    }
-
-    @PreAuthorize("hasRole('COURIER')")
-    @GetMapping("/currentTaskList")
-    public ResponseEntity<List<CourierTaskDTO>> getCurrentTaskList() {
-
-        logger.info("hello");
-        Long courierId = AuthUtils.getAuthenticatedPersonId();
-        List<CourierTaskDTO> taskList = courierService.getCurrentTaskList(courierId);
-
-        return ResponseEntity.ok(taskList);
     }
 
     @PreAuthorize("hasRole('COURIER')")

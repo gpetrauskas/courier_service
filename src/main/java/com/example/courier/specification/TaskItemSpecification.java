@@ -2,14 +2,14 @@ package com.example.courier.specification;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
-import com.example.courier.domain.DeliveryTaskItem;
+import com.example.courier.domain.TaskItem;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 public class TaskItemSpecification {
 
-    public static Specification<DeliveryTaskItem> isActiveTaskItem(Long id) {
+    public static Specification<TaskItem> isActiveTaskItem(Long id) {
         return (root, query, criteriaBuilder) -> {
             Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
             Predicate statusPredicate = criteriaBuilder.not(root.get("status").in(ParcelStatus.getStatusesPreventingRemoval()));

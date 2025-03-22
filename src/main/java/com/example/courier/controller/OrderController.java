@@ -13,7 +13,7 @@ import com.example.courier.service.order.OrderFacadeService;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.TrackingService;
-import com.example.courier.service.AuthService;
+import com.example.courier.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +82,6 @@ public class OrderController {
             @RequestParam String taskType
     ) {
         PaginatedResponseDTO<OrderDTO> responseDTO = orderService.fetchAllTaskOrdersByTaskType(page, size, taskType);
-
         return ResponseEntity.ok(responseDTO);
     }
 

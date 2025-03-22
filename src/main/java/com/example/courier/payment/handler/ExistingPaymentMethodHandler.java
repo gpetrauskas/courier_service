@@ -9,7 +9,7 @@ import com.example.courier.exception.PaymentFailedException;
 import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.exception.UnauthorizedPaymentMethodException;
 import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.service.CreditCardService;
+import com.example.courier.service.payment.CreditCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

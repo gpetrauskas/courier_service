@@ -12,6 +12,11 @@ public final class AuthUtils {
 
     private AuthUtils() {}
 
+    /**
+     * Return the ID of authenticated person
+     *
+     * @return the ID of the authenticated person
+     */
     public static Long getAuthenticatedPersonId() {
         Authentication authentication = getAuthentication();
         logger.info("who {}", authentication);
@@ -26,6 +31,12 @@ public final class AuthUtils {
         throw new IllegalStateException("User not authenticated");
     }
 
+    /**
+     * Checks if the authenticated Person is Admin
+     *
+     * @return true if person is admin, false otherwise
+     * @throws UnauthorizedAccessException if the person is not authenticated
+     */
     public static boolean isAdmin() {
         Authentication authentication = getAuthentication();
         boolean isAdmin = authentication.getAuthorities().stream()
@@ -35,6 +46,15 @@ public final class AuthUtils {
         return isAdmin;
     }
 
+    /**
+     * Returns the authenticated person as specified type
+     *
+     * @param tClass the class of the expected type (Admin.class, Courier.class, User.class)
+     * @return the authenticated person as specified type
+     * @param <T> type of the authenticated person, which must extend {@link Person}
+     * @throws UnauthorizedAccessException if the user is not authenticated
+     *  or the principal is not of expected tpe
+     */
     public static <T extends Person> T getAuthenticated(Class<T> tClass) {
        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
        if (authentication == null || !authentication.isAuthenticated()) {
@@ -53,6 +73,12 @@ public final class AuthUtils {
        throw new UnauthorizedAccessException("invalid authentication details");
     }
 
+    /**
+     * Returns current authentication object
+     *
+     * @return current authentication object
+     * @throws UnauthorizedAccessException if the authentication object is null
+     */
     private static Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
     }
