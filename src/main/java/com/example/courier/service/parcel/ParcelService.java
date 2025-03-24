@@ -23,7 +23,7 @@ public class ParcelService {
 
     public void parcelSectionUpdate(ParcelSectionUpdateRequest updateRequest) {
         Parcel parcel = fetchById(updateRequest.id());
-        ParcelStatus.isValidStatus(updateRequest.status());
+        ParcelStatus.validateStatus(updateRequest.status());
         parcelMapper.updateParcelSectionFromRequest(updateRequest, parcel);
         parcelRepository.save(parcel);
     }

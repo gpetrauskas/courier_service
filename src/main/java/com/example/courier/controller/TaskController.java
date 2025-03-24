@@ -45,12 +45,12 @@ public class TaskController {
     }
 
     @GetMapping("getAllDeliveryTaskLists")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PaginatedResponseDTO<AdminTaskDTO>> getAllDeliveryTaskLists(
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
+    public ResponseEntity<PaginatedResponseDTO<? extends TaskBase>> getAllDeliveryTaskLists(
             @ModelAttribute DeliveryTaskFilterDTO filterDTO
     ) {
         logger.info("fetching {}", filterDTO);
-        PaginatedResponseDTO<AdminTaskDTO> list = taskService.getAllDeliveryLists(filterDTO);
+        PaginatedResponseDTO<? extends TaskBase> list = taskService.getAllTaskLists(filterDTO);
 
         return ResponseEntity.ok(list);
     }

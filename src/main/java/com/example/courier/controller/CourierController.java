@@ -25,32 +25,6 @@ public class CourierController {
     }
 
     @PreAuthorize("hasRole('COURIER')")
-    @PostMapping("/updateTaskItemNotes/{taskItemId}")
-    public ResponseEntity<UpdateTaskItemNotesResponse> updateTaskItemNotes(
-            @PathVariable Long taskItemId,
-            @Valid @RequestBody UpdateTaskItemNotesRequest request) {
-
-        courierService.updateTaskItemNotes(taskItemId, request);
-
-        return ResponseEntity.ok(
-                new UpdateTaskItemNotesResponse("Successfully added note for item id: ", taskItemId)
-        );
-    }
-
-    @PreAuthorize("hasRole('COURIER')")
-    @PostMapping("/updateTaskItemStatus/{taskItemId}")
-    public ResponseEntity<UpdateTaskItemStatusResponse> updateTaskItemStatus(
-            @PathVariable Long taskItemId,
-            @Valid @RequestBody UpdateTaskItemStatusRequest payLoad) {
-
-        courierService.updateTaskItemStatus(taskItemId, payLoad);
-
-        return ResponseEntity.ok(
-                new UpdateTaskItemStatusResponse("Status successfully changed")
-        );
-    }
-
-    @PreAuthorize("hasRole('COURIER')")
     @PostMapping("/checkIn/{taskId}")
     public ResponseEntity<String> checkIn(@PathVariable Long taskId) {
         courierService.processCourierCheckIn(taskId);

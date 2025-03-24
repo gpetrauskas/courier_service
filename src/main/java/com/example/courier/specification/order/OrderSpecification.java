@@ -9,7 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 public class OrderSpecification {
     public static Specification<Order> hasParcelStatus(String parcelStatus) {
 
-        ParcelStatus.isValidStatus(parcelStatus);
+        ParcelStatus.validateStatus(parcelStatus);
         return ((root, query, criteriaBuilder) -> {
             Join<Object, Object> parcelJoin = root.join("parcelDetails");
             return criteriaBuilder.equal(parcelJoin.get("status"), ParcelStatus.valueOf(parcelStatus.toUpperCase()));

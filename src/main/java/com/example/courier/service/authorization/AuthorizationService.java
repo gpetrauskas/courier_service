@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationService {
 
     public void validateCourierTaskAssignmentByTaskItem(TaskItem taskItem) throws UnauthorizedAccessException {
-        Long authenticatedCourierId = AuthUtils.getAuthenticatedPersonId();
+        Long authenticatedCourierId = getAuthenticatedPersonId();
 
         if (!taskItem.getTask().getCourier().getId().equals(authenticatedCourierId)) {
             throw new UnauthorizedAccessException("Not authorized to update this item");
@@ -18,10 +18,14 @@ public class AuthorizationService {
     }
 
     public void validateCourierTaskAssignment(Task task) throws UnauthorizedAccessException {
-        Long authenticatedCourierId = AuthUtils.getAuthenticatedPersonId();
+        Long authenticatedCourierId = getAuthenticatedPersonId();
 
         if (!task.getCourier().getId().equals(authenticatedCourierId)) {
             throw new UnauthorizedAccessException("Not authorized to update this task");
         }
+    }
+
+    private Long getAuthenticatedPersonId() {
+        return AuthUtils.getAuthenticatedPersonId();
     }
 }

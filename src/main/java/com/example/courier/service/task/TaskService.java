@@ -10,21 +10,19 @@ import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.CreateTaskDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.DeliveryTaskMapper;
+import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonServiceImpl;
-import com.example.courier.specification.task.DeliveryTaskSpecification;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -100,10 +98,14 @@ public class TaskService {
         return response;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public PaginatedResponseDTO<AdminTaskDTO> getAllDeliveryLists(DeliveryTaskFilterDTO dto) {
-        Specification<Task> specification = specificationBuilder.buildTaskSpecification(dto);
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
+    public PaginatedResponseDTO<? extends TaskBase> getAllTaskLists(DeliveryTaskFilterDTO dto) {
         Pageable pageable = PageableUtils.toPageable(dto);
+        if (!AuthUtils.isAdmin()) {
+            return getCourierHistory(pageable);
+        }
+
+        Specification<Task> specification = specificationBuilder.buildTaskSpecification(dto);
         Page<Task> taskPage = taskRepository.findAll(specification, pageable);
 
         List<AdminTaskDTO> paginatedResponseDTO = taskPage.getContent().stream()
@@ -161,6 +163,16 @@ public class TaskService {
         return taskList.stream()
                 .map(task -> deliveryTaskMapper.toCourierTaskDTO(task, task.getTaskType()))
                 .toList();
+    }
+
+    private PaginatedResponseDTO<CourierTaskDTO> getCourierHistory(Pageable pageable) {
+        Long courierId = AuthUtils.getAuthenticatedPersonId();
+        Page<Task> taskList = taskRepository.findByCourierIdAndDeliveryStatusIn(
+                courierId, DeliveryStatus.historicalStatuses(), pageable);
+
+        return new PaginatedResponseDTO<>(taskList.stream()
+                .map(task -> deliveryTaskMapper.toCourierTaskDTO(task, task.getTaskType()))
+                .toList(), taskList.getNumber(), taskList.getTotalElements(), taskList.getTotalPages());
     }
 
     private Task fetchTaskById(Long id) {
