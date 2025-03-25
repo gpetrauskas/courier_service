@@ -43,7 +43,7 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                         auth
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/courier/components/**", "/courier/**").permitAll()
                                 .requestMatchers("/*", "/testpage/**").permitAll()
-                                .requestMatchers("/api/registration/**", "/api/auth/login",
+                                .requestMatchers("/api/registration/**", "/api/auth/login", "/api/parcel/**",
                                         "/api/orders/trackOrder/{id}", "/api/orders/**", "/api/person/**",
                                         "/api/paymentMethods/**", "/api/auth/cc/*", "/api/addresses/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

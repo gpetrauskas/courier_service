@@ -36,14 +36,6 @@ public class TaskController {
         return ResponseEntity.ok(new ApiResponseDTO("success", "Delivery task was successfully created"));
     }
 
-    @GetMapping("/availableItemsCount")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Long>> getAvailableItemsCount() {
-        Map<String, Long> response = taskService.getAvailableItemsCount();
-
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("getAllDeliveryTaskLists")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
     public ResponseEntity<PaginatedResponseDTO<? extends TaskBase>> getAllDeliveryTaskLists(

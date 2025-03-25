@@ -11,6 +11,7 @@ import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskItemRepository;
 import com.example.courier.service.authorization.AuthorizationService;
+import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.specification.TaskItemSpecification;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.StatusParser;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskItemService {

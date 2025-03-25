@@ -100,18 +100,6 @@ public class TaskService {
         taskItemService.saveAll(taskItems);
     }
 
-    public Map<String, Long> getAvailableItemsCount() {
-        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.DELIVERING);
-
-        Map<String, Long> response = statuses.stream()
-                .collect(Collectors.toMap(
-                        status -> status.name().toLowerCase(),
-                        parcelService::getAvailableItemsCountByStatus
-                ));
-        log.info("Items count fetched successfully {}", response);
-        return response;
-    }
-
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
     public PaginatedResponseDTO<? extends TaskBase> getAllTaskLists(DeliveryTaskFilterDTO dto) {
         Pageable pageable = PageableUtils.toPageable(dto);
@@ -186,7 +174,7 @@ public class TaskService {
     @PreAuthorize("hasRole('COURIER')")
     @Transactional
     public void checkIn(Long taskId) {
-        log.info("here?");
+        log.info("Courier Trying to check in. Task ID: {}", taskId);
         Task task = taskRepository.findWithRelationsById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
         log.info("authorizing task assignment to courier");

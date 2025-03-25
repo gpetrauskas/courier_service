@@ -6,9 +6,12 @@ import com.example.courier.dto.mapper.ParcelMapper;
 import com.example.courier.dto.request.order.ParcelSectionUpdateRequest;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.ParcelRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ParcelService {
@@ -26,6 +29,16 @@ public class ParcelService {
         ParcelStatus.validateStatus(updateRequest.status());
         parcelMapper.updateParcelSectionFromRequest(updateRequest, parcel);
         parcelRepository.save(parcel);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Long> getAvailableParcelsCount() {
+        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.DELIVERING);
+        return statuses.stream()
+                .collect(Collectors.toMap(
+                        (status -> status.name().toLowerCase()),
+                        this::getAvailableItemsCountByStatus
+                ));
     }
 
     private Parcel fetchById(Long id) {
