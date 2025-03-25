@@ -138,4 +138,19 @@ public class TaskItem {
 
         return taskItem;
     }
+
+    public void addNote(String note) {
+        if (note == null || note.isEmpty()) {
+            throw new IllegalArgumentException("Note cannot be empty");
+        }
+        this.notes.add(note);
+    }
+
+    public void removeFromTask() {
+        setStatus(ParcelStatus.REMOVED_FROM_THE_LIST);
+
+        if (this.parcel != null) {
+            parcel.unassign();
+        }
+    }
 }

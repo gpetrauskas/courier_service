@@ -67,14 +67,9 @@ public class TaskItemService {
         TaskItem taskItem = taskItemRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("No active Task Item was found with id: " + itemId));
 
-        Task task = taskItem.getTask();
-        taskItemValidator.validateItemCanBeRemovedFromTask(task, itemId);
-
-        taskItem.getParcel().setAssigned(false);
-        taskItem.setStatus(ParcelStatus.REMOVED_FROM_THE_LIST);
-
-        checkIfNotLastItemInTask(task, taskItem);
-
+        taskItemValidator.validateItemCanBeRemovedFromTask(taskItem.getTask(), itemId);
+        taskItem.removeFromTask();
+        checkIfNotLastItemInTask(taskItem.getTask(), taskItem);
         taskItemRepository.save(taskItem);
     }
 
@@ -85,9 +80,9 @@ public class TaskItemService {
 
         if (!hasRemainingItems) {
             item.getParcel().setAssigned(false);
-            item.getTask().setDeliveryStatus(DeliveryStatus.CANCELED);
+
             Long adminId = AuthUtils.getAuthenticatedPersonId();
-            item.getTask().setCanceledByAdminId(adminId);
+            item.getTask().cancel(adminId);
             item.getTask().getCourier().setHasActiveTask(false);
         }
     }
@@ -114,7 +109,7 @@ public class TaskItemService {
         TaskItem item = fetchTaskItemById(taskItemId);
         authorizationService.validateCourierTaskAssignmentByTaskItem(item);
         taskItemValidator.validateNotInFinalState(item);
-        item.getNotes().add(notesRequest.note());
+        item.addNote(notesRequest.note());
 
         save(item);
         return new UpdateTaskItemNotesResponse("Note successfully added.", taskItemId);
