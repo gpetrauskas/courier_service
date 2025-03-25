@@ -51,7 +51,7 @@ public class TaskItemController {
     @PutMapping("updateNote/{taskItemId}")
     @PreAuthorize("hasRole('COURIER')")
     public ResponseEntity<UpdateTaskItemNotesResponse> updateNotes(
-            @RequestParam Long taskItemId,
+            @PathVariable Long taskItemId,
             @Valid @RequestBody UpdateTaskItemNotesRequest notesRequest
     ) {
         return ResponseEntity.ok(taskItemService.updateNote(notesRequest, taskItemId));

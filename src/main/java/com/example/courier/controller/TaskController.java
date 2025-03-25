@@ -79,4 +79,12 @@ public class TaskController {
         List<CourierTaskDTO> taskDTO = taskService.getCourierCurrentTask();
         return ResponseEntity.ok(taskDTO);
     }
+
+    @PutMapping("/checkIn/{taskId}")
+    @PreAuthorize("hasRole('COURIER')")
+    public ResponseEntity<ApiResponseDTO> checkIn(@PathVariable Long taskId) {
+        taskService.checkIn(taskId);
+        return ResponseEntity.ok(new ApiResponseDTO("success", String.format("Courier successfully" +
+                " check-in with task %s", taskId)));
+    }
 }

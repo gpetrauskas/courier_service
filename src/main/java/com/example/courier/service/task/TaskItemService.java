@@ -13,6 +13,7 @@ import com.example.courier.repository.TaskItemRepository;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.specification.TaskItemSpecification;
 import com.example.courier.util.AuthUtils;
+import com.example.courier.util.StatusParser;
 import com.example.courier.validation.TaskItemValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,22 +96,28 @@ public class TaskItemService {
         }
     }
 
+    @Transactional
     public void updateStatus(Long id, String newStatus) {
-        TaskItem item = taskItemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task Item not found"));
+        ParcelStatus status = ParcelStatus.valueOf(newStatus);
+
+        TaskItem item = fetchTaskItemById(id);
+
         authorizationService.validateCourierTaskAssignmentByTaskItem(item);
-        taskItemValidator.validateStatusChange(item, ParcelStatus.valueOf(newStatus));
-        Long personId = AuthUtils.getAuthenticatedPersonId();
-        item.setStatus(ParcelStatus.valueOf(newStatus));
-        item.getNotes().add("Status changed by Courier: " + personId + " to " + newStatus +
-            " for item id: " + id);
+        taskItemValidator.validateStatusChange(item, status);
+
+        item.setStatus(status);
+        item.addDefaultStatusChangeNote(AuthUtils.getAuthenticatedPersonId(), status);
+
+        item.getTask().updateStatusIfAllItemsFinal();
+
         saveAll(List.of(item));
     }
 
+    @Transactional
     public UpdateTaskItemNotesResponse updateNote(UpdateTaskItemNotesRequest notesRequest, Long taskItemId) {
         TaskItem item = fetchTaskItemById(taskItemId);
         authorizationService.validateCourierTaskAssignmentByTaskItem(item);
-        taskItemValidator.validateIfItemIsInFinalState(item);
+        taskItemValidator.validateNotInFinalState(item);
         item.getNotes().add(notesRequest.note());
 
         save(item);

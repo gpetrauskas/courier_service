@@ -1,7 +1,5 @@
 package com.example.courier.common;
 
-import com.example.courier.domain.TaskItem;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +29,7 @@ public enum ParcelStatus {
             .map(Enum::name)
             .collect(Collectors.toSet());
 
-    private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED);
+    private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY);
 
 
     public static List<ParcelStatus> getStatusesPreventingRemoval() {
@@ -50,6 +48,15 @@ public enum ParcelStatus {
 
     public boolean isFinalState() {
         return FINAL_STATES.contains(this);
+    }
+
+    public boolean isValidTransition(ParcelStatus newStatus) {
+        return switch (this) {
+            case PICKING_UP -> newStatus == PICKED_UP || newStatus == FAILED_PICKUP;
+            case DELIVERING -> newStatus == DELIVERED || newStatus == FAILED_DELIVERY;
+            case DELIVERED, PICKED_UP, FAILED_DELIVERY, FAILED_PICKUP -> false;
+            default -> throw new IllegalArgumentException("invalid transition from: " + newStatus);
+        };
     }
 
 }

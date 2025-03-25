@@ -105,4 +105,15 @@ public class TaskItem {
     public void setNotes(List<String> notes) {
         this.notes = notes;
     }
+
+    public void addDefaultStatusChangeNote(Long personId, ParcelStatus newStatus) {
+        String note = switch (newStatus) {
+            case FAILED_PICKUP -> "Failed to pick up";
+            case FAILED_DELIVERY -> "Failed to deliver";
+            case PICKED_UP -> "Picked up";
+            case DELIVERED -> "Delivered";
+            default -> "Status changed";
+        };
+        notes.add(String.format("%s by Courier: %d for item id: %d", note, personId, getId()));
+    }
 }

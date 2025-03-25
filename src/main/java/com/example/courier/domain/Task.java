@@ -112,4 +112,19 @@ public class Task {
     public void setCanceledByAdminId(Long canceledByAdminId) {
         this.canceledByAdminId = canceledByAdminId;
     }
+
+    public void completeOnCheckIn() {
+        if (this.deliveryStatus != DeliveryStatus.RETURNING_TO_STATION) {
+            throw new IllegalArgumentException("Invalid status for check in.");
+        }
+        this.deliveryStatus = DeliveryStatus.AT_CHECKPOINT;
+        this.completedAt = LocalDateTime.now();
+        this.courier.setHasActiveTask(false);
+    }
+
+    public void updateStatusIfAllItemsFinal() {
+        if (this.items.stream().allMatch(item -> item.getStatus().isFinalState())) {
+            setDeliveryStatus(DeliveryStatus.RETURNING_TO_STATION);
+        }
+    }
 }

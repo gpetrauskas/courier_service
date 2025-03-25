@@ -1,7 +1,6 @@
 package com.example.courier.common;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 public enum DeliveryStatus {
@@ -20,7 +19,7 @@ public enum DeliveryStatus {
         return EnumSet.of(COMPLETED, CANCELED);
     }
 
-    public static boolean isValidToCheckIn(DeliveryStatus status) {
+    public static boolean isCheckInAllowed(DeliveryStatus status) {
         return status == RETURNING_TO_STATION;
     }
 

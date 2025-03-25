@@ -13,12 +13,15 @@ import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskRepository;
+import com.example.courier.service.NotificationService;
+import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
+import com.example.courier.validation.task.TaskValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -28,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,10 +48,15 @@ public class TaskService {
     private final OrderService orderService;
     private final TaskItemService taskItemService;
     private final TaskSpecificationBuilder specificationBuilder;
+    private final AuthorizationService authorizationService;
+    private final TaskValidator taskValidator;
+    private final NotificationService notificationService;
 
     public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
                        ParcelService parcelService, PersonServiceImpl personServiceImpl, OrderService orderService,
-                       TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder) {
+                       TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
+                       AuthorizationService authorizationService, TaskValidator taskValidator,
+                       NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.deliveryTaskMapper = deliveryTaskMapper;
         this.parcelService = parcelService;
@@ -55,6 +64,9 @@ public class TaskService {
         this.orderService = orderService;
         this.taskItemService = taskItemService;
         this.specificationBuilder = specificationBuilder;
+        this.authorizationService = authorizationService;
+        this.taskValidator = taskValidator;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -175,8 +187,21 @@ public class TaskService {
                 .toList(), taskList.getNumber(), taskList.getTotalElements(), taskList.getTotalPages());
     }
 
+    @Transactional
+    public void checkIn(Long taskId) {
+        Task task = taskRepository.findWithRelationsById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
+        authorizationService.validateCourierTaskAssignment(task);
+        task.completeOnCheckIn();
+        taskRepository.save(task);
+
+        notificationService.notifyAdmin(taskId, task.getCourier().getId());
+        log.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId,task.getCourier().getId());
+    }
+
     private Task fetchTaskById(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task was not found with ID: " + id));
     }
+
 }

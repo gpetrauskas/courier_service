@@ -19,15 +19,25 @@ public class TaskItemValidator {
         }
     }
 
-    public void validateIfItemIsInFinalState(TaskItem taskItem) {
+    public void validateStatusChange(TaskItem item, ParcelStatus newStatus) {
+        validateNotInFinalState(item);
+        validateTransitionRule(item, newStatus);
+    }
+
+    public void validateNotInFinalState(TaskItem taskItem) {
         if (taskItem.getStatus().isFinalState()) {
             throw new IllegalArgumentException("Task Item cannot be updated anymore.");
         }
     }
 
-    public void validateStatusChange(TaskItem item, ParcelStatus newStatus) {
-        if (!item.getStatus().isValidStatusChange(item.getTask().getTaskType(), newStatus)) {
-            throw new IllegalArgumentException("Status for this Task Item cannot be changed");
+    private void validateTransitionRule(TaskItem item, ParcelStatus newStatus) {
+        if (!item.getStatus().isValidTransition(newStatus)) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid %s transition: %s -> %s",
+                            item.getTask().getTaskType(),
+                            item.getStatus(),
+                            newStatus)
+            );
         }
     }
 }
