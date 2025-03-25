@@ -92,4 +92,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponseDTO);
     }
 
+    @ExceptionHandler(TaskNotCancelableException.class)
+    public ResponseEntity<ApiResponseDTO> handleTaskNotCancelableException(TaskNotCancelableException ex) {
+        logger.error("Task cancellation error: {}", ex.getMessage());
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+    }
+
 }

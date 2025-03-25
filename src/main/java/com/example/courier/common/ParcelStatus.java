@@ -31,9 +31,12 @@ public enum ParcelStatus {
 
     private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY);
 
-
     public static List<ParcelStatus> getStatusesPreventingRemoval() {
         return List.of(CANCELED, REMOVED_FROM_THE_LIST);
+    }
+
+    public static boolean cannotBeModified(ParcelStatus status) {
+        return FINAL_STATES.contains(status) || getStatusesPreventingRemoval().contains(status);
     }
 
     public static void validateStatus(String status) {

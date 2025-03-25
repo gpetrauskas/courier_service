@@ -97,4 +97,16 @@ public class Parcel {
     public void setAssigned(boolean assigned) {
         isAssigned = assigned;
     }
+
+    public void unassign() {
+        this.isAssigned = false;
+    }
+
+    public void assign() {
+        if (isAssigned) {
+            throw new IllegalStateException("Parcel is already assigned.");
+        }
+        this.isAssigned = true;
+    }
+
 }

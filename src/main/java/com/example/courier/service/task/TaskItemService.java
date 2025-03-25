@@ -18,6 +18,7 @@ import com.example.courier.validation.TaskItemValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,25 +42,17 @@ public class TaskItemService {
         this.authorizationService = authorizationService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public List<TaskItem> createTaskItems(List<Parcel> parcels, List<Order> orders, Task task) {
         return parcels.stream()
                 .map(parcel -> {
-                    TaskItem taskItem = new TaskItem();
-                    taskItem.setParcel(parcel);
-                    taskItem.getParcel().setAssigned(true);
-                    taskItem.setStatus(parcel.getStatus());
-
                     Order order = orders.stream()
                             .filter(o -> o.getParcelDetails().equals(parcel))
                             .findFirst()
-                            .orElseThrow(() -> new ResourceNotFoundException("Order for parcel was not found"));
+                            .orElseThrow(() -> new ResourceNotFoundException("Order for parcel was not found."));
 
-                    taskItem.setSenderAddress(order.getSenderAddress());
-                    taskItem.setRecipientAddress(order.getRecipientAddress());
-                    taskItem.setDeliveryPreference(order.getDeliveryMethod());
-                    taskItem.setTask(task);
-
-                    return taskItem;
+                    return TaskItem.from(parcel, order, task);
                 })
                 .toList();
     }

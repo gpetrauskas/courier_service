@@ -62,7 +62,7 @@ public class TaskController {
         return ResponseEntity.ok(new ApiResponseDTO("success", "Task was successfully canceled. IDL " + id));
     }
 
-    @PostMapping("changeTaskStatus/{taskId}")
+    @PutMapping("changeTaskStatus/{taskId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseDTO> changeTaskStatus(
             @PathVariable Long taskId,
@@ -83,6 +83,7 @@ public class TaskController {
     @PutMapping("/checkIn/{taskId}")
     @PreAuthorize("hasRole('COURIER')")
     public ResponseEntity<ApiResponseDTO> checkIn(@PathVariable Long taskId) {
+        logger.info("im here??");
         taskService.checkIn(taskId);
         return ResponseEntity.ok(new ApiResponseDTO("success", String.format("Courier successfully" +
                 " check-in with task %s", taskId)));

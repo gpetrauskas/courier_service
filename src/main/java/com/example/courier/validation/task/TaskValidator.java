@@ -12,4 +12,8 @@ public class TaskValidator {
         }
     }
 
+    public void validateAdminUpdatable() {
+
+    }
+
 }

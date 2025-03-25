@@ -116,4 +116,26 @@ public class TaskItem {
         };
         notes.add(String.format("%s by Courier: %d for item id: %d", note, personId, getId()));
     }
+
+    public void cancel() {
+        if (ParcelStatus.cannotBeModified(this.status)) {
+            throw new IllegalArgumentException("Parcel status cannot be changed");
+        }
+
+        setStatus(ParcelStatus.CANCELED);
+        this.parcel.unassign();
+    }
+
+    public static TaskItem from(Parcel parcel, Order order, Task task) {
+        TaskItem taskItem = new TaskItem();
+        taskItem.parcel = parcel;
+        taskItem.status = parcel.getStatus();
+        taskItem.senderAddress = order.getSenderAddress();
+        taskItem.recipientAddress = order.getRecipientAddress();
+        taskItem.deliveryPreference = order.getDeliveryMethod();
+        taskItem.task = task;
+        parcel.assign();
+
+        return taskItem;
+    }
 }

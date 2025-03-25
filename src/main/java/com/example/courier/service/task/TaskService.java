@@ -12,11 +12,13 @@ import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.exception.ResourceNotFoundException;
+import com.example.courier.exception.TaskNotCancelableException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.NotificationService;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
+import com.example.courier.service.person.PersonService;
 import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
@@ -24,6 +26,7 @@ import com.example.courier.util.PageableUtils;
 import com.example.courier.validation.task.TaskValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,6 +55,8 @@ public class TaskService {
     private final AuthorizationService authorizationService;
     private final TaskValidator taskValidator;
     private final NotificationService notificationService;
+    @Autowired
+    private PersonService personService;
 
     public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
                        ParcelService parcelService, PersonServiceImpl personServiceImpl, OrderService orderService,
@@ -69,27 +75,23 @@ public class TaskService {
         this.notificationService = notificationService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
         Courier courier = personServiceImpl.findById(createTaskDTO.courierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Courier not found"));
         personServiceImpl.hasCourierActiveTask(courier);
         Admin admin = AuthUtils.getAuthenticated(Admin.class);
+
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
         List<Order> orders = orderService.fetchAllByParcelDetails(parcels);
 
         Task task = new Task();
-        task.setCourier(courier);
-        task.setTaskType(createTaskDTO.taskType()
-                .equalsIgnoreCase("PICKING_UP") ?
-                TaskType.PICKUP : TaskType.DELIVERY);
-        task.setCreatedBy(admin);
-        task.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
-
+        task.initiateTaskCreation(createTaskDTO, courier, admin, parcels, orders);
         taskRepository.save(task);
 
         List<TaskItem> taskItems = taskItemService.createTaskItems(parcels, orders, task);
-        task.setItems(taskItems);
+        task.addTaskItems(taskItems);
 
         courier.setHasActiveTask(true);
         personServiceImpl.save(courier);
@@ -134,25 +136,17 @@ public class TaskService {
         Task task = taskRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("No such Task with id: " + id));
 
-        task.getItems()
-                .forEach(item -> {
-                    if (!ParcelStatus.getStatusesPreventingRemoval().contains(item.getStatus())) {
-                        item.setStatus(ParcelStatus.CANCELED);
-                        item.getParcel().setAssigned(false);
-                    }
-                });
+        task.cancelItems();
 
-        boolean allItemsCanceled = task.getItems().stream()
-                .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED
-                        || item.getStatus() == ParcelStatus.REMOVED_FROM_THE_LIST);
-
-        if (allItemsCanceled) {
-            Long adminId = AuthUtils.getAuthenticatedPersonId();
-            task.getCourier().setHasActiveTask(false);
-            task.setDeliveryStatus(DeliveryStatus.CANCELED);
-            task.setCanceledByAdminId(adminId);
-            taskRepository.save(task);
+        if (!task.areAllItemsCanceled()) {
+            log.error("Task cannot be canceled because some items are still active. Task ID: {}", task.getId());
+            throw new TaskNotCancelableException("There are active items. Task cannot be canceled");
         }
+
+        Long adminId = AuthUtils.getAuthenticatedPersonId();
+        task.cancel(adminId);
+
+        taskRepository.save(task);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -160,6 +154,8 @@ public class TaskService {
         if (!DeliveryStatus.isAdminUpdatable(newStatus)) {
             throw new IllegalArgumentException("Task status cannot be updated.");
         }
+
+        taskValidator.validateAdminUpdatable();
 
         Task task = fetchTaskById(taskId);
         task.setDeliveryStatus(newStatus);
@@ -187,10 +183,13 @@ public class TaskService {
                 .toList(), taskList.getNumber(), taskList.getTotalElements(), taskList.getTotalPages());
     }
 
+    @PreAuthorize("hasRole('COURIER')")
     @Transactional
     public void checkIn(Long taskId) {
+        log.info("here?");
         Task task = taskRepository.findWithRelationsById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
+        log.info("authorizing task assignment to courier");
         authorizationService.validateCourierTaskAssignment(task);
         task.completeOnCheckIn();
         taskRepository.save(task);

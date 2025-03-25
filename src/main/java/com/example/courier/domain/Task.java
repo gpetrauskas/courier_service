@@ -2,7 +2,9 @@
 package com.example.courier.domain;
 
 import com.example.courier.common.DeliveryStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
+import com.example.courier.dto.CreateTaskDTO;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -122,9 +124,51 @@ public class Task {
         this.courier.setHasActiveTask(false);
     }
 
+    public void markAsComplete() {
+        this.deliveryStatus = DeliveryStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+       // updateItemsOnCompletion();
+    }
+
+/*    private void updateItemsOnCompletion() {
+        this.items.forEach(item -> {
+            if (item.getStatus() == ParcelStatus.PICKED_UP) {
+                item.setStatus(ParcelStatus.DELIVERING);
+            } else if (item.getTask())
+        });
+    }*/
+
+    public void initiateTaskCreation(CreateTaskDTO taskDTO, Courier courier, Admin admin,
+                                     List<Parcel> parcels, List<Order> orders) {
+        setCourier(courier);
+        setCreatedBy(admin);
+        setTaskType(taskDTO.taskType().equals("PICKING_UP") ? TaskType.PICKUP : TaskType.DELIVERY);
+        setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
+    }
+
     public void updateStatusIfAllItemsFinal() {
         if (this.items.stream().allMatch(item -> item.getStatus().isFinalState())) {
             setDeliveryStatus(DeliveryStatus.RETURNING_TO_STATION);
         }
+    }
+
+    public void cancelItems() {
+        this.items.forEach(TaskItem::cancel);
+    }
+
+    public boolean areAllItemsCanceled() {
+        return this.items.stream()
+                .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED ||
+                        item.getStatus() == ParcelStatus.REMOVED_FROM_THE_LIST);
+    }
+
+    public void cancel(Long adminId) {
+        this.courier.setHasActiveTask(false);
+        this.setDeliveryStatus(DeliveryStatus.CANCELED);
+        this.setCanceledByAdminId(adminId);
+    }
+
+    public void addTaskItems(List<TaskItem> taskItems) {
+        this.items.addAll(taskItems);
     }
 }

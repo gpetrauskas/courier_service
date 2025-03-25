@@ -26,6 +26,7 @@ public final class AuthUtils {
         if (authentication.isAuthenticated()) {
             Person person = (Person) authentication.getPrincipal();
             logger.info("class {}", person.getClass());
+            logger.info("id: {}", person.getId());
             return person.getId();
         }
         throw new IllegalStateException("User not authenticated");
