@@ -80,24 +80,19 @@ public class TaskService {
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
         Courier courier = personServiceImpl.findById(createTaskDTO.courierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Courier not found"));
-        personServiceImpl.hasCourierActiveTask(courier);
-        Admin admin = AuthUtils.getAuthenticated(Admin.class);
 
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
         List<Order> orders = orderService.fetchAllByParcelDetails(parcels);
 
-        Task task = new Task();
-        task.initiateTaskCreation(createTaskDTO, courier, admin, parcels, orders);
-        taskRepository.save(task);
+        taskValidator.validateCreation(createTaskDTO, courier, parcels);
 
-        List<TaskItem> taskItems = taskItemService.createTaskItems(parcels, orders, task);
-        task.addTaskItems(taskItems);
+        Task task = new Task();
+        task.initiateTaskCreation(createTaskDTO, courier, AuthUtils.getAuthenticated(Admin.class));
+        task.addTaskItems(taskItemService.createTaskItems(parcels, orders, task));
+        taskRepository.save(task);
 
         courier.setHasActiveTask(true);
         personServiceImpl.save(courier);
-
-        task.setItems(taskItems);
-        taskItemService.saveAll(taskItems);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")

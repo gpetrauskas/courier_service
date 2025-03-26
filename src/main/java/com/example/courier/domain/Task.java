@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -68,7 +69,7 @@ public class Task {
     }
 
     public List<TaskItem> getItems() {
-        return items;
+        return Collections.unmodifiableList(items);
     }
 
     public void setItems(List<TaskItem> items) {
@@ -138,8 +139,7 @@ public class Task {
         });
     }*/
 
-    public void initiateTaskCreation(CreateTaskDTO taskDTO, Courier courier, Admin admin,
-                                     List<Parcel> parcels, List<Order> orders) {
+    public void initiateTaskCreation(CreateTaskDTO taskDTO, Courier courier, Admin admin) {
         setCourier(courier);
         setCreatedBy(admin);
         setTaskType(taskDTO.taskType().equals("PICKING_UP") ? TaskType.PICKUP : TaskType.DELIVERY);
@@ -169,6 +169,19 @@ public class Task {
     }
 
     public void addTaskItems(List<TaskItem> taskItems) {
+        if (this.deliveryStatus.isFinalState()) {
+            throw new IllegalStateException("Cannot add items to a final state task.");
+        }
+        taskItems.forEach(item -> item.setTask(this));
         this.items.addAll(taskItems);
+    }
+
+    public void addTaskItem(TaskItem item) {
+        if (this.deliveryStatus.isFinalState()) {
+            throw new IllegalStateException("Cannot add items to a final state task.");
+        }
+
+        item.setTask(this);
+        this.items.add(item);
     }
 }

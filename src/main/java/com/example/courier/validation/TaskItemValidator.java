@@ -19,18 +19,13 @@ public class TaskItemValidator {
         }
     }
 
-    public void validateStatusChange(TaskItem item, ParcelStatus newStatus) {
-        validateNotInFinalState(item);
-        validateTransitionRule(item, newStatus);
-    }
-
     public void validateNotInFinalState(TaskItem taskItem) {
         if (taskItem.getStatus().isFinalState()) {
             throw new IllegalArgumentException("Task Item cannot be updated anymore.");
         }
     }
 
-    private void validateTransitionRule(TaskItem item, ParcelStatus newStatus) {
+    public void validateTransitionRule(TaskItem item, ParcelStatus newStatus) {
         if (!item.getStatus().isValidTransition(newStatus)) {
             throw new IllegalArgumentException(
                     String.format("Invalid %s transition: %s -> %s",

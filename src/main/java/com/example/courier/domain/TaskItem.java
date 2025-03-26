@@ -2,6 +2,8 @@ package com.example.courier.domain;
 
 import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -152,5 +154,14 @@ public class TaskItem {
         if (this.parcel != null) {
             parcel.unassign();
         }
+    }
+
+    public void changeStatus(@NotBlank ParcelStatus status, @NotNull Long personId) {
+        if (this.getStatus().isFinalState()) {
+            throw new IllegalArgumentException("Task item cannot be updated anymore.");
+        }
+
+        this.setStatus(status);
+        this.addDefaultStatusChangeNote(personId, status);
     }
 }

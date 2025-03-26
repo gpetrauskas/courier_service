@@ -1,6 +1,5 @@
 package com.example.courier.service.task;
 
-import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Task;
 import com.example.courier.domain.TaskItem;
@@ -11,10 +10,8 @@ import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskItemRepository;
 import com.example.courier.service.authorization.AuthorizationService;
-import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.specification.TaskItemSpecification;
 import com.example.courier.util.AuthUtils;
-import com.example.courier.util.StatusParser;
 import com.example.courier.validation.TaskItemValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskItemService {
@@ -94,10 +89,9 @@ public class TaskItemService {
         TaskItem item = fetchTaskItemById(id);
 
         authorizationService.validateCourierTaskAssignmentByTaskItem(item);
-        taskItemValidator.validateStatusChange(item, status);
+        taskItemValidator.validateTransitionRule(item, status);
 
-        item.setStatus(status);
-        item.addDefaultStatusChangeNote(AuthUtils.getAuthenticatedPersonId(), status);
+        item.changeStatus(status, AuthUtils.getAuthenticatedPersonId());
 
         item.getTask().updateStatusIfAllItemsFinal();
 

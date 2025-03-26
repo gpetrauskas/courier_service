@@ -45,10 +45,6 @@ public enum ParcelStatus {
         }
     }
 
-    public boolean isValidStatusChange(TaskType taskType, ParcelStatus newStatus) {
-        return VALID_TRANSITIONS.getOrDefault(taskType, Set.of()).contains(newStatus);
-    }
-
     public boolean isFinalState() {
         return FINAL_STATES.contains(this);
     }
@@ -58,7 +54,7 @@ public enum ParcelStatus {
             case PICKING_UP -> newStatus == PICKED_UP || newStatus == FAILED_PICKUP;
             case DELIVERING -> newStatus == DELIVERED || newStatus == FAILED_DELIVERY;
             case DELIVERED, PICKED_UP, FAILED_DELIVERY, FAILED_PICKUP -> false;
-            default -> throw new IllegalArgumentException("invalid transition from: " + newStatus);
+            default -> throw new IllegalArgumentException("invalid transition from: " + this + " to " + newStatus);
         };
     }
 

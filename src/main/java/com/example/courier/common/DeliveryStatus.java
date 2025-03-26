@@ -30,4 +30,8 @@ public enum DeliveryStatus {
     public static boolean isTaskItemUpdatable(DeliveryStatus status) {
         return status == IN_PROGRESS;
     }
+
+    public boolean isFinalState() {
+        return historicalStatuses().contains(this);
+    }
 }
