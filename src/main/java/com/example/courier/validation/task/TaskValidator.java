@@ -4,6 +4,7 @@ import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.TaskType;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Parcel;
+import com.example.courier.domain.Task;
 import com.example.courier.dto.CreateTaskDTO;
 import org.springframework.stereotype.Component;
 
@@ -18,8 +19,10 @@ public class TaskValidator {
         }
     }
 
-    public void validateAdminUpdatable() {
-
+    public void validateAdminUpdatable(Task task) {
+        if (!DeliveryStatus.isAdminUpdatable(task.getDeliveryStatus())) {
+            throw new IllegalArgumentException("Status cannot be updated.");
+        }
     }
 
     public void validateCreation(CreateTaskDTO dto, Courier courier, List<Parcel> parcels) {

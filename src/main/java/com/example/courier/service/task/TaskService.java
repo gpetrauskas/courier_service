@@ -23,6 +23,7 @@ import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
+import com.example.courier.validation.TaskItemValidator;
 import com.example.courier.validation.task.TaskValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,7 @@ public class TaskService {
     private final AuthorizationService authorizationService;
     private final TaskValidator taskValidator;
     private final NotificationService notificationService;
+    private final TaskItemValidator taskItemValidator;
     @Autowired
     private PersonService personService;
 
@@ -62,7 +64,7 @@ public class TaskService {
                        ParcelService parcelService, PersonServiceImpl personServiceImpl, OrderService orderService,
                        TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
                        AuthorizationService authorizationService, TaskValidator taskValidator,
-                       NotificationService notificationService) {
+                       NotificationService notificationService, TaskItemValidator taskItemValidator) {
         this.taskRepository = taskRepository;
         this.deliveryTaskMapper = deliveryTaskMapper;
         this.parcelService = parcelService;
@@ -73,6 +75,7 @@ public class TaskService {
         this.authorizationService = authorizationService;
         this.taskValidator = taskValidator;
         this.notificationService = notificationService;
+        this.taskItemValidator = taskItemValidator;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -92,6 +95,7 @@ public class TaskService {
         taskRepository.save(task);
 
         courier.setHasActiveTask(true);
+
         personServiceImpl.save(courier);
     }
 
@@ -121,7 +125,7 @@ public class TaskService {
 
         task.cancelItems();
 
-        if (!task.areAllItemsCanceled()) {
+        if (!task.isAllItemsCanceled()) {
             log.error("Task cannot be canceled because some items are still active. Task ID: {}", task.getId());
             throw new TaskNotCancelableException("There are active items. Task cannot be canceled");
         }
@@ -133,15 +137,15 @@ public class TaskService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void changeTaskStatus(Long taskId, DeliveryStatus newStatus) {
-        if (!DeliveryStatus.isAdminUpdatable(newStatus)) {
-            throw new IllegalArgumentException("Task status cannot be updated.");
+    public void changeTaskStatus(Long taskId, String newStatus) {
+        DeliveryStatus status = DeliveryStatus.valueOf(newStatus);
+        Task task = fetchTaskById(taskId);
+        taskValidator.validateAdminUpdatable(task);
+
+        if (status.equals(DeliveryStatus.COMPLETED)) {
+            task.completeTask();
         }
 
-        taskValidator.validateAdminUpdatable();
-
-        Task task = fetchTaskById(taskId);
-        task.setDeliveryStatus(newStatus);
         taskRepository.save(task);
     }
 

@@ -58,7 +58,7 @@ public class TaskController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseDTO> changeTaskStatus(
             @PathVariable Long taskId,
-            @RequestBody DeliveryStatus newStatus
+            @RequestBody String newStatus
     ) {
         taskService.changeTaskStatus(taskId, newStatus);
         return ResponseEntity.ok(new ApiResponseDTO("success", "Status for Task ID: " + taskId +

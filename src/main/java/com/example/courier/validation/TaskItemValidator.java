@@ -6,6 +6,8 @@ import com.example.courier.domain.Task;
 import com.example.courier.domain.TaskItem;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class TaskItemValidator {
 

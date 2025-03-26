@@ -109,4 +109,9 @@ public class Parcel {
         this.isAssigned = true;
     }
 
+    public void updateStatusFromTaskItem(ParcelStatus status) {
+        setStatus(status);
+        unassign();
+    }
+
 }

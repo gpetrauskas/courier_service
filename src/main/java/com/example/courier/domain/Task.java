@@ -156,7 +156,7 @@ public class Task {
         this.items.forEach(TaskItem::cancel);
     }
 
-    public boolean areAllItemsCanceled() {
+    public boolean isAllItemsCanceled() {
         return this.items.stream()
                 .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED ||
                         item.getStatus() == ParcelStatus.REMOVED_FROM_THE_LIST);
@@ -183,5 +183,14 @@ public class Task {
 
         item.setTask(this);
         this.items.add(item);
+    }
+
+    public void completeTask() {
+        if (this.getItems().stream().anyMatch(item -> !item.getStatus().isFinalState())) {
+            throw new IllegalArgumentException("All items must be in final state;");
+        }
+
+        this.getItems().forEach(TaskItem::applyFinalStatusToParcel);
+        this.setDeliveryStatus(DeliveryStatus.COMPLETED);
     }
 }

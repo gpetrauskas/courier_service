@@ -164,4 +164,11 @@ public class TaskItem {
         this.setStatus(status);
         this.addDefaultStatusChangeNote(personId, status);
     }
+
+    public void applyFinalStatusToParcel() {
+        if (this.parcel== null) {
+            throw new IllegalStateException("TaskItem must be associated with a Parcel");
+        }
+        this.parcel.updateStatusFromTaskItem(this.status);
+    }
 }
