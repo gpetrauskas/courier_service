@@ -9,6 +9,12 @@ import java.util.List;
     @Table(name = "couriers")
     public class Courier extends Person {
 
+        public Courier() {}
+
+        public Courier(String name, String email, String password) {
+            super(name, email, password);
+        }
+
         @OneToMany(mappedBy = "courier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private List<Task> assignedTasks = new ArrayList<>();
 

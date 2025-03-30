@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,6 +89,14 @@ public class TaskItemTest {
         assertEquals(DeliveryStatus.COMPLETED, task.getDeliveryStatus());
         assertEquals(ParcelStatus.DELIVERED, deliveredItem.getParcel().getStatus());
         assertEquals(ParcelStatus.FAILED_DELIVERY, failedItem.getParcel().getStatus());
+    }
+
+    @Test
+    void createNewDeliveryTask_HappyPath_CreatesTaskWithProperStatuses() {
+        Parcel parcel = new Parcel();
+        parcel.setStatus(ParcelStatus.PICKED_UP);
+
+
     }
 
 }

@@ -114,4 +114,14 @@ public class Parcel {
         unassign();
     }
 
+    public void transitionToDelivery() {
+        if (this.status != ParcelStatus.PICKED_UP) {
+            throw new IllegalStateException(
+                    String.format("Cannot transition to DELIVERY from %s", this.status)
+            );
+        }
+
+        this.status = ParcelStatus.DELIVERING;
+    }
+
 }

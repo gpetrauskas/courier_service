@@ -27,7 +27,7 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private PersonRepository<Person> personRepository;
+    private PersonRepository personRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired

@@ -10,12 +10,14 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface PersonRepository<T extends Person> extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
-    Optional<T>findByEmail(String email);
-    Page<T> findAll(Specification<T> specification, Pageable pageable);
+public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecificationExecutor<Person> {
+    <S extends Person> S save(S entity);
+
+    Optional<Person>findByEmail(String email);
+    Page<Person> findAll(Specification<Person> specification, Pageable pageable);
     boolean existsByEmail(String email);
 
     @Query("SELECT COUNT(c) FROM Courier c WHERE c.hasActiveTask = false")
-    long countAvailableCouriers(Specification<T> specification);
+    long countAvailableCouriers(Specification<Person> specification);
 
 }

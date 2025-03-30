@@ -49,7 +49,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final DeliveryTaskMapper deliveryTaskMapper;
     private final ParcelService parcelService;
-    private final PersonServiceImpl<Courier> personServiceImpl;
+    private final PersonService personService;
     private final OrderService orderService;
     private final TaskItemService taskItemService;
     private final TaskSpecificationBuilder specificationBuilder;
@@ -57,18 +57,16 @@ public class TaskService {
     private final TaskValidator taskValidator;
     private final NotificationService notificationService;
     private final TaskItemValidator taskItemValidator;
-    @Autowired
-    private PersonService personService;
 
     public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
-                       ParcelService parcelService, PersonServiceImpl personServiceImpl, OrderService orderService,
+                       ParcelService parcelService, PersonService personService, OrderService orderService,
                        TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
                        AuthorizationService authorizationService, TaskValidator taskValidator,
                        NotificationService notificationService, TaskItemValidator taskItemValidator) {
         this.taskRepository = taskRepository;
         this.deliveryTaskMapper = deliveryTaskMapper;
         this.parcelService = parcelService;
-        this.personServiceImpl = personServiceImpl;
+        this.personService = personService;
         this.orderService = orderService;
         this.taskItemService = taskItemService;
         this.specificationBuilder = specificationBuilder;
@@ -81,11 +79,17 @@ public class TaskService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
-        Courier courier = personServiceImpl.findById(createTaskDTO.courierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Courier not found"));
+        log.info("Creating new delivery task for courier {}", createTaskDTO.courierId());
+        Courier courier = personService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
 
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
         List<Order> orders = orderService.fetchAllByParcelDetails(parcels);
+
+        parcels.forEach(parcel -> {
+            if (parcel.getStatus() == ParcelStatus.PICKED_UP) {
+                parcel.transitionToDelivery();
+            }
+        });
 
         taskValidator.validateCreation(createTaskDTO, courier, parcels);
 
@@ -96,7 +100,7 @@ public class TaskService {
 
         courier.setHasActiveTask(true);
 
-        personServiceImpl.save(courier);
+        personService.save(courier);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
@@ -138,12 +142,17 @@ public class TaskService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public void changeTaskStatus(Long taskId, String newStatus) {
+        log.info("Changing tak {} status to {}", taskId, newStatus);
         DeliveryStatus status = DeliveryStatus.valueOf(newStatus);
         Task task = fetchTaskById(taskId);
         taskValidator.validateAdminUpdatable(task);
 
         if (status.equals(DeliveryStatus.COMPLETED)) {
             task.completeTask();
+        } else if (status.equals(DeliveryStatus.CANCELED)) {
+           cancel(taskId);
+        } else {
+            throw new IllegalStateException("No such status.");
         }
 
         taskRepository.save(task);

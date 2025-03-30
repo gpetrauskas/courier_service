@@ -1,5 +1,6 @@
 package com.example.courier.common;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -24,11 +25,18 @@ public enum DeliveryStatus {
     }
 
     public static boolean isAdminUpdatable(DeliveryStatus status) {
-        return status == AT_CHECKPOINT;
+        return status == AT_CHECKPOINT || status == IN_PROGRESS;
     }
 
     public static boolean isTaskItemUpdatable(DeliveryStatus status) {
         return status == IN_PROGRESS;
+    }
+
+    public static DeliveryStatus validateAndGetStatus(String status) {
+        return Arrays.stream(DeliveryStatus.values())
+                .filter(e -> e.name().equals(status))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid status: " + status));
     }
 
     public boolean isFinalState() {

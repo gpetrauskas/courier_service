@@ -33,7 +33,7 @@ public class ParcelService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Long> getAvailableParcelsCount() {
-        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.DELIVERING);
+        List<ParcelStatus> statuses = List.of(ParcelStatus.PICKING_UP, ParcelStatus.PICKED_UP);
         return statuses.stream()
                 .collect(Collectors.toMap(
                         (status -> status.name().toLowerCase()),

@@ -23,20 +23,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class PersonServiceImpl<T extends Person> implements PersonService<T> {
+public class PersonServiceImpl implements PersonService {
 
     private static final Logger logger = LoggerFactory.getLogger(PersonServiceImpl.class);
-    private final PersonRepository<T> personRepository;
+    private final PersonRepository personRepository;
     private final PersonMapper personMapper;
 
-    public PersonServiceImpl(PersonRepository<T> personRepository, PersonMapper personMapper,
-                             RegistrationService registrationService) {
+    public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
     }
 
     @Override
-    public Optional<T> findById(Long id) {
+    public Optional<Person> findById(Long id) {
         return personRepository.findById(id);
     }
 
@@ -69,14 +68,14 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
 
     public PaginatedResponseDTO<PersonResponseDTO> findAllPaginated(int page, int size, String role, String searchKeyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Specification<T> specification = PersonSpecificationBuilder.buildPersonSpecification(role, searchKeyword);
+        Specification<Person> specification = PersonSpecificationBuilder.buildPersonSpecification(role, searchKeyword);
 
-        Page<T> personPage = personRepository.findAll(specification, pageable);
+        Page<Person> personPage = personRepository.findAll(specification, pageable);
 
         return mapToPaginatedResponseDTO(personPage);
     }
 
-    private PaginatedResponseDTO<PersonResponseDTO> mapToPaginatedResponseDTO(Page<T> personPage) {
+    private PaginatedResponseDTO<PersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
         List<PersonResponseDTO> content = personPage.getContent()
                 .stream()
                 .map(personMapper::toPersonResponseDTO)
@@ -90,7 +89,7 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
 
     @Transactional
     public void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest) {
-        T person = fetchById(personId);
+        Person person = fetchById(personId);
 
         if (!person.getId().equals(updateRequest.id())) {
             throw new IllegalArgumentException("Person ID in request does not match the path Id");
@@ -101,8 +100,8 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
     }
 
     public List<CourierDTO> getAvailableCouriers() {
-        Specification<T> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
-        List<T> personList = personRepository.findAll(specification);
+        Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
+        List<Person> personList = personRepository.findAll(specification);
 
         return personList.stream()
                 .map(personMapper::toCourierDTO)
@@ -110,17 +109,21 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
     }
 
     public Long availableCouriersCount() {
-        Specification<T> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
+        Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
         return personRepository.countAvailableCouriers(specification);
     }
 
     @Override
-    public void save(T person) {
+    public void save(Person person) {
         personRepository.save(person);
     }
 
     public void hasCourierActiveTask(Courier courier) {
         if (courier.hasActiveTask()) throw new IllegalArgumentException("Courier already have assigned task.");
+    }
+
+    public boolean checkIfPersonAlreadyExistsByEmail(String email) {
+        return personRepository.existsByEmail(email);
     }
 
 
@@ -129,7 +132,7 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
 
     @Transactional
     public void delete(Long personId) {
-        T person = fetchById(personId);
+        Person person = fetchById(personId);
         if (person.isDeleted()) {
             throw new IllegalStateException("User already deleted.");
         }
@@ -140,7 +143,7 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
     }
 
     public String banUnban(Long id) {
-        T person = fetchById(id);
+        Person person = fetchById(id);
         if (person.isDeleted()) {
             throw new IllegalStateException("Cannot ban/unban deleted user");
         }
@@ -151,7 +154,7 @@ public class PersonServiceImpl<T extends Person> implements PersonService<T> {
         return person.isBlocked() ? "User was banned successfully." : "User was unbanned successfully.";
     }
 
-    private T fetchById(Long personId) {
+    private Person fetchById(Long personId) {
         return personRepository.findById(personId).orElseThrow(() ->
                 new ResourceNotFoundException("User was not found."));
     }

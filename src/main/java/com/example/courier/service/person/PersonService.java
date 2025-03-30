@@ -4,8 +4,10 @@ import com.example.courier.domain.Person;
 
 import java.util.Optional;
 
-public interface PersonService<T extends Person> {
-    Optional<T> findById(Long id);
+public interface PersonService {
+    Optional<Person> findById(Long id);
     void updatePassword(Long personId, String newPassword);
-    void save(T person);
+    void save(Person person);
+    boolean checkIfPersonAlreadyExistsByEmail(String email);
+    <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType);
 }

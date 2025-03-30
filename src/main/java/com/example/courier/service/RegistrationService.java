@@ -7,86 +7,93 @@ import com.example.courier.dto.RegistrationDTO;
 import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
+import com.example.courier.service.person.PersonService;
+import com.example.courier.validation.RegistrationValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 @Service
 public class RegistrationService {
     private final Logger logger = LoggerFactory.getLogger(RegistrationService.class);
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PersonRepository personRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private CourierRepository courierRepository;
+    private final UserRepository userRepository;
+    private final PersonRepository personRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CourierRepository courierRepository;
+    private final RegistrationValidator registrationValidator;
+    private final PersonService personService;
+
+    RegistrationService(UserRepository userRepository, PersonRepository personRepository,
+                        PasswordEncoder passwordEncoder, CourierRepository courierRepository,
+                        RegistrationValidator registrationValidator, PersonService personService) {
+        this.userRepository = userRepository;
+        this.personRepository = personRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.courierRepository = courierRepository;
+        this.registrationValidator = registrationValidator;
+        this.personService = personService;
+    }
 
 
     @Transactional
     public void registerUser(RegistrationDTO registrationDTO) {
-        try {
-            logger.info("Trying to register user");
-            validateUserRegistration(registrationDTO);
-            User newUser = createPersonFromDTO(registrationDTO, User.class);
-            userRepository.save(newUser);
-            logger.info("User registration successful");
-        } catch (ValidationException e) {
-            logger.error("Validation error during registration {}", e.getMessage());
-            throw e;
-        } catch (RuntimeException e) {
-            logger.error("Unexpected error during registration {}", e.getMessage());
-            throw new RuntimeException("Failed to register user", e);
-        }
+            logger.info("Trying to register user with email {}", registrationDTO.email());
+
+            validateAndRegister(
+                    registrationDTO,
+                    () -> new User(
+                            registrationDTO.name(),
+                            registrationDTO.email(),
+                            passwordEncoder.encode(registrationDTO.password())
+                    ),
+                    personRepository::save
+            );
+
+            logger.info("User registered successfully: {}", registrationDTO.email());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void registerCourier(RegistrationDTO registrationDTO) {
         logger.info("Trying to register courier");
-        validateUserRegistration(registrationDTO);
-        Courier newCourier = createPersonFromDTO(registrationDTO, Courier.class);
-        courierRepository.save(newCourier);
-        logger.info("Courier registered successfully {}", newCourier.getEmail());
+
+        validateAndRegister(
+                registrationDTO,
+                () -> new Courier(
+                        registrationDTO.name(),
+                        registrationDTO.email(),
+                        passwordEncoder.encode(registrationDTO.password())),
+                personRepository::save
+        );
+
+        logger.info("Courier registered successfully {}", registrationDTO.email());
     }
 
-    private void validateUserRegistration(RegistrationDTO registrationDTO) {
-        logger.info("Checking if user exists with email: {}", registrationDTO.email());
+    private void checkIfUserAlreadyExists(String email) {
+        logger.info("Checking if user exists with email: {}", email);
 
-        if (personRepository.existsByEmail(registrationDTO.email())) {
-            logger.warn("Registration failed: EMail {} already registered", registrationDTO.email());
-            throw new ValidationException("Email " + registrationDTO.email() + " is already registered");
-        }
-
-        logger.info("Checking password length");
-        if (registrationDTO.password().length() < 8 || registrationDTO.password().length() > 16) {
-            logger.warn("Password is to short or to long");
-            throw new ValidationException("Password length must be between 8-16 characters");
-        }
-
-        logger.info("Validating email format");
-        if (!registrationDTO.email().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            logger.warn("Registration failed. Email format is invalid");
-            throw new ValidationException("Email is not valid.");
+        if (personService.checkIfPersonAlreadyExistsByEmail(email)) {
+            logger.warn("Registration failed: EMail {} already registered", email);
+            throw new ValidationException("Email " + email + " is already registered");
         }
     }
 
-    private <T extends Person> T createPersonFromDTO(RegistrationDTO registrationDTO, Class<T> personClass) throws RuntimeException {
-        try {
-            T person = personClass.getDeclaredConstructor().newInstance();
-            person.setName(registrationDTO.name());
-            person.setEmail(registrationDTO.email());
-            person.setPassword(passwordEncoder.encode(registrationDTO.password()));
-            return person;
-        } catch (Exception e) {
-            logger.error("Failed to create person from dto: {}", e.getMessage());
-            throw new RuntimeException("Failed to create person from dto.");
-        }
+    private <T extends Person> void validateAndRegister(
+            RegistrationDTO registrationDTO,
+            Supplier<T> entityCreator,
+            Consumer<T> entitySaver
+    ) {
+        registrationValidator.validateUserRegistration(registrationDTO);
+        checkIfUserAlreadyExists(registrationDTO.email());
+
+        T entity = entityCreator.get();
+        entitySaver.accept(entity);
     }
 }
