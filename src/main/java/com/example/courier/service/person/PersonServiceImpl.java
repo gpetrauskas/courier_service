@@ -1,13 +1,17 @@
 package com.example.courier.service.person;
 
+import com.example.courier.domain.BanHistory;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.PersonResponseDTO;
+import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.exception.ResourceNotFoundException;
+import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.RegistrationService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
@@ -28,10 +32,15 @@ public class PersonServiceImpl implements PersonService {
     private static final Logger logger = LoggerFactory.getLogger(PersonServiceImpl.class);
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
+    private final BanHistoryRepository banHistoryRepository;
+    private final BanHistoryMapper banHistoryMapper;
 
-    public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper) {
+    public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
+                             BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
+        this.banHistoryRepository = banHistoryRepository;
+        this.banHistoryMapper = banHistoryMapper;
     }
 
     @Override
@@ -167,4 +176,17 @@ public class PersonServiceImpl implements PersonService {
                 .map(personType::cast)
                 .orElseThrow(() -> new IllegalArgumentException("The person is no instance of " + personType.getSimpleName()));
     }
+
+    public List<BanHistoryDTO> getBanHistory(Long personId) {
+        Person person = fetchById(personId);
+        List<BanHistory> banHistories = banHistoryRepository.findByPersonOrderByActionTimeDesc(person);
+        if (banHistories.isEmpty()) {
+            return List.of();
+        }
+
+        return banHistories.stream()
+                .map(banHistoryMapper::toDTO)
+                .toList();
+    }
+
 }

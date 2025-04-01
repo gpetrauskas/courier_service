@@ -3,6 +3,7 @@ package com.example.courier.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Entity
+@SQLRestriction("is_deleted = false")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "persons")
 public abstract class Person implements UserDetails {

@@ -14,6 +14,7 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     <S extends Person> S save(S entity);
 
     Optional<Person>findByEmail(String email);
+    @Query("SELECT p FROM Person p WHERE p.isDeleted = false")
     Page<Person> findAll(Specification<Person> specification, Pageable pageable);
     boolean existsByEmail(String email);
 

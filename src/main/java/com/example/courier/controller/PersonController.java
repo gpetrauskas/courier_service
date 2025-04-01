@@ -6,11 +6,12 @@ import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.*;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.repository.AdminRepository;
 import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
-import com.example.courier.service.person.PersonServiceImpl;
+import com.example.courier.service.person.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +25,7 @@ import java.util.Optional;
 public class PersonController {
 
     @Autowired
-    private PersonServiceImpl personServiceImpl;
+    private PersonService personService;
     @Autowired
     private CourierRepository courierRepository;
     @Autowired
@@ -41,7 +42,7 @@ public class PersonController {
             @RequestParam int size,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String searchKeyword) {
-        return personServiceImpl.findAllPaginated(page, size, role, searchKeyword);
+        return personService.findAllPaginated(page, size, role, searchKeyword);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -54,34 +55,34 @@ public class PersonController {
     @PostMapping("/update/{id}")
     public ResponseEntity<String> updatePerson(@PathVariable Long id,
                                                @RequestBody PersonDetailsUpdateRequest updateRequest) {
-        personServiceImpl.updateDetails(id, updateRequest);
+        personService.updateDetails(id, updateRequest);
         return ResponseEntity.ok("Person was successfully updated.");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        this.personServiceImpl.delete(id);
+        this.personService.delete(id);
         return ResponseEntity.ok("Person was successfully deleted.");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/banUnban/{id}")
     public ResponseEntity<String> banUnban(@PathVariable Long id) {
-        String action = this.personServiceImpl.banUnban(id);
+        String action = this.personService.banUnban(id);
         return ResponseEntity.ok(action);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/availableCouriers")
     public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
-        List<CourierDTO> list = personServiceImpl.getAvailableCouriers();
+        List<CourierDTO> list = personService.getAvailableCouriers();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/availableCouriersCount")
     public ResponseEntity<Long> availableCouriersCount() {
-        Long count = personServiceImpl.availableCouriersCount();
+        Long count = personService.availableCouriersCount();
         return ResponseEntity.ok(count);
     }
 
@@ -93,6 +94,12 @@ public class PersonController {
         Optional<Person> person = personRepository.findById(50L);
 
         return ResponseEntity.ok(courier + " " + admin + " " + user + " " + person);
+    }
+
+    @GetMapping("/{personId}/banHistory")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<BanHistoryDTO>> banHistory(@PathVariable Long personId) {
+        return ResponseEntity.ok(personService.getBanHistory(personId));
     }
 
 }
