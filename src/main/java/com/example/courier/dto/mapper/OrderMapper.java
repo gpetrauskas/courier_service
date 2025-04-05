@@ -32,7 +32,7 @@ public interface OrderMapper {
     AdminOrderDTO toAdminOrderDTO(Order order, Payment payment);
 
     @Mapping(source = "order.id", target = "id")
-    @Mapping(source = "order.user", target = "personResponseDTO")
+    @Mapping(source = "order.user", target = "adminPersonResponseDTO")
     @Mapping(source = "order.senderAddress", target = "senderAddress")
     @Mapping(source = "order.recipientAddress", target = "recipientAddress")
     @Mapping(source = "order.deliveryMethod", target = "deliveryMethod")

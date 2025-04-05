@@ -5,16 +5,17 @@ import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.PersonResponseDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.dto.response.BanHistoryDTO;
+import com.example.courier.dto.response.person.AdminPersonResponseDTO;
+import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
-import com.example.courier.service.RegistrationService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
+import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -52,6 +53,10 @@ public class PersonServiceImpl implements PersonService {
     public void updatePassword(Long id, String newPassword) {
     }
 
+    public PersonResponseDTO myInfo() {
+        Person person = fetchById(AuthUtils.getAuthenticatedPersonId());
+        return personMapper.toPersonResponseNew(person);
+    }
 
 
 
@@ -74,8 +79,7 @@ public class PersonServiceImpl implements PersonService {
 
 
 
-
-    public PaginatedResponseDTO<PersonResponseDTO> findAllPaginated(int page, int size, String role, String searchKeyword) {
+    public PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(int page, int size, String role, String searchKeyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Specification<Person> specification = PersonSpecificationBuilder.buildPersonSpecification(role, searchKeyword);
 
@@ -84,8 +88,8 @@ public class PersonServiceImpl implements PersonService {
         return mapToPaginatedResponseDTO(personPage);
     }
 
-    private PaginatedResponseDTO<PersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
-        List<PersonResponseDTO> content = personPage.getContent()
+    private PaginatedResponseDTO<AdminPersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
+        List<AdminPersonResponseDTO> content = personPage.getContent()
                 .stream()
                 .map(personMapper::toPersonResponseDTO)
                 .toList();

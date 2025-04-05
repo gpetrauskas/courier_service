@@ -4,9 +4,12 @@ import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
-import com.example.courier.dto.*;
+import com.example.courier.dto.CourierDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.dto.response.BanHistoryDTO;
+import com.example.courier.dto.response.person.AdminPersonResponseDTO;
+import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.repository.AdminRepository;
 import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
@@ -37,7 +40,7 @@ public class PersonController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public PaginatedResponseDTO<PersonResponseDTO> fetchAllPersons(
+    public PaginatedResponseDTO<AdminPersonResponseDTO> fetchAllPersons(
             @RequestParam int page,
             @RequestParam int size,
             @RequestParam(required = false) String role,
@@ -47,7 +50,7 @@ public class PersonController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/findPersonById/{id}")
-    public ResponseEntity<PersonResponseDTO> findPersonById(@PathVariable Long id) {
+    public ResponseEntity<AdminPersonResponseDTO> findPersonById(@PathVariable Long id) {
         return ResponseEntity.ok(null);
     }
 
@@ -100,6 +103,12 @@ public class PersonController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BanHistoryDTO>> banHistory(@PathVariable Long personId) {
         return ResponseEntity.ok(personService.getBanHistory(personId));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PersonResponseDTO> myInfo() {
+        return ResponseEntity.ok(personService.myInfo());
     }
 
 }

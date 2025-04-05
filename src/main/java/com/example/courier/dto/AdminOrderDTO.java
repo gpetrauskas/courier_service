@@ -3,12 +3,13 @@ package com.example.courier.dto;
 import com.example.courier.common.OrderStatus;
 import com.example.courier.domain.*;
 import com.example.courier.domain.Parcel;
+import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 
 import java.time.LocalDateTime;
 
 public record AdminOrderDTO(
         Long id,
-        PersonResponseDTO user,
+        AdminPersonResponseDTO user,
         OrderAddress senderAddress,
         OrderAddress recipientAddress,
         Parcel parcelDetails,
