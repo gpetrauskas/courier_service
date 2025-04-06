@@ -1,10 +1,12 @@
 package com.example.courier.service.person;
 
 import com.example.courier.domain.Person;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
@@ -26,4 +28,5 @@ public interface PersonService {
     List<CourierDTO> getAvailableCouriers();
     Long availableCouriersCount();
     PersonResponseDTO myInfo();
+    ApiResponseDTO updateMyInfo(UserEditDTO dto);
 }

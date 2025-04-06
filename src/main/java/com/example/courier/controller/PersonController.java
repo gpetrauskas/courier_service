@@ -4,9 +4,11 @@ import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
@@ -15,6 +17,8 @@ import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +41,7 @@ public class PersonController {
     private UserRepository userRepository;
     @Autowired
     private PersonRepository personRepository;
+    private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
@@ -111,4 +116,10 @@ public class PersonController {
         return ResponseEntity.ok(personService.myInfo());
     }
 
+    @PutMapping("/editMyInfo")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponseDTO> editMyInfo(@RequestBody UserEditDTO userEditDTO) {
+        logger.info("Endpoint invoked");
+        return ResponseEntity.ok(personService.updateMyInfo(userEditDTO));
+    }
 }

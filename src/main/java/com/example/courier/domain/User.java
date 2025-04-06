@@ -1,7 +1,9 @@
 package com.example.courier.domain;
 
+import com.example.courier.common.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,10 @@ public class User extends Person {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders;
+
+    @Column
+    @ColumnDefault("false")
+    private boolean subscribed;
 
     public User() {
         super();
@@ -83,5 +89,19 @@ public class User extends Person {
 
     public void setOrders(List<Order> orders) {
         this.orders = orders;
+    }
+
+    public int getConfirmedOrdersCount() {
+        return this.orders == null ? 0 : (int) this.orders.stream()
+                .filter(order -> order.getStatus() == OrderStatus.CONFIRMED)
+                .count();
+    }
+
+    public boolean isSubscribed() {
+        return subscribed;
+    }
+
+    public void setSubscribed(boolean subscribed) {
+        this.subscribed = subscribed;
     }
 }

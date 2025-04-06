@@ -1,21 +1,23 @@
 package com.example.courier.service.person;
 
-import com.example.courier.domain.BanHistory;
-import com.example.courier.domain.Courier;
-import com.example.courier.domain.Person;
+import com.example.courier.domain.*;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
+import com.example.courier.service.address.AddressService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
+import com.example.courier.validation.PhoneValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -35,13 +37,18 @@ public class PersonServiceImpl implements PersonService {
     private final PersonMapper personMapper;
     private final BanHistoryRepository banHistoryRepository;
     private final BanHistoryMapper banHistoryMapper;
+    private final PhoneValidator phoneValidator;
+    private final AddressService addressService;
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
-                             BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper) {
+                             BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
+                             PhoneValidator phoneValidator, AddressService addressService) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
         this.banHistoryMapper = banHistoryMapper;
+        this.phoneValidator = phoneValidator;
+        this.addressService = addressService;
     }
 
     @Override
@@ -55,9 +62,32 @@ public class PersonServiceImpl implements PersonService {
 
     public PersonResponseDTO myInfo() {
         Person person = fetchById(AuthUtils.getAuthenticatedPersonId());
-        return personMapper.toPersonResponseNew(person);
+        return personMapper.toDto(person);
     }
 
+    @Transactional
+    public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
+        logger.info("Method entered");
+        User user = fetchPersonByIdAndType(AuthUtils.getAuthenticatedPersonId(), User.class);
+        logger.info("User fetched: {}", user.getId());
+
+        dto.phoneNumber().map(phoneValidator::validate).ifPresent(validated -> {
+            logger.info("Setting phone number to: {}", validated);
+            user.setPhoneNumber(validated);
+        });
+
+        logger.info("DTO phone number: {}", dto.phoneNumber());
+
+        if (dto.defaultAddressId().isPresent()) {
+            Long addressId = dto.defaultAddressId().get();
+            addressService.validateAddressUser(addressId, user.getEmail());
+            user.setDefaultAddress(addressService.getAddressById(addressId));
+        }
+
+        personRepository.save(user);
+
+        return new ApiResponseDTO("success", "Successfully updated");
+    }
 
 
 
@@ -91,7 +121,7 @@ public class PersonServiceImpl implements PersonService {
     private PaginatedResponseDTO<AdminPersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
         List<AdminPersonResponseDTO> content = personPage.getContent()
                 .stream()
-                .map(personMapper::toPersonResponseDTO)
+                .map(personMapper::toAdminPersonResponseDTO)
                 .toList();
 
         return new PaginatedResponseDTO<>(
