@@ -32,5 +32,6 @@ public interface PersonMapper {
     }
 
     @Mapping(target = "confirmedOrdersCount", source = "confirmedOrdersCount")
+    @Mapping(target = "subscribed", source = "subscribed")
     UserResponseDTO toUserResponseDTO(User person);
 }

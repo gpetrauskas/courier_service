@@ -29,7 +29,7 @@ public class User extends Person {
 
     @Column
     @ColumnDefault("false")
-    private boolean subscribed;
+    private Boolean subscribed;
 
     public User() {
         super();
@@ -101,7 +101,7 @@ public class User extends Person {
         return subscribed;
     }
 
-    public void setSubscribed(boolean subscribed) {
+    public void setSubscribed(Boolean subscribed) {
         this.subscribed = subscribed;
     }
 }

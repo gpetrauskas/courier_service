@@ -77,12 +77,16 @@ public class PersonServiceImpl implements PersonService {
         });
 
         logger.info("DTO phone number: {}", dto.phoneNumber());
+        logger.info("DTO phone number: {}", dto.defaultAddressId());
+        logger.info("DTO phone number: {}", dto.subscribed());
 
         if (dto.defaultAddressId().isPresent()) {
             Long addressId = dto.defaultAddressId().get();
             addressService.validateAddressUser(addressId, user.getEmail());
             user.setDefaultAddress(addressService.getAddressById(addressId));
         }
+
+        dto.subscribed().ifPresent(user::setSubscribed);
 
         personRepository.save(user);
 

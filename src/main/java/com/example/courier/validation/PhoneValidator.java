@@ -10,7 +10,9 @@ public class PhoneValidator {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{8}$");
 
     public String validate(String phone) throws ValidationException {
-        if (phone == null) return null;
+        if (phone == null) {
+            throw new NullPointerException("Phone cannot be null");
+        }
 
         String digits = phone.replaceAll("[^0-9]", "");
 
