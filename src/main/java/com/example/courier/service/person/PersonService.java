@@ -6,6 +6,7 @@ import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
@@ -29,4 +30,5 @@ public interface PersonService {
     Long availableCouriersCount();
     PersonResponseDTO myInfo();
     ApiResponseDTO updateMyInfo(UserEditDTO dto);
+    ApiResponseDTO changePassword(PasswordChangeDTO dto);
 }

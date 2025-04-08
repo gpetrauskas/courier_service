@@ -8,6 +8,7 @@ import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
+import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.RegistrationValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -29,16 +30,19 @@ public class RegistrationService {
     private final CourierRepository courierRepository;
     private final RegistrationValidator registrationValidator;
     private final PersonService personService;
+    private final PasswordValidator passwordValidator;
 
     RegistrationService(UserRepository userRepository, PersonRepository personRepository,
                         PasswordEncoder passwordEncoder, CourierRepository courierRepository,
-                        RegistrationValidator registrationValidator, PersonService personService) {
+                        RegistrationValidator registrationValidator, PersonService personService,
+                        PasswordValidator passwordValidator) {
         this.userRepository = userRepository;
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.courierRepository = courierRepository;
         this.registrationValidator = registrationValidator;
         this.personService = personService;
+        this.passwordValidator = passwordValidator;
     }
 
 
@@ -91,6 +95,7 @@ public class RegistrationService {
             Consumer<T> entitySaver
     ) {
         registrationValidator.validateUserRegistration(registrationDTO);
+        passwordValidator.validatePassword(registrationDTO.password());
         checkIfUserAlreadyExists(registrationDTO.email());
 
         T entity = entityCreator.get();

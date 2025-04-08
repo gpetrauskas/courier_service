@@ -8,6 +8,7 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
@@ -17,6 +18,7 @@ import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,5 +123,11 @@ public class PersonController {
     public ResponseEntity<ApiResponseDTO> editMyInfo(@RequestBody UserEditDTO userEditDTO) {
         logger.info("Endpoint invoked");
         return ResponseEntity.ok(personService.updateMyInfo(userEditDTO));
+    }
+
+    @PutMapping("password")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'COURIER')")
+    public ResponseEntity<ApiResponseDTO> changePassword(@RequestBody @Valid PasswordChangeDTO dto) {
+        return ResponseEntity.ok(personService.changePassword(dto));
     }
 }
