@@ -1,8 +1,11 @@
 package com.example.courier.service.task;
 
 import com.example.courier.common.DeliveryStatus;
+import com.example.courier.common.NotificationTargetType;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.*;
+import com.example.courier.dto.request.NotificationMessage;
+import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
 import com.example.courier.dto.response.task.AdminTaskDTO;
 import com.example.courier.dto.response.task.CourierTaskDTO;
@@ -14,7 +17,9 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.TaskNotCancelableException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.notification.NotificationService;
+import com.example.courier.service.notification.NotificationServiceImpl;
 import com.example.courier.service.authorization.AuthorizationService;
+import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonService;
@@ -183,7 +188,13 @@ public class TaskService {
         task.completeOnCheckIn();
         taskRepository.save(task);
 
-        notificationService.notifyAdminCourierCheckIn(taskId, task.getCourier().getId());
+        NotificationRequestDTO notificationMessage = new NotificationRequestDTO(
+                String.format("Courier %d CheckedIn", task.getCourier().getId()),
+                String.format("Courier checked in: Task ID = %d, Courier ID = %d", taskId,task.getCourier().getId()),
+                new NotificationTarget.BroadCast(NotificationTargetType.ADMIN)
+        );
+
+        notificationService.createNotification(notificationMessage);
         log.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId,task.getCourier().getId());
     }
 

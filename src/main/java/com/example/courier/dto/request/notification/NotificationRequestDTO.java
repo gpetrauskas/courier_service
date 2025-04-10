@@ -1,6 +1,10 @@
 package com.example.courier.dto.request.notification;
 
-import com.example.courier.common.NotificationTargetType;
+import com.example.courier.service.notification.NotificationTarget;
 
-public record NotificationRequestDTO(String title, String message, NotificationTargetType type) {
+public record NotificationRequestDTO(
+        String title,
+        String message,
+        NotificationTarget type
+) {
 }
