@@ -231,6 +231,14 @@ public class PersonServiceImpl implements PersonService {
                 .orElseThrow(() -> new IllegalArgumentException("The person is no instance of " + personType.getSimpleName()));
     }
 
+    public <T extends Person> List<T> fetchAllByType(Class<T> personType) {
+        return personRepository.findAllByType(personType);
+    }
+
+    public <T extends Person> List<T> getAllActiveByType(Class<T> tClass) {
+        return personRepository.findAllActiveByType(tClass);
+    }
+
     public List<BanHistoryDTO> getBanHistory(Long personId) {
         Person person = fetchById(personId);
         List<BanHistory> banHistories = banHistoryRepository.findByPersonOrderByActionTimeDesc(person);

@@ -31,4 +31,6 @@ public interface PersonService {
     PersonResponseDTO myInfo();
     ApiResponseDTO updateMyInfo(UserEditDTO dto);
     ApiResponseDTO changePassword(PasswordChangeDTO dto);
+    <T extends Person> List<T> fetchAllByType(Class<T> personType);
+    <T extends Person> List<T> getAllActiveByType(Class<T> tClass);
 }

@@ -57,6 +57,11 @@ public class PersonSpecification<T extends Person> {
                 criteriaBuilder.isFalse(root.get("isDeleted")));
     }
 
+    public static <T extends Person> Specification<T> isNotBlocked() {
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.isFalse(root.get("isBlocked")));
+    }
+
     public static <T extends Person> Specification<T> hasNoActiveTask() {
         return (((root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("hasActiveTask"))));

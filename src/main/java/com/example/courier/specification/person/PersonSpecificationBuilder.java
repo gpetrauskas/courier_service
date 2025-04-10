@@ -24,6 +24,17 @@ public class PersonSpecificationBuilder<T extends Person> {
         return specification;
     }
 
+    public static <T extends Person> Specification<T> buildPersonSpecificationForNotification(String role) {
+        Specification<T> specification = Specification.where(PersonSpecification.<T>isNotDeleted().and(
+                PersonSpecification.isNotBlocked()
+        ));
+        if (role != null) {
+            specification = specification.and(PersonSpecification.hasRole(role));
+        }
+
+        return specification;
+    }
+
     public static <T extends Person> Specification<T> buildAvailableCourierSpecification() {
         return Specification.where(PersonSpecification.<T>isNotDeleted().and(
                 PersonSpecification.<T>hasRole("COURIER").and(PersonSpecification.hasNoActiveTask())

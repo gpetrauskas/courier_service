@@ -2,7 +2,6 @@ package com.example.courier.service.task;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
-import com.example.courier.common.TaskType;
 import com.example.courier.domain.*;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
 import com.example.courier.dto.response.task.AdminTaskDTO;
@@ -14,12 +13,11 @@ import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.TaskNotCancelableException;
 import com.example.courier.repository.TaskRepository;
-import com.example.courier.service.NotificationService;
+import com.example.courier.service.notification.NotificationService;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonService;
-import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
@@ -27,7 +25,6 @@ import com.example.courier.validation.TaskItemValidator;
 import com.example.courier.validation.task.TaskValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -35,12 +32,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @PreAuthorize("hasRole('ADMIN')")
 @Service
@@ -190,7 +183,7 @@ public class TaskService {
         task.completeOnCheckIn();
         taskRepository.save(task);
 
-        notificationService.notifyAdmin(taskId, task.getCourier().getId());
+        notificationService.notifyAdminCourierCheckIn(taskId, task.getCourier().getId());
         log.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId,task.getCourier().getId());
     }
 

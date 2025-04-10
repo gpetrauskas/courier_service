@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "notifications")
@@ -12,6 +14,9 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private String title;
 
     @Column(nullable = false)
     private String message;
@@ -23,11 +28,20 @@ public class Notification {
     @ColumnDefault("false")
     private boolean isRead;
 
+    @ManyToMany
+    @JoinTable(
+            name = "notification_recipients",
+            joinColumns = @JoinColumn(name = "notification_id"),
+            inverseJoinColumns = @JoinColumn(name = "person_id")
+    )
+    private Set<Person> recipients = new HashSet<>();
+
     public Notification() {
 
     }
 
-    public Notification(String message, LocalDateTime createdAt) {
+    public Notification(String title, String message, LocalDateTime createdAt) {
+        this.title = title;
         this.message = message;
         this.createdAt = createdAt;
     }
@@ -62,5 +76,25 @@ public class Notification {
 
     public void setRead(boolean read) {
         this.isRead = read;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Set<Person> getRecipients() {
+        return recipients;
+    }
+
+    public void setRecipients(Set<Person> recipients) {
+        this.recipients = recipients;
+    }
+
+    public void addRecipient(Person person) {
+        this.recipients.add(person);
     }
 }
