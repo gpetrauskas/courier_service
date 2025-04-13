@@ -2,6 +2,7 @@ package com.example.courier.controller;
 
 import com.example.courier.common.NotificationTargetType;
 import com.example.courier.domain.Notification;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.NotificationMessage;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
@@ -42,10 +43,18 @@ public class NotificationController {
         notificationService.createNotification(
                 new NotificationRequestDTO(
                         "test",
-                        "test notification content",
+                        "test notification content, long long text. lets see how it goes.. " +
+                                "addding even more text. lets seee how it goes... even more... super long text " +
+                                " to fetch on ui.... lets seee... alsmost done... enough for this time.... ",
                         new NotificationTarget.BroadCast(NotificationTargetType.COURIER))
         );
         return ResponseEntity.ok("Notification sent");
+    }
+
+    @PostMapping("/markAsRead")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
+    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestParam Long notificationId) {
+        return ResponseEntity.ok(notificationService.markAsRead());
     }
 
     @GetMapping()

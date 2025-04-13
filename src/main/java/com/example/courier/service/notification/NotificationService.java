@@ -1,7 +1,7 @@
 package com.example.courier.service.notification;
 
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.request.NotificationMessage;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import org.springframework.data.domain.Pageable;
@@ -13,4 +13,5 @@ public interface NotificationService {
     void sendToPerson(NotificationRequestDTO message, Long personId);
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
     PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable);
+    ApiResponseDTO markAsRead();
 }

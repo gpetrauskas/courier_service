@@ -2,22 +2,21 @@ package com.example.courier.service.notification;
 
 import com.example.courier.common.NotificationTargetType;
 import com.example.courier.domain.*;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.NotificationMapper;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
-import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.NotificationRepository;
+import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.util.AuthUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -26,16 +25,20 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final PersonService personService;
     private final NotificationMapper notificationMapper;
+    private final PersonNotificationRepository personNotificationRepository;
 
 
     public NotificationServiceImpl(NotificationRepository notificationRepository,
-                                   PersonService personService, NotificationMapper notificationMapper) {
+                                   PersonService personService, NotificationMapper notificationMapper,
+                                   PersonNotificationRepository personNotificationRepository) {
         this.notificationRepository = notificationRepository;
         this.personService = personService;
         this.notificationMapper = notificationMapper;
+        this.personNotificationRepository = personNotificationRepository;
     }
 
     @Override
+    @Transactional
     public void createNotification(NotificationRequestDTO request) {
         switch (request.type()) {
             case NotificationTarget.BroadCast broadcast ->
@@ -55,9 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendToPerson(NotificationRequestDTO request, Long personId) {
-        Person person = personService.findById(personId)
-                .orElseThrow(() -> new ResourceNotFoundException("Person was not found"));
-        createNotificationWithRecipients(request, Collections.singleton(person));
+        createNotificationWithRecipients(request, List.of(personId));
     }
 
     @Override
@@ -71,19 +72,27 @@ public class NotificationServiceImpl implements NotificationService {
 
     }
 
+    @Override
+    public ApiResponseDTO markAsRead() {
+        return new ApiResponseDTO("test", "ok ok");
+    }
+
     private void broadcastToType(Class<? extends Person> personClass, NotificationRequestDTO message) {
-        List<? extends Person> recipients = personService.getAllActiveByType(personClass);
+        List<Long> recipients = personService.findAllActiveIdsByType(personClass);
+        System.out.println(recipients);
+        System.out.println("test " + personClass.getSimpleName());
         createNotificationWithRecipients(message, recipients);
     }
 
-    private void createNotificationWithRecipients(NotificationRequestDTO message, Collection<? extends Person> recipients) {
+    @Transactional
+    private void createNotificationWithRecipients(NotificationRequestDTO message, List<Long> recipients) {
         Notification notification = new Notification(
                 message.title(),
                 message.message(),
                 LocalDateTime.now()
         );
-        notification.setRecipients(new HashSet<>(recipients));
         notificationRepository.save(notification);
+        personNotificationRepository.bulkInsert(notification.getId(), recipients);
     }
 
     public PaginatedResponseDTO<NotificationResponseDTO> getNotificationsPaginated(Pageable pageable) {

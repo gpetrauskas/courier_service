@@ -25,20 +25,7 @@ public class Notification {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @ColumnDefault("false")
-    private boolean isRead;
-
-    @ManyToMany
-    @JoinTable(
-            name = "notification_recipients",
-            joinColumns = @JoinColumn(name = "notification_id"),
-            inverseJoinColumns = @JoinColumn(name = "person_id")
-    )
-    private Set<Person> recipients = new HashSet<>();
-
-    public Notification() {
-
-    }
+    public Notification() {}
 
     public Notification(String title, String message, LocalDateTime createdAt) {
         this.title = title;
@@ -70,14 +57,6 @@ public class Notification {
         this.createdAt = createdAt;
     }
 
-    public boolean isRead() {
-        return isRead;
-    }
-
-    public void setRead(boolean read) {
-        this.isRead = read;
-    }
-
     public String getTitle() {
         return title;
     }
@@ -86,15 +65,4 @@ public class Notification {
         this.title = title;
     }
 
-    public Set<Person> getRecipients() {
-        return recipients;
-    }
-
-    public void setRecipients(Set<Person> recipients) {
-        this.recipients = recipients;
-    }
-
-    public void addRecipient(Person person) {
-        this.recipients.add(person);
-    }
 }

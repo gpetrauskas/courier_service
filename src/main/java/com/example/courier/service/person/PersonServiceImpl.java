@@ -251,4 +251,8 @@ public class PersonServiceImpl implements PersonService {
                 .toList();
     }
 
+    public List<Long> findAllActiveIdsByType(Class<? extends Person> type) {
+        return personRepository.findAllActiveIdsByType(type);
+    }
+
 }

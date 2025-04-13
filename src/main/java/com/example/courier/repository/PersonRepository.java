@@ -33,4 +33,7 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     @Query("SELECT p FROM Person p WHERE TYPE(p) = :type AND p.isBlocked = false AND p.isBlocked = false")
     <T extends Person> List<T> findAllActiveByType(@Param("type") Class<T> type);
 
+    @Query("SELECT p.id FROM Person p WHERE TYPE(p) = :type AND p.isBlocked = false AND p.isDeleted = false")
+    List<Long> findAllActiveIdsByType(@Param("type") Class<? extends Person> type);
+
 }
