@@ -53,13 +53,19 @@ public class NotificationController {
 
     @PostMapping("/markAsRead")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestParam Long notificationId) {
-        return ResponseEntity.ok(notificationService.markAsRead());
+    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestParam(required = false) Long notificationId) {
+        return ResponseEntity.ok(notificationService.markAsRead(notificationId));
     }
 
     @GetMapping()
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<PaginatedResponseDTO<NotificationResponseDTO>>getAll(Pageable pageable) {
+    public ResponseEntity<PaginatedResponseDTO<NotificationResponseDTO>> getAll(Pageable pageable) {
         return ResponseEntity.ok(notificationService.getNotificationHistory(pageable));
+    }
+
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
+    public ResponseEntity<ApiResponseDTO> delete(@RequestParam(required = false) Long id) {
+        return ResponseEntity.ok(notificationService.delete(id));
     }
 }
