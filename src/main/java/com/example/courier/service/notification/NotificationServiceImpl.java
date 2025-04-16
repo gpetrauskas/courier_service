@@ -1,5 +1,6 @@
 package com.example.courier.service.notification;
 
+import com.example.courier.common.ApiResponseType;
 import com.example.courier.common.NotificationTargetType;
 import com.example.courier.domain.*;
 import com.example.courier.dto.ApiResponseDTO;
@@ -8,6 +9,7 @@ import com.example.courier.dto.mapper.NotificationMapper;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.person.PersonService;
@@ -72,22 +74,17 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public ApiResponseDTO markAsRead(Long notificationId) {
-        Long personId = AuthUtils.getAuthenticatedPersonId();
-        if (notificationId == null) {
-            int updatedCount = personNotificationRepository.markAllAsRead(personId, LocalDateTime.now());
-            if (updatedCount == 0) {
-                return new ApiResponseDTO("info", "No unread notifications found");
-            }
-            return new ApiResponseDTO("success", "All unread notifications marked as read successfully");
-        } else {
-            PersonNotification personNotification = personNotificationRepository.findByIdAndPersonId(notificationId, personId);
-            if (!personNotification.isRead()) {
-                personNotification.markAsRead();
-                return new ApiResponseDTO("success", "Notification marked as read");
-            }
+    public ApiResponseDTO markAsRead(List<Long> ids) {
+        if (ids.isEmpty()) {
+            throw new IllegalArgumentException("Notification list cannot be empty");
         }
-        return new ApiResponseDTO("info", "Notification was already read");
+
+        final Long personId = AuthUtils.getAuthenticatedPersonId();
+        if (ids.size() > 1) {
+            return markMultipleNotificationsAsRead(personId, ids);
+        } else {
+            return markSingleNotificationAsRead(personId, ids.get(0));
+        }
     }
 
     @Override
@@ -149,5 +146,30 @@ public class NotificationServiceImpl implements NotificationService {
                 notificationPage.getTotalElements(),
                 notificationPage.getTotalPages()
         );
+    }
+
+    private ApiResponseDTO markMultipleNotificationsAsRead(Long personId, List<Long> notificationsIds) {
+        int updatedRows = personNotificationRepository.markMultipleAsRead(
+                personId,
+                notificationsIds,
+                LocalDateTime.now()
+        );
+
+        if (updatedRows > 0) {
+            return ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_SUCCESS.withParams(updatedRows, notificationsIds.size());
+        } else {
+            return ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_INFO.apiResponseDTO();
+        }
+    }
+
+    private ApiResponseDTO markSingleNotificationAsRead(Long personId, Long notificationId) {
+        PersonNotification personNotification = personNotificationRepository.findByIdAndPersonId(notificationId, personId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification was ot found"));
+        if (personNotification.isRead()) {
+            return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_INFO.apiResponseDTO();
+        } else {
+            personNotification.markAsRead();
+            return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_SUCCESS.apiResponseDTO();
+        }
     }
 }

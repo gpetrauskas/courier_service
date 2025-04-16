@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Array;
 import java.util.List;
 
 @RestController
@@ -53,8 +54,8 @@ public class NotificationController {
 
     @PostMapping("/markAsRead")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestParam(required = false) Long notificationId) {
-        return ResponseEntity.ok(notificationService.markAsRead(notificationId));
+    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestBody List<Long> ids) {
+        return ResponseEntity.ok(notificationService.markAsRead(ids));
     }
 
     @GetMapping()

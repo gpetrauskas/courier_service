@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface PersonNotificationRepository extends JpaRepository<PersonNotification, PersonNotificationId>, JpaSpecificationExecutor<PersonNotification> {
 
@@ -41,12 +42,14 @@ public interface PersonNotificationRepository extends JpaRepository<PersonNotifi
 
     @Modifying
     @Query("UPDATE PersonNotification pn SET pn.isRead = true, pn.readAt = :now " +
-            "WHERE pn.id.personId = :personId AND pn.isRead = false")
-    int markAllAsRead(@Param("personId") Long personId, @Param("now")LocalDateTime now);
+            "WHERE pn.id.personId = :personId AND pn.id.notificationId IN :ids AND pn.isRead = false")
+    int markMultipleAsRead(@Param("personId") Long personId,
+                           @Param("ids") List<Long> notificationsIds,
+                           @Param("now")LocalDateTime now);
 
     @Query("SELECT pn FROM PersonNotification pn WHERE pn.id.notificationId = :notificationId " +
             "AND pn.id.personId = :personId")
-    PersonNotification findByIdAndPersonId(@Param("notificationId") Long notificationId, @Param("personId") Long personId);
+    Optional<PersonNotification> findByIdAndPersonId(@Param("notificationId") Long notificationId, @Param("personId") Long personId);
 
     void deleteByNotificationIdAndPersonId(Long notificationId, Long personId);
     Long deleteAllByPersonId(Long personId);
