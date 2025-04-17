@@ -89,18 +89,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public ApiResponseDTO delete(Long notificationId) {
-        Long personId = AuthUtils.getAuthenticatedPersonId();
+    public ApiResponseDTO delete(List<Long> ids) {
+        if (ids.isEmpty()) {
+            throw new IllegalArgumentException("Notifications List cannot be empty");
+        }
 
-        if (notificationId != null) {
-            personNotificationRepository.deleteByNotificationIdAndPersonId(notificationId, personId);
-            return new ApiResponseDTO("success", "Notification successfully deleted");
+        final Long personId = AuthUtils.getAuthenticatedPersonId();
+        if (ids.size() > 1) {
+            return deleteMultipleNotifications(personId, ids);
         } else {
-            Long deletedCount = personNotificationRepository.deleteAllByPersonId(personId);
-            if (deletedCount > 0) {
-                return new ApiResponseDTO("success", "Successfully deleted " + deletedCount + " notifications");
-            }
-            return new ApiResponseDTO("info", "No notifications to be deleted");
+            return deleteSingleNotification(personId, ids.get(0));
         }
     }
 
@@ -170,6 +168,24 @@ public class NotificationServiceImpl implements NotificationService {
         } else {
             personNotification.markAsRead();
             return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_SUCCESS.apiResponseDTO();
+        }
+    }
+
+    private ApiResponseDTO deleteMultipleNotifications(Long personId, List<Long> ids) {
+        int deletedRows = personNotificationRepository.deleteMultipleByIdAndPersonId(ids, personId);
+        if (deletedRows > 0) {
+            return ApiResponseType.MULTIPLE_NOTIFICATIONS_DELETE_SUCCESS.withParams(deletedRows, ids.size());
+        } else {
+            return ApiResponseType.MULTIPLE_NOTIFICATIONS_DELEte_INFO.apiResponseDTO();
+        }
+    }
+
+    private ApiResponseDTO deleteSingleNotification(Long personId, Long notificationId) {
+        int deletedRow = personNotificationRepository.deleteByNotificationIdAndPersonId(notificationId, personId);
+        if (deletedRow == 1) {
+            return ApiResponseType.SINGLE_NOTIFICATION_DELETE_SUCCESS.apiResponseDTO();
+        } else {
+            return ApiResponseType.SINGLE_NOTIFICATION_DELETE_INFO.apiResponseDTO();
         }
     }
 }

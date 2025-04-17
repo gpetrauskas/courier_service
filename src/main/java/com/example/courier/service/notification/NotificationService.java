@@ -14,5 +14,5 @@ public interface NotificationService {
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
     PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable);
     ApiResponseDTO markAsRead(List<Long> ids);
-    ApiResponseDTO delete(Long notificationId);
+    ApiResponseDTO delete(List<Long> ids);
 }

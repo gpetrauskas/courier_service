@@ -64,9 +64,9 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getNotificationHistory(pageable));
     }
 
-    @DeleteMapping("/delete")
+    @PostMapping("/delete")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<ApiResponseDTO> delete(@RequestParam(required = false) Long id) {
-        return ResponseEntity.ok(notificationService.delete(id));
+    public ResponseEntity<ApiResponseDTO> delete(@RequestBody List<Long> ids) {
+        return ResponseEntity.ok(notificationService.delete(ids));
     }
 }
