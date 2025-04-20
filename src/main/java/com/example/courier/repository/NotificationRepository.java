@@ -26,4 +26,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
          """)
  Page<NotificationWithReadStatus> findAllByRecipientIdPageable(
          @Param("recipientId") Long recipientId, Pageable pageable);
+
 }

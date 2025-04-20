@@ -6,6 +6,7 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.NotificationMessage;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
+import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.service.notification.NotificationService;
@@ -68,5 +69,11 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
     public ResponseEntity<ApiResponseDTO> delete(@RequestBody List<Long> ids) {
         return ResponseEntity.ok(notificationService.delete(ids));
+    }
+
+    @GetMapping("/adminManage")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PaginatedResponseDTO<AdminNotificationResponseDTO>> getAllForAdmin(Pageable pageable) {
+        return ResponseEntity.ok(notificationService.getAllForAdmin(pageable));
     }
 }
