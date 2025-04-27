@@ -61,5 +61,17 @@ public interface PersonNotificationRepository extends JpaRepository<PersonNotifi
     @Modifying
     @Query("DELETE FROM PersonNotification pn WHERE pn.notification.id IN :ids AND pn.person.id = :personId")
     int deleteMultipleByIdAndPersonId(@Param("ids") List<Long> ids,@Param("personId") Long personId);
+
+    @Query("""
+            SELECT pn.id.notificationId
+            FROM PersonNotification pn
+            WHERE pn.id.personId = :personId
+            ORDER BY pn.notification.createdAt DESC
+            """)
+    List<Long> findNotificationIdsByPerson(@Param("personId") Long personId);
+
+    @Modifying
+    @Query("DELETE FROM PersonNotification pn WHERE pn.notification.id IN :ids")
+    void deleteAllByNotificationIdIn(@Param("ids") List<Long> ids);
 }
 

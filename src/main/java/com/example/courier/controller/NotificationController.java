@@ -34,23 +34,11 @@ public class NotificationController {
         return notificationRepository.findAll();
     }
 
- /*   @PostMapping("create")
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponseDTO> create(NotificationMessage notificationMessage) {
-        notificationServiceImpl.broadcastToType();
-    }*/
-
-    @PostMapping("/test")
-    public ResponseEntity<?> testNotification() {
-        notificationService.createNotification(
-                new NotificationRequestDTO(
-                        "test",
-                        "test notification content, long long text. lets see how it goes.. " +
-                                "addding even more text. lets seee how it goes... even more... super long text " +
-                                " to fetch on ui.... lets seee... alsmost done... enough for this time.... ",
-                        new NotificationTarget.BroadCast(NotificationTargetType.COURIER))
-        );
-        return ResponseEntity.ok("Notification sent");
+    public ResponseEntity<?> create(@RequestBody NotificationRequestDTO requestDTO) {
+        notificationService.createNotification(requestDTO);
+        return ResponseEntity.ok(new ApiResponseDTO("success", "Notification sent"));
     }
 
     @PostMapping("/markAsRead")
@@ -75,5 +63,14 @@ public class NotificationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedResponseDTO<AdminNotificationResponseDTO>> getAllForAdmin(Pageable pageable) {
         return ResponseEntity.ok(notificationService.getAllForAdmin(pageable));
+    }
+
+    @GetMapping("/page-containing/{notificationId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
+    public ResponseEntity<PaginatedResponseDTO<NotificationResponseDTO>> getPageContainingNotification(
+            @PathVariable Long notificationId,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        return ResponseEntity.ok(notificationService.getPageContainingNotification(notificationId, pageSize));
     }
 }

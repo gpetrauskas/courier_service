@@ -17,4 +17,5 @@ public interface NotificationService {
     ApiResponseDTO markAsRead(List<Long> ids);
     ApiResponseDTO delete(List<Long> ids);
     PaginatedResponseDTO<AdminNotificationResponseDTO> getAllForAdmin(Pageable pageable);
+    PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize);
 }

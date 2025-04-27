@@ -17,7 +17,9 @@ import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.util.AuthUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,12 +106,15 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("Notifications List cannot be empty");
         }
 
-        final Long personId = AuthUtils.getAuthenticatedPersonId();
-        if (ids.size() > 1) {
-            return deleteMultipleNotifications(personId, ids);
-        } else {
-            return deleteSingleNotification(personId, ids.get(0));
+        if (AuthUtils.isAdmin()) {
+            return adminDelete(ids);
         }
+
+        final Long personId = AuthUtils.getAuthenticatedPersonId();
+        return ids.size() > 1 ?
+                deleteMultipleNotifications(personId, ids)
+                :
+                deleteSingleNotification(personId, ids.get(0));
     }
 
     @Override
@@ -132,6 +137,39 @@ public class NotificationServiceImpl implements NotificationService {
                 pNList.getTotalElements(),
                 pNList.getTotalPages()
         );
+    }
+
+    @Override
+    public PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize) {
+        Long personId = AuthUtils.getAuthenticatedPersonId();
+
+        List<Long> notifications = personNotificationRepository.findNotificationIdsByPerson(personId);
+        int index = notifications.indexOf(notificationId);
+        if (index == -1) {
+            throw new ResourceNotFoundException("Notification not found.");
+        }
+
+        int pageIndex = index / pageSize;
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by("notification.createdAt").descending());
+        Page<NotificationWithReadStatus> dto = notificationRepository.findAllByRecipientIdPageable(personId, pageable);
+        List<NotificationResponseDTO> dtoList = dto.getContent()
+                .stream()
+                .map(n ->
+                        new NotificationResponseDTO(
+                                n.getId(),
+                                n.getTitle(),
+                                n.getMessage(),
+                                n.getCreatedAt(),
+                                n.getReadAt(),
+                                n.getIsRead()
+                        ))
+                .toList();
+
+        return new PaginatedResponseDTO<>(
+                dtoList,
+                pageable.getPageNumber(),
+                dto.getTotalElements(),
+                dto.getTotalPages());
     }
 
     private void broadcastToType(Class<? extends Person> personClass, NotificationRequestDTO message) {
@@ -218,6 +256,19 @@ public class NotificationServiceImpl implements NotificationService {
             return ApiResponseType.SINGLE_NOTIFICATION_DELETE_SUCCESS.apiResponseDTO();
         } else {
             return ApiResponseType.SINGLE_NOTIFICATION_DELETE_INFO.apiResponseDTO();
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    private ApiResponseDTO adminDelete(List<Long> ids) {
+        boolean isAdmin = AuthUtils.isAdmin();
+        if (isAdmin) {
+            personNotificationRepository.deleteAllByNotificationIdIn(ids);
+            notificationRepository.deleteAllById(ids);
+            return ApiResponseType.SINGLE_NOTIFICATION_DELETE_SUCCESS.apiResponseDTO();
+        } else {
+            throw new UnauthorizedAccessException("Unauthorized access");
         }
     }
 }
