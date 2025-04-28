@@ -16,5 +16,5 @@ public record TicketAdminResponseDTO(
         LocalDateTime updatedAt,
         PersonResponseDTO createdBy,
         PersonResponseDTO assignedTo
-) {
+) implements TicketBase {
 }

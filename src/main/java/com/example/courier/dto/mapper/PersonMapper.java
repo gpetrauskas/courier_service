@@ -8,10 +8,7 @@ import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.dto.response.person.UserResponseDTO;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PersonMapper {
@@ -23,6 +20,7 @@ public interface PersonMapper {
 
     CourierDTO toCourierDTO(Person person);
 
+    @Named("toPersonDto")
     default PersonResponseDTO toDto(Person person) {
         return switch (person) {
             case User u -> toUserResponseDTO(u);

@@ -13,5 +13,5 @@ public record TicketUserResponseDTO(
         TicketPriority priority,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
-) {
+) implements TicketBase {
 }
