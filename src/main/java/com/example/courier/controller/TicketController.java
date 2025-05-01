@@ -1,8 +1,11 @@
 package com.example.courier.controller;
 
 import com.example.courier.dto.ApiResponseDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
+import com.example.courier.dto.request.ticket.TicketCommentRequestDTO;
 import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
+import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 import com.example.courier.service.ticket.TicketService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -38,5 +41,21 @@ public class TicketController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<List<TicketBase>> getAll() {
         return ResponseEntity.ok(ticketService.getAll());
+    }
+
+    @PostMapping("/addComment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<TicketCommentResponseDTO> addComment(@RequestBody @Valid TicketCommentRequestDTO commentRequestDTO) {
+        return ResponseEntity.ok(ticketService.addComment(commentRequestDTO));
+    }
+
+    @GetMapping("/{ticketId}/getComments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<PaginatedResponseDTO<TicketCommentResponseDTO>> getComments(
+            @PathVariable Long ticketId,
+            @RequestParam int currentPage,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        return ResponseEntity.ok(ticketService.getComments(ticketId, currentPage, pageSize));
     }
 }

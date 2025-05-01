@@ -3,17 +3,27 @@ package com.example.courier.service.ticket;
 import com.example.courier.common.TicketStatus;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.Ticket;
+import com.example.courier.domain.TicketComment;
 import com.example.courier.dto.ApiResponseDTO;
+import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.TicketMapper;
+import com.example.courier.dto.request.ticket.TicketCommentRequestDTO;
 import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
+import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
+import com.example.courier.repository.TicketCommentRepository;
 import com.example.courier.repository.TicketRepository;
+import com.example.courier.service.permission.PermissionService;
 import com.example.courier.service.security.CurrentPersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,16 +39,22 @@ public class TicketServiceImpl implements TicketService {
     private TicketRepository ticketRepository;
     private TicketMapper ticketMapper;
     private final CurrentPersonService currentPersonService;
+    private TicketCommentRepository commentRepository;
+    private final PermissionService permissionService;
 
     @Autowired
     public TicketServiceImpl(
             TicketRepository ticketRepository,
             TicketMapper ticketMapper,
-            CurrentPersonService currentPersonService
+            CurrentPersonService currentPersonService,
+            TicketCommentRepository commentRepository,
+            PermissionService permissionService
     ) {
         this.ticketRepository = ticketRepository;
         this.ticketMapper = ticketMapper;
         this.currentPersonService = currentPersonService;
+        this.commentRepository = commentRepository;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -89,5 +105,51 @@ public class TicketServiceImpl implements TicketService {
         List<Ticket> list = ticketRepository.findAllByCreatedById(person.getId());
         return list.stream()
                 .map(t -> ticketMapper.toUserDTO(t)).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public TicketCommentResponseDTO addComment(TicketCommentRequestDTO commentRequestDTO) {
+
+        Person person = currentPersonService.getCurrentPerson();
+        Ticket t = ticketRepository.findById(commentRequestDTO.ticketId())
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket was not found."));
+        if (!permissionService.canAddTicketComment(person, t)) {
+            throw new UnauthorizedAccessException("No access");
+        }
+
+        TicketComment ticketComment = new TicketComment();
+        ticketComment.setTicket(t);
+        ticketComment.setMessage(commentRequestDTO.message());
+        ticketComment.setAuthor(person);
+        ticketComment.setCreatedAt(LocalDateTime.now());
+        commentRepository.save(ticketComment);
+
+        t.setUpdatedAt(LocalDateTime.now());
+        ticketRepository.save(t);
+
+        return ticketMapper.toTicketCommentResponseDTO(ticketComment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedResponseDTO<TicketCommentResponseDTO> getComments(Long ticketId, int currentPage, int pageSize) {
+        Person p = currentPersonService.getCurrentPerson();
+        Ticket t = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+        if (!permissionService.canReadTicketComments(p, t)) {
+            throw new UnauthorizedAccessException("No access");
+        }
+
+        Pageable pageable = PageRequest.of(currentPage, pageSize, Sort.by(Sort.Direction.ASC, "createdAt"));
+        Page<TicketComment> comments = commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId, pageable);
+        Page<TicketCommentResponseDTO> responseDTOS = comments.map(ticketMapper::toTicketCommentResponseDTO);
+
+        return new PaginatedResponseDTO<>(
+                responseDTOS.getContent(),
+                comments.getNumber(),
+                comments.getTotalElements(),
+                comments.getTotalPages()
+        );
     }
 }

@@ -1,7 +1,9 @@
 package com.example.courier.dto.mapper;
 
 import com.example.courier.domain.Ticket;
+import com.example.courier.domain.TicketComment;
 import com.example.courier.dto.response.ticket.TicketAdminResponseDTO;
+import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 import com.example.courier.dto.response.ticket.TicketUserResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,4 +18,7 @@ public interface TicketMapper {
     TicketAdminResponseDTO toAdminDTO(Ticket ticket);
 
     TicketUserResponseDTO toUserDTO(Ticket ticket);
+
+    @Mapping(target = "authorName", source = "author.name")
+    TicketCommentResponseDTO toTicketCommentResponseDTO(TicketComment comment);
 }
