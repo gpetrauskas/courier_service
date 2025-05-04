@@ -1,5 +1,6 @@
 package com.example.courier.service.ticket;
 
+import com.example.courier.common.TicketPriority;
 import com.example.courier.common.TicketStatus;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.Ticket;
@@ -9,6 +10,7 @@ import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.TicketMapper;
 import com.example.courier.dto.request.ticket.TicketCommentRequestDTO;
 import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
+import com.example.courier.dto.request.ticket.TicketUpdateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
 import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,7 +93,7 @@ public class TicketServiceImpl implements TicketService {
         if (me.getRole().equals("ADMIN")) {
             logger.info("Is admin");
             return ticketMapper.toAdminDTO(ticket);
-        } else if (ticket.getCreatedBy().getId().equals(me.getId())) {
+        } else if (permissionService.hasTicketAccess(me, ticket)) {
             logger.info("is creator of ticket");
             return ticketMapper.toUserDTO(ticket);
         } else {
@@ -102,7 +105,12 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public List<TicketBase> getAll() {
         Person person = currentPersonService.getCurrentPerson();
-        List<Ticket> list = ticketRepository.findAllByCreatedById(person.getId());
+        List<Ticket> list;
+        if (person.getRole().equals("ADMIN")) {
+            list = ticketRepository.findAll();
+        } else {
+            list = ticketRepository.findAllByCreatedById(person.getId());
+        }
         return list.stream()
                 .map(t -> ticketMapper.toUserDTO(t)).collect(Collectors.toList());
     }
@@ -114,7 +122,8 @@ public class TicketServiceImpl implements TicketService {
         Person person = currentPersonService.getCurrentPerson();
         Ticket t = ticketRepository.findById(commentRequestDTO.ticketId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket was not found."));
-        if (!permissionService.canAddTicketComment(person, t)) {
+
+        if (permissionService.hasTicketAccess(person, t)) {
             throw new UnauthorizedAccessException("No access");
         }
 
@@ -137,7 +146,8 @@ public class TicketServiceImpl implements TicketService {
         Person p = currentPersonService.getCurrentPerson();
         Ticket t = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
-        if (!permissionService.canReadTicketComments(p, t)) {
+
+        if (!permissionService.hasTicketAccess(p, t)) {
             throw new UnauthorizedAccessException("No access");
         }
 
@@ -151,5 +161,32 @@ public class TicketServiceImpl implements TicketService {
                 comments.getTotalElements(),
                 comments.getTotalPages()
         );
+    }
+
+    @Override
+    public void updateTicket(TicketUpdateRequestDTO requestDTO) {
+        if (!currentPersonService.isAdmin()) {
+            throw new UnauthorizedAccessException("No access");
+        }
+
+        Objects.requireNonNull(requestDTO);
+        Ticket ticket = ticketRepository.findById(requestDTO.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+
+        switch (requestDTO.partTarget()) {
+            case TicketUpdateTarget.Status(TicketStatus newStatus) -> {
+                if (!TicketStatus.isValidTransition(ticket.getStatus(), newStatus)) {
+                    throw new IllegalStateException("Invalid status transition " + ticket.getStatus() + " -> " + newStatus);
+                }
+                ticket.setStatus(newStatus);
+            }
+            case TicketUpdateTarget.Priority(TicketPriority newPriority) -> {
+                if (!TicketPriority.isValidPriority(newPriority.name())) {
+                    throw new IllegalStateException("Invalid priority data");
+                }
+                ticket.setPriority(TicketPriority.valueOf(newPriority.name()));
+            }
+        }
+        ticketRepository.save(ticket);
     }
 }

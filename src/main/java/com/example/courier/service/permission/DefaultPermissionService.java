@@ -8,12 +8,8 @@ import org.springframework.stereotype.Service;
 public class DefaultPermissionService implements PermissionService {
 
     @Override
-    public boolean canAddTicketComment(Person person, Ticket ticket) {
-        return ticket.getCreatedBy().getId().equals(person.getId());
-    }
-
-    @Override
-    public boolean canReadTicketComments(Person person, Ticket ticket) {
-        return ticket.getCreatedBy().getId().equals(person.getId());
+    public boolean hasTicketAccess(Person person, Ticket ticket) {
+        return ticket.getCreatedBy().getId().equals(person.getId())
+                || person.getRole().equals("ADMIN");
     }
 }

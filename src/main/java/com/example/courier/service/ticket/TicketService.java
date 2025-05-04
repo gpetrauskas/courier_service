@@ -4,6 +4,7 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.ticket.TicketCommentRequestDTO;
 import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
+import com.example.courier.dto.request.ticket.TicketUpdateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
 import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 
@@ -15,4 +16,5 @@ public interface TicketService {
     List<TicketBase> getAll();
     TicketCommentResponseDTO addComment(TicketCommentRequestDTO commentRequestDTO);
     PaginatedResponseDTO<TicketCommentResponseDTO> getComments(Long ticketId, int currentPage, int pageSize);
+    void updateTicket(TicketUpdateRequestDTO requestDTO);
 }

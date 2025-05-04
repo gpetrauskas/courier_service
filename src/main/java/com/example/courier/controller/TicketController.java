@@ -4,6 +4,7 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.ticket.TicketCommentRequestDTO;
 import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
+import com.example.courier.dto.request.ticket.TicketUpdateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
 import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
 import com.example.courier.service.ticket.TicketService;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,5 +59,12 @@ public class TicketController {
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         return ResponseEntity.ok(ticketService.getComments(ticketId, currentPage, pageSize));
+    }
+
+    @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponseDTO> update(@RequestBody TicketUpdateRequestDTO requestDTO) {
+        ticketService.updateTicket(requestDTO);
+        return ResponseEntity.ok(new ApiResponseDTO("success", "ok"));
     }
 }
