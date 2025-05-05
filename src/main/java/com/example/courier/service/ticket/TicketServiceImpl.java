@@ -103,16 +103,21 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<TicketBase> getAll() {
+    public PaginatedResponseDTO<? extends TicketBase> getAll(Pageable pageable) {
+
         Person person = currentPersonService.getCurrentPerson();
-        List<Ticket> list;
+        Page<Ticket> list;
         if (person.getRole().equals("ADMIN")) {
-            list = ticketRepository.findAll();
+            list = ticketRepository.findAll(pageable);
         } else {
-            list = ticketRepository.findAllByCreatedById(person.getId());
+            list = ticketRepository.findAllByCreatedById(person.getId(), pageable);
         }
-        return list.stream()
-                .map(t -> ticketMapper.toUserDTO(t)).collect(Collectors.toList());
+        return new PaginatedResponseDTO<>(
+                list.stream().map(ticketMapper::toUserDTO).toList(),
+                list.getNumber(),
+                list.getTotalElements(),
+                list.getTotalPages()
+        );
     }
 
     @Override
@@ -123,7 +128,7 @@ public class TicketServiceImpl implements TicketService {
         Ticket t = ticketRepository.findById(commentRequestDTO.ticketId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket was not found."));
 
-        if (permissionService.hasTicketAccess(person, t)) {
+        if (!permissionService.hasTicketAccess(person, t) || t.getStatus().equals(TicketStatus.CLOSED)) {
             throw new UnauthorizedAccessException("No access");
         }
 

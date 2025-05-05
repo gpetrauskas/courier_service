@@ -7,13 +7,14 @@ import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
 import com.example.courier.dto.request.ticket.TicketUpdateRequestDTO;
 import com.example.courier.dto.response.ticket.TicketBase;
 import com.example.courier.dto.response.ticket.TicketCommentResponseDTO;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface TicketService {
     ApiResponseDTO create(TicketCreateRequestDTO requestDTO);
     TicketBase getTicket(Long ticketId);
-    List<TicketBase> getAll();
+    PaginatedResponseDTO<? extends TicketBase> getAll(Pageable pageable);
     TicketCommentResponseDTO addComment(TicketCommentRequestDTO commentRequestDTO);
     PaginatedResponseDTO<TicketCommentResponseDTO> getComments(Long ticketId, int currentPage, int pageSize);
     void updateTicket(TicketUpdateRequestDTO requestDTO);
