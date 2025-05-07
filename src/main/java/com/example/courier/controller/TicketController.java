@@ -44,9 +44,11 @@ public class TicketController {
     @GetMapping()
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<PaginatedResponseDTO<? extends TicketBase>> getAll(
-            @PageableDefault(page = 0, size = 10, sort = "updatedAt", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(page = 0, size = 10, sort = "updatedAt", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long personid
     ) {
-        return ResponseEntity.ok(ticketService.getAll(pageable));
+        return ResponseEntity.ok(ticketService.getAll(pageable, status, personid));
     }
 
     @PostMapping("/addComment")
@@ -63,6 +65,12 @@ public class TicketController {
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         return ResponseEntity.ok(ticketService.getComments(ticketId, currentPage, pageSize));
+    }
+
+    @PutMapping("/{ticketId}/close")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponseDTO>close(@PathVariable Long ticketId) {
+        return ResponseEntity.ok(ticketService.close(ticketId));
     }
 
     @PutMapping("/update")

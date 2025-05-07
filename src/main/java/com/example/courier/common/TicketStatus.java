@@ -22,4 +22,9 @@ public enum TicketStatus {
         return VALID_TRANSITIONS.getOrDefault(current, Set.of())
                 .contains(proposed);
     }
+
+    public static boolean isValidStatus(String status) {
+        return Arrays.stream(TicketStatus.values())
+                .anyMatch(e -> e.name().equalsIgnoreCase(status));
+    }
 }

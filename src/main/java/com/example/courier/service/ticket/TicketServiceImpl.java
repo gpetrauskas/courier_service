@@ -19,6 +19,8 @@ import com.example.courier.repository.TicketCommentRepository;
 import com.example.courier.repository.TicketRepository;
 import com.example.courier.service.permission.PermissionService;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.specification.ticket.TicketSpecification;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,20 +107,27 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public PaginatedResponseDTO<? extends TicketBase> getAll(Pageable pageable) {
+    public PaginatedResponseDTO<? extends TicketBase> getAll(
+            Pageable pageable, @Nullable String status, @Nullable Long personId
+    ) {
+        if (status != null && !TicketStatus.isValidStatus(status)) {
+            throw new IllegalArgumentException("Invalid status");
+        }
 
         Person person = currentPersonService.getCurrentPerson();
-        Page<Ticket> list;
-        if (person.getRole().equals("ADMIN")) {
-            list = ticketRepository.findAll(pageable);
-        } else {
-            list = ticketRepository.findAllByCreatedById(person.getId(), pageable);
-        }
+        Function<Ticket, ? extends TicketBase> mapper =
+                "ADMIN".equals(person.getRole()) ? ticketMapper::toAdminDTO : ticketMapper::toUserDTO;
+        Long filterPersonId = "ADMIN".equals(person.getRole()) ? personId : person.getId();
+
+        Specification<Ticket> spec = Specification.where(TicketSpecification.hasStatus(status))
+                .and(TicketSpecification.createdBy(filterPersonId));
+
+        Page<Ticket> page = ticketRepository.findAll(spec, pageable);
         return new PaginatedResponseDTO<>(
-                list.stream().map(ticketMapper::toUserDTO).toList(),
-                list.getNumber(),
-                list.getTotalElements(),
-                list.getTotalPages()
+                page.stream().map(mapper).toList(),
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages()
         );
     }
 
@@ -193,5 +204,23 @@ public class TicketServiceImpl implements TicketService {
             }
         }
         ticketRepository.save(ticket);
+    }
+
+    @Override
+    public ApiResponseDTO close(Long ticketId) {
+        Person person = currentPersonService.getCurrentPerson();
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+        if (!permissionService.hasTicketAccess(person, ticket)) {
+            throw new UnauthorizedAccessException("No access");
+        }
+
+        if (ticket.getStatus().equals(TicketStatus.CLOSED)) {
+            return new ApiResponseDTO("info", "Ticket is already closed");
+        }
+
+        ticket.setStatus(TicketStatus.CLOSED);
+        ticketRepository.save(ticket);
+        return new ApiResponseDTO("success", "Ticket was successfully closed");
     }
 }

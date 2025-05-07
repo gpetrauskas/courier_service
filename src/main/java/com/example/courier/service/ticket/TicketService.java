@@ -14,8 +14,9 @@ import java.util.List;
 public interface TicketService {
     ApiResponseDTO create(TicketCreateRequestDTO requestDTO);
     TicketBase getTicket(Long ticketId);
-    PaginatedResponseDTO<? extends TicketBase> getAll(Pageable pageable);
+    PaginatedResponseDTO<? extends TicketBase> getAll(Pageable pageable, String status, Long personId);
     TicketCommentResponseDTO addComment(TicketCommentRequestDTO commentRequestDTO);
     PaginatedResponseDTO<TicketCommentResponseDTO> getComments(Long ticketId, int currentPage, int pageSize);
     void updateTicket(TicketUpdateRequestDTO requestDTO);
+    ApiResponseDTO close(Long ticketId);
 }

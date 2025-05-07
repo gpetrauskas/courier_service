@@ -22,6 +22,9 @@ public interface PersonMapper {
 
     @Named("toPersonDto")
     default PersonResponseDTO toDto(Person person) {
+        if (person == null) {
+            return null;
+        }
         return switch (person) {
             case User u -> toUserResponseDTO(u);
             case Admin a -> toAdminPersonResponseDTO(a);
