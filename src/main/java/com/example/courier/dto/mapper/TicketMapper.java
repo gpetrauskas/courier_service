@@ -13,8 +13,8 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         uses = PersonMapper.class)
 public interface TicketMapper {
 
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toPersonDto")
-    @Mapping(target = "assignedTo", source = "assignedTo", qualifiedByName = "toPersonDto")
+    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toAdminPersonDto")
+    @Mapping(target = "assignedTo", source = "assignedTo", qualifiedByName = "toAdminPersonDto")
     TicketAdminResponseDTO toAdminDTO(Ticket ticket);
 
     TicketUserResponseDTO toUserDTO(Ticket ticket);

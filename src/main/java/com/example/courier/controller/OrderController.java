@@ -107,7 +107,7 @@ public class OrderController {
             User user = authService.getUserByEmail(auth.getName());
             List<OrderDTO> orders = orderService.findUserOrders(user);
 
-            int start = (page - 1) * size;
+            int start = (page) * size;
             int end = Math.min(start + size, orders.size());
             List<OrderDTO> paginatedOrders = orders.subList(start, end);
 

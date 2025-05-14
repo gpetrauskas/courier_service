@@ -16,6 +16,7 @@ public interface PersonMapper {
     @Mapping(target = "id", ignore = true)
     void updatePersonFromRequest(PersonDetailsUpdateRequest updateRequest, @MappingTarget Person person);
 
+    @Named("toAdminPersonDto")
     AdminPersonResponseDTO toAdminPersonResponseDTO(Person person);
 
     CourierDTO toCourierDTO(Person person);
