@@ -9,6 +9,11 @@ public enum ApiResponseType {
     MULTIPLE_NOTIFICATIONS_MARK_AS_READ_SUCCESS("success", "Marked {0} of {1} notifications as read"),
     SINGLE_NOTIFICATION_MARK_AS_READ_INFO("info", "Notification already marked as read"),
     SINGLE_NOTIFICATION_MARK_AS_READ_SUCCESS("success", "Notification marked as read successfully"),
+    USER_REGISTRATION_SUCCESS("success", "User registered successfully"),
+    PERSON_EMAIL_EXISTS("error", "Email already registered"),
+    PERSON_PASSWORD_WEAK("error", "Password does not meet requirements"),
+    COURIER_REGISTRATION_ADMIN_ONLY("error", "Only admins can register couriers"),
+    COURIER_REGISTRATION_SUCCESS("success", "Courier registered by admin {0}"),
 
     MULTIPLE_NOTIFICATIONS_DELETE_SUCCESS("succes", "Deleted {0} of {1} notifications"),
     MULTIPLE_NOTIFICATIONS_DELEte_INFO("info", "No notifications found to be deleted"),

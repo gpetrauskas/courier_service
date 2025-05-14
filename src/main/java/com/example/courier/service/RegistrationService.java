@@ -1,13 +1,14 @@
 package com.example.courier.service;
 
+import com.example.courier.common.ApiResponseType;
 import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.RegistrationDTO;
-import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.RegistrationValidator;
 import jakarta.validation.ValidationException;
@@ -18,87 +19,60 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 @Service
 public class RegistrationService {
     private final Logger logger = LoggerFactory.getLogger(RegistrationService.class);
-    private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
-    private final CourierRepository courierRepository;
     private final RegistrationValidator registrationValidator;
     private final PersonService personService;
     private final PasswordValidator passwordValidator;
+    private final CurrentPersonService currentPersonService;
 
-    RegistrationService(UserRepository userRepository, PersonRepository personRepository,
-                        PasswordEncoder passwordEncoder, CourierRepository courierRepository,
-                        RegistrationValidator registrationValidator, PersonService personService,
-                        PasswordValidator passwordValidator) {
-        this.userRepository = userRepository;
+    RegistrationService(PersonRepository personRepository,
+                        PasswordEncoder passwordEncoder, RegistrationValidator registrationValidator,
+                        PersonService personService, PasswordValidator passwordValidator,
+                        CurrentPersonService currentPersonService
+    ) {
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
-        this.courierRepository = courierRepository;
         this.registrationValidator = registrationValidator;
         this.personService = personService;
         this.passwordValidator = passwordValidator;
+        this.currentPersonService= currentPersonService;
     }
 
-
     @Transactional
-    public void registerUser(RegistrationDTO registrationDTO) {
+    public ApiResponseDTO registerUser(RegistrationDTO registrationDTO) {
             logger.info("Trying to register user with email {}", registrationDTO.email());
-
-            validateAndRegister(
-                    registrationDTO,
-                    () -> new User(
-                            registrationDTO.name(),
-                            registrationDTO.email(),
-                            passwordEncoder.encode(registrationDTO.password())
-                    ),
-                    personRepository::save
-            );
-
-            logger.info("User registered successfully: {}", registrationDTO.email());
+            validateAndRegister(registrationDTO, new User(registrationDTO.name(), registrationDTO.email(), passwordEncoder.encode(registrationDTO.password())));
+            return ApiResponseType.USER_REGISTRATION_SUCCESS.apiResponseDTO();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void registerCourier(RegistrationDTO registrationDTO) {
+    public ApiResponseDTO registerCourier(RegistrationDTO registrationDTO) {
         logger.info("Trying to register courier");
+        validateAndRegister(registrationDTO, new Courier(registrationDTO.name(), registrationDTO.email(), passwordEncoder.encode(registrationDTO.password())));
+        return ApiResponseType.COURIER_REGISTRATION_SUCCESS.withParams(currentPersonService.getCurrentPerson().getEmail());
+    }
 
-        validateAndRegister(
-                registrationDTO,
-                () -> new Courier(
-                        registrationDTO.name(),
-                        registrationDTO.email(),
-                        passwordEncoder.encode(registrationDTO.password())),
-                personRepository::save
-        );
+    private <T extends Person> void validateAndRegister(RegistrationDTO registrationDTO, T entity) {
+        // fast check if user already registered
+        checkIfUserAlreadyExists(registrationDTO.email());
+        // validation
+        registrationValidator.validateUserRegistration(registrationDTO);
+        passwordValidator.validatePassword(registrationDTO.password());
 
-        logger.info("Courier registered successfully {}", registrationDTO.email());
+        personRepository.save(entity);
+        logger.info("{} registered successfully: {}", entity.getClass().getSimpleName(), registrationDTO.email());
     }
 
     private void checkIfUserAlreadyExists(String email) {
         logger.info("Checking if user exists with email: {}", email);
-
         if (personService.checkIfPersonAlreadyExistsByEmail(email)) {
-            logger.warn("Registration failed: EMail {} already registered", email);
+            logger.warn("Registration failed: Email {} already registered", email);
             throw new ValidationException("Email " + email + " is already registered");
         }
-    }
-
-    private <T extends Person> void validateAndRegister(
-            RegistrationDTO registrationDTO,
-            Supplier<T> entityCreator,
-            Consumer<T> entitySaver
-    ) {
-        registrationValidator.validateUserRegistration(registrationDTO);
-        passwordValidator.validatePassword(registrationDTO.password());
-        checkIfUserAlreadyExists(registrationDTO.email());
-
-        T entity = entityCreator.get();
-        entitySaver.accept(entity);
     }
 }

@@ -24,24 +24,13 @@ public class RegistrationController {
     private RegistrationService registrationService;
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> registerUser(@Valid @RequestBody RegistrationDTO registrationDTO) {
-        logger.info("Received regisrtation request from user {}", registrationDTO.email());
-        Map<String, String> response = new HashMap<>();
-        try {
-            registrationService.registerUser(registrationDTO);
-            response.put("message", "User registered successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error occurred while registering: {}", e.getMessage(), e);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public ResponseEntity<ApiResponseDTO> registerUser(@Valid @RequestBody RegistrationDTO registrationDTO) {
+        return ResponseEntity.ok(registrationService.registerUser(registrationDTO));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/registerCourier")
     public ResponseEntity<ApiResponseDTO> registerCourier(@Valid @RequestBody RegistrationDTO registrationDTO) {
-        registrationService.registerCourier(registrationDTO);
-        return ResponseEntity.ok(new ApiResponseDTO("success", "Courier registered successfully"));
+        return ResponseEntity.ok(registrationService.registerCourier(registrationDTO));
     }
 }
