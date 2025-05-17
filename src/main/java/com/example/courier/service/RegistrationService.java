@@ -14,7 +14,6 @@ import com.example.courier.validation.RegistrationValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +48,6 @@ public class RegistrationService {
             return ApiResponseType.USER_REGISTRATION_SUCCESS.apiResponseDTO();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ApiResponseDTO registerCourier(RegistrationDTO registrationDTO) {
         logger.info("Trying to register courier");
@@ -58,6 +56,7 @@ public class RegistrationService {
     }
 
     private <T extends Person> void validateAndRegister(RegistrationDTO registrationDTO, T entity) {
+        logger.info("Starting registration for email: {}", registrationDTO.email());
         // fast check if user already registered
         checkIfUserAlreadyExists(registrationDTO.email());
         // validation

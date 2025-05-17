@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +34,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ApiResponseDTO> handleValidationException(ValidationException ex) {
         logger.warn("Validation error: {}", ex.getMessage(), ex);
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponseDTO> handleAccessDeniedException(AccessDeniedException ex) {
+        logger.warn("Access denied: {}", ex.getMessage(), ex);
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponseDTO);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
     }

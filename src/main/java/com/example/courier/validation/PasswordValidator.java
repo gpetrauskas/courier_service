@@ -12,7 +12,7 @@ public class PasswordValidator {
         } if (!password.matches(".*[A-Z].*")) {
             throw new ValidationException("Password must contain at least one uppercase letter");
         } if (!password.matches(".*[a-z].*")) {
-            throw new ValidationException("Passwprd must contain at least one lowercase letter");
+            throw new ValidationException("Password must contain at least one lowercase letter");
         } if (!password.matches(".*\\d.*")) {
             throw new ValidationException("Password must contain at least one number");
         }

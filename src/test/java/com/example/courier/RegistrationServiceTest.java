@@ -1,7 +1,11 @@
 package com.example.courier;
 
+import com.example.courier.common.ApiResponseType;
+import com.example.courier.domain.Admin;
 import com.example.courier.domain.Courier;
+import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.RegistrationDTO;
 import com.example.courier.repository.CourierRepository;
 import com.example.courier.repository.PersonRepository;
@@ -10,18 +14,25 @@ import com.example.courier.service.RegistrationService;
 import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.auth.JwtService;
 import com.example.courier.service.person.PersonService;
+import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.RegistrationValidator;
 import jakarta.validation.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -33,7 +44,7 @@ public class RegistrationServiceTest {
     private AuthService authService;
     @Mock
     private PersonRepository personRepository;
-    @Mock
+    @Spy
     private RegistrationValidator registrationValidator;
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -41,10 +52,14 @@ public class RegistrationServiceTest {
     private CourierRepository courierRepository;
     @Mock
     private JwtService jwtService;
+    @Spy
+    private PasswordValidator passwordValidator;
     @Mock
     private PersonService personService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private CurrentPersonService currentPersonService;
 
     @InjectMocks
     private RegistrationService registrationService;
@@ -55,191 +70,211 @@ public class RegistrationServiceTest {
             new RegistrationDTO("Name Surname", "invalid.example.com", "goodPassword1");
     private final RegistrationDTO shortPasswordReg =
             new RegistrationDTO("Name Surname", "valid@example.com", "short");
+    private final RegistrationDTO noNumberPassword =
+            new RegistrationDTO("Name Surname", "valid@example.com", "shoaaaaadWwrt");
+    private final RegistrationDTO noUpperCasePassword =
+            new RegistrationDTO("Name Surname", "valid@example.com", "goodpassword1");
+    private final RegistrationDTO noLowerCasePassword =
+            new RegistrationDTO("Name Surname", "valid@example.com", "GOODPASSWORD1");
+    private final RegistrationDTO longPasswordReq =
+            new RegistrationDTO("Name Surname", "valid@example.com", "Gw111OODasdadPASSWORD1");
+    List<String> invalidEmails = List.of(
+            "plaintext",
+            "missing@domain",
+            "invalid@.com",
+            "@domain.com",
+            "spaces @domain.com",
+            "double..dots@domain.com",
+            "invalid@domain..com",
+            "user@com",
+            "user@.com",
+            "user@domain.c",
+            "user@domain.123",
+            "user@-domain.com"
+    );
+    private final Person tAdmin = new Admin();
 
 
-    @Test
-    @DisplayName("Successful registration saves user with encoded password")
-    void registerUser_success() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(false);
-        when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
+    @Nested
+    @DisplayName("Success cases")
+    class SuccessCases {
+        private final User mockUser = new User(validReg.name(), validReg.email(), validReg.password());
+        private final Admin admin = new Admin();
+        private final Courier mockCourier = new Courier();
 
-        User mockUser = new User(validReg.name(), validReg.email(), "encodedPassword");
-        when(personRepository.save(any(User.class))).thenReturn(mockUser);
+        @BeforeEach
+        void setupEntities() {
+            admin.setEmail("admin@example.com");
+            mockCourier.setName(validReg.name());
+            mockCourier.setEmail(validReg.email());
+            mockCourier.setPassword(validReg.password());
 
-        assertDoesNotThrow(() -> registrationService.registerUser(validReg));
+            when(personService.checkIfPersonAlreadyExistsByEmail(anyString())).thenReturn(false);
+            when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
+        }
 
-        verify(personService).checkIfPersonAlreadyExistsByEmail(validReg.email());
-        verify(passwordEncoder).encode(validReg.password());
-        verify(personRepository).save(any(User.class));
+        @Test
+        @DisplayName("User registration - should return success response")
+        void registerUser_success() {
+            when(personRepository.save(any(User.class))).thenReturn(mockUser);
+
+            ApiResponseDTO response = registrationService.registerUser(validReg);
+
+            assertThat(response)
+                    .usingRecursiveComparison()
+                    .ignoringFields("timestamp")
+                    .isEqualTo(ApiResponseType.USER_REGISTRATION_SUCCESS.apiResponseDTO());
+
+            verify(personService).checkIfPersonAlreadyExistsByEmail(validReg.email());
+            verify(passwordEncoder).encode(validReg.password());
+            verify(personRepository).save(argThat(user ->
+                    user.getEmail().equals(mockUser.getEmail()) &&
+                    user.getPassword().equals("encodedPassword")));
+        }
+
+        @Test
+        @DisplayName("Courier registration - should include admin email in API response")
+        void registerCourier_Success() {
+            when(currentPersonService.getCurrentPerson()).thenReturn(admin);
+            when(personRepository.save(any(Courier.class))).thenReturn(mockCourier);
+
+            ApiResponseDTO response = registrationService.registerCourier(validReg);
+
+            assertThat(response)
+                    .usingRecursiveComparison()
+                    .ignoringFields("timestamp")
+                    .isEqualTo(ApiResponseType.COURIER_REGISTRATION_SUCCESS.withParams(admin.getEmail()));
+
+            verify(currentPersonService).getCurrentPerson();
+            verify(personService).checkIfPersonAlreadyExistsByEmail(validReg.email());
+            verify(passwordEncoder).encode(validReg.password());
+            verify(personRepository).save(argThat(courier ->
+                    courier.getEmail().equals(mockCourier.getEmail()) &&
+                    courier.getPassword().equals("encodedPassword")));
+        }
     }
 
-    @Test
-    @DisplayName("Rejects email already exists")
-    void registerUser_rejectsEmailAlreadyExists() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(true);
+    @Nested
+    @DisplayName("Failure cases")
+    class FailureCases {
+        @Test
+        @DisplayName("Should throw when email already exists")
+        void register_rejectsEmailAlreadyExists() {
+            when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(true);
 
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> registrationService.registerUser(validReg));
+            assertThatThrownBy(() -> registrationService.registerUser(validReg))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Email %s is already registered".formatted(validReg.email()));
 
-        assertEquals("Email %s is already registered".formatted(validReg.email()), exception.getMessage());
-        verify(personService).checkIfPersonAlreadyExistsByEmail(validReg.email());
-        verify(userRepository, never()).save(any(User.class));
+            verify(personService).checkIfPersonAlreadyExistsByEmail(validReg.email());
+            verify(personRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should reject invalid email format")
+        void register_rejectsInvalidEmail() {
+            doThrow(new ValidationException("Invalid email format"))
+                    .when(registrationValidator).validateUserRegistration(invalidEmailReg);
+
+            assertThatThrownBy(() -> registrationService.registerUser(invalidEmailReg))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Invalid email format");
+
+            verify(registrationValidator).validateUserRegistration(invalidEmailReg);
+            verify(personRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should reject - password to short")
+        void register_rejectsPasswordToShort() {
+            assertThatThrownBy(() -> registrationService.registerUser(shortPasswordReg))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Password length must be between 8-16 characters");
+
+            verify(passwordValidator).validatePassword(shortPasswordReg.password());
+            verify(personRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Rejects null RegistrationDTO")
+        void register_rejectsNullDTO() {
+            assertThrows(RuntimeException.class,
+                    () -> registrationService.registerUser(null));
+
+            verifyNoInteractions(personRepository);
+        }
+
+        @Test
+        @DisplayName("Rejects partly null RegistrationDTO")
+        void register_RejectNullFields() {
+            when(personService.checkIfPersonAlreadyExistsByEmail(anyString())).thenReturn(false);
+
+            assertThrows(RuntimeException.class,
+                    () -> registrationService.registerUser(new RegistrationDTO("name", null, "password11111")));
+
+            verify(personRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Rejects - passowrd must have a number")
+        void register_rejectsMissingNumberInPassword() {
+            assertThatThrownBy(() -> registrationService.registerUser(noNumberPassword))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Password must contain at least one number");
+
+            verify(personRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Fails on concurrent registration with same email")
+        void register_rejectOnParallelRequestWithSameEmail() {
+            when(personService.checkIfPersonAlreadyExistsByEmail(any()))
+                    .thenReturn(false)
+                    .thenReturn(true);
+
+            assertDoesNotThrow(() -> registrationService.registerUser(validReg));
+
+            assertThatThrownBy(() -> registrationService.registerUser(validReg))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Email " + validReg.email() + " is already registered");
+
+            verify(personService, times(2)).checkIfPersonAlreadyExistsByEmail(validReg.email());
+            verify(personRepository, times(1)).save(any());
+        }
+
+        @Test
+        void registerUser_rejectsPasswordWithoutUpperCase() {
+            assertThatThrownBy(() -> registrationService.registerUser(noUpperCasePassword))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Password must contain at least one uppercase letter");
+        }
+
+        @Test
+        void registerUser_rejectsPasswordWithoutLowerCase() {
+            assertThatThrownBy(() -> registrationService.registerUser(noLowerCasePassword))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Password must contain at least one lowercase letter");
+        }
+
+        @Test
+        void registerUser_rejectsPasswordToLong() {
+            assertThatThrownBy(() -> registrationService.registerUser(longPasswordReq))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessage("Password length must be between 8-16 characters");
+        }
+
+        @Test
+        void registerUser_rejectsInvalidEmailFormats() {
+            invalidEmails.forEach(e -> {
+                RegistrationDTO invalidE = new RegistrationDTO("name", e, "valIdPAss123");
+
+                assertThatThrownBy(() -> registrationService.registerUser(invalidE))
+                        .isInstanceOf(ValidationException.class)
+                        .hasMessageContaining("Email is not valid");
+            });
+
+            verify(registrationValidator, times(invalidEmails.size())).validateUserRegistration(any());
+        }
+
     }
-
-    @Test
-    @DisplayName("Wraps repository errors during user registration")
-    void registerUser_wrapsRepositoryErrors() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(false);
-        when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
-        when(personRepository.save(any())).thenThrow(new RuntimeException("DB error"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-        () -> registrationService.registerUser(validReg));
-
-        assertEquals("DB error", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Creates user with correct details")
-    void registerUser_createCorrectUser() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(false);
-        when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
-
-        registrationService.registerUser(validReg);
-
-        verify(personRepository).save(argThat(user ->
-                user.getName().equals(validReg.name()) &&
-                user.getEmail().equals(validReg.email()) &&
-                user.getPassword().equals("encodedPassword")
-        ));
-    }
-
-    @Test
-    @DisplayName("Admin can register courier")
-    void registerCourier_success() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(false);
-        when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
-
-        registrationService.registerCourier(validReg);
-
-        verify(personRepository).save(any(Courier.class));
-        verify(passwordEncoder).encode(validReg.password());
-    }
-
-    @Test
-    @DisplayName("Rolls back when save fails")
-    void registerUser_rollsBackOnFailure() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(any())).thenReturn(false);
-        when(personRepository.save(any())).thenThrow(new RuntimeException("DB failure"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> registrationService.registerUser(validReg));
-
-        verify(personRepository).save(any());
-        assertEquals("DB failure", exception.getMessage());
-        verifyNoMoreInteractions(personRepository);
-    }
-
-    @Test
-    @DisplayName("Throws validation exception when email is invalid")
-    void registerUser_rejectsInvalidEmail() {
-        doThrow(new ValidationException("Invalid email"))
-                .when(registrationValidator).validateUserRegistration(invalidEmailReg);
-
-        assertThrows(ValidationException.class,
-                () -> registrationService.registerUser(invalidEmailReg));
-
-        verify(registrationValidator).validateUserRegistration(invalidEmailReg);
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Throws validation exception when password is too short")
-    void registerUser_rejectsShortPassword() {
-        doThrow(new ValidationException("Password too short"))
-                .when(registrationValidator).validateUserRegistration(shortPasswordReg);
-
-        assertThrows(ValidationException.class,
-                () -> registrationService.registerUser(shortPasswordReg));
-
-        verify(registrationValidator).validateUserRegistration(shortPasswordReg);
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Courier registration fails if email exists")
-    void registerCourier_rejectsEmailAlreadyExists() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(true);
-
-        assertThrows(ValidationException.class,
-                () -> registrationService.registerCourier(validReg));
-
-        verify(courierRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Courier registration fails email invalid")
-    void registerUser_failsIfEmailInvalid() {
-        doThrow(new ValidationException("Invalid email"))
-                .when(registrationValidator).validateUserRegistration(invalidEmailReg);
-
-        assertThrows(ValidationException.class,
-                () -> registrationService.registerCourier(invalidEmailReg));
-    }
-
-    @Test
-    @DisplayName("Courier registration wraps repository errors")
-    void registerCourier_wrapsRepositoryErrors() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email())).thenReturn(false);
-        when(passwordEncoder.encode(validReg.password())).thenReturn("encodedPassword");
-        when(personRepository.save(any())).thenThrow(new RuntimeException("DB error"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> registrationService.registerCourier(validReg));
-
-        assertTrue(exception.getMessage().contains("DB error"));
-    }
-
-    @Test
-    @DisplayName("Rejects null RegistrationDTO")
-    void registerUser_rejectsNullDTO() {
-        assertThrows(RuntimeException.class,
-                () -> registrationService.registerUser(null));
-    }
-
-    @Test
-    @DisplayName("Rejects registrationDTO with null fields")
-    void registerUser_rejectsNullFields() {
-        RegistrationDTO dto = new RegistrationDTO("name", null, "passwordNotnull123");
-
-        doThrow(new ValidationException("Fields cannot be null"))
-                .when(registrationValidator).validateUserRegistration(dto);
-
-        assertThrows(ValidationException.class,
-                () -> registrationService.registerUser(dto));
-
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Fails when concurrent registration with same email")
-    void registerUser_failsOnConcurrentDuplicateEmail() {
-        when(personService.checkIfPersonAlreadyExistsByEmail(validReg.email()))
-                .thenReturn(false)
-                .thenReturn(true);
-
-        assertDoesNotThrow(() -> registrationService.registerUser(validReg));
-
-        assertThrows(ValidationException.class, () -> registrationService.registerUser(validReg));
-    }
-
-    @Test
-    @DisplayName("Rejects passowrd without numbers")
-    void registerUser_rejectsPasswordWithoutNumbers() {
-        doThrow(new ValidationException("Password must contain numbers"))
-                .when(registrationValidator).validateUserRegistration(validReg);
-
-        assertThrows(ValidationException.class, () -> registrationService.registerUser(validReg));
-    }
-
 }
