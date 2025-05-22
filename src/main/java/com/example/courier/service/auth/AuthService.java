@@ -72,29 +72,6 @@ public class AuthService {
         response.addCookie(cookie);
     }
 
-    /*
-    public void logoutUser(HttpServletResponse response) {
-        try {
-            invalidateCookie(response, "jwt", true);
-            invalidateCookie(response, "authToken", false);
-            Map<String, String> logoutResponse = new HashMap<>();
-            logoutResponse.put("message", "Logout successful");
-        } catch (Exception e) {
-            throw new RuntimeException("Logout failed", e);
-        }
-    }
-
-    private void invalidateCookie(HttpServletResponse response, String cookieName, boolean httpOnly) {
-        Cookie cookie = new Cookie(cookieName, "");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(httpOnly);
-        cookie.setAttribute("SameSite", "Strict");
-        response.addCookie(cookie);
-    }
-
-     */
-
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
