@@ -22,7 +22,6 @@ import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import com.example.courier.validation.DeliveryOptionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,25 +41,26 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
-    @Autowired
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    @Autowired
-    private AddressService addressService;
-    @Autowired
-    private PaymentService paymentService;
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private DeliveryMethodService deliveryMethodService;
+    private final AddressService addressService;
+    private final PaymentService paymentService;
+    private final AuthService authService;
+    private final DeliveryMethodService deliveryMethodService;
     private final OrderUpdateValidator orderUpdateValidator;
     private final DeliveryOptionValidator deliveryOptionValidator;
 
-    public OrderServiceImpl(OrderMapper orderMapper, OrderUpdateValidator orderUpdateValidator,
-                            DeliveryOptionValidator deliveryOptionValidator) {
+    public OrderServiceImpl(OrderMapper orderMapper, OrderRepository orderRepository, OrderUpdateValidator orderUpdateValidator,
+                            DeliveryOptionValidator deliveryOptionValidator, AddressService addressService,
+                            PaymentService paymentService, AuthService authService, DeliveryMethodService deliveryMethodService) {
         this.orderMapper = orderMapper;
+        this.orderRepository = orderRepository;
         this.orderUpdateValidator = orderUpdateValidator;
         this.deliveryOptionValidator = deliveryOptionValidator;
+        this.addressService = addressService;
+        this.authService = authService;
+        this.paymentService = paymentService;
+        this.deliveryMethodService = deliveryMethodService;
     }
 
     @Transactional
