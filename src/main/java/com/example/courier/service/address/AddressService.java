@@ -2,16 +2,19 @@ package com.example.courier.service.address;
 
 import com.example.courier.domain.Address;
 import com.example.courier.domain.OrderAddress;
+import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.dto.request.order.AddressSectionUpdateRequest;
 import com.example.courier.exception.AddressNotFoundException;
+import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.repository.OrderAddressRepository;
 import com.example.courier.service.auth.AuthService;
+import com.example.courier.service.security.CurrentPersonService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,37 +38,41 @@ public class AddressService {
     private AuthService authService;
     @Autowired
     private OrderAddressRepository orderAddressRepository;
+    @Autowired
+    private CurrentPersonService currentPersonService;
 
     @Transactional
     public void addressSectionUpdate(AddressSectionUpdateRequest updateRequest) {
-        OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
-        addressMapper.updateAddressSectionFromRequest(updateRequest, orderAddress);
-        orderAddressRepository.save(orderAddress);
+        if (currentPersonService.isAdmin()) {
+            OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
+            addressMapper.updateAddressSectionFromRequest(updateRequest, orderAddress);
+            orderAddressRepository.save(orderAddress);
+        } else {
+            throw new UnauthorizedAccessException("No access.");
+        }
     }
 
     @Transactional(readOnly = true)
-    public List<AddressDTO> getAllMyAddresses(String email) {
+    public List<AddressDTO> getAllMyAddresses() {
         try {
-            Long userId = authService.getUserIdByEmail(email);
+            Long userId = currentPersonService.getCurrentPersonId();
             List<Address> addresses = getAddressesByUserId(userId);
 
             return addresses.stream()
                     .map(addressMapper::toAddressDTO)
                     .toList();
         } catch (EntityNotFoundException e) {
-            logger.error("User wth email {} not found", email);
+            logger.error("User not found");
             throw new UserNotFoundException("User not found");
         } catch (Exception e) {
-            logger.error("Error fetching addresses for user with email {}", email, e);
+            logger.error("Error fetching addresses for user", e);
             throw new RuntimeException("Error fetching addresses", e);
         }
     }
 
     @Transactional
-    public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO, Principal principal) {
-        validateAddressUser(addressId, principal.getName());
-
-        Address address = getAddressById(addressId);
+    public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
+        Address address = validateAddressPerson(addressId);
         addressMapper.updateAddressFromDTO(addressDTO, address);
         saveAddress(address);
 
@@ -75,9 +82,8 @@ public class AddressService {
     }
 
     @Transactional
-    public void deleteAddressById(Long addressId, Principal principal) {
-        validateAddressUser(addressId, principal.getName());
-        addressRepository.deleteById(addressId);
+    public void deleteAddressById(Long addressId) {
+        addressRepository.delete(validateAddressPerson(addressId));
         logger.info("Deleted address with id: {}", addressId);
     }
 
@@ -89,8 +95,8 @@ public class AddressService {
         try {
             if (addressDTO.id() != null) {
                 logger.info("Address found with id {}", addressDTO.id());
-                validateAddressUser(addressDTO.id(), user.getEmail());
-                address = getAddressById(addressDTO.id());
+                address = addressRepository.findByIdAndUserId(addressDTO.id(), user.getId())
+                                .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
 
                 if (address.getName() == null || !address.getName().equals(addressDTO.name())) {
                     address.setName(addressDTO.name());
@@ -111,14 +117,15 @@ public class AddressService {
         }
     }
 
-    public void validateAddressUser(Long addressId, String userEmail) {
-        User user = authService.getUserByEmail(userEmail);
+    public Address validateAddressPerson(Long addressId) {
+        Long personId = currentPersonService.getCurrentPersonId();
         Address address = getAddressById(addressId);
 
-        if (!address.getUser().getId().equals(user.getId())) {
-            logger.error("Address id {} does nto match to the user with email {}", addressId, userEmail);
+        if (!address.getUser().getId().equals(personId)) {
+            logger.error("Address id {} does nto match to the user with email {}", addressId, personId);
             throw new UserAddressMismatchException("Address does not belong to the user.");
         }
+        return address;
     }
 
     @Transactional

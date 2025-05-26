@@ -134,7 +134,7 @@ public class DeliveryMethodService {
     public String getDescriptionById(String id) {
         return deliveryOptionRepository.findById(Long.parseLong(id))
                 .map(DeliveryMethod::getDescription)
-                .orElseThrow(() -> new RuntimeException("Delivery option not found."));
+                .orElseThrow(() -> new DeliveryOptionNotFoundException("Delivery option not found."));
     }
 
     @Cacheable("deliveryMethod")

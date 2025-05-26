@@ -27,8 +27,8 @@ public class AddressController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/myAddressList")
-    public ResponseEntity<List<AddressDTO>> getMyAddressList(Principal principal) {
-        List<AddressDTO> myList = addressService.getAllMyAddresses(principal.getName());
+    public ResponseEntity<List<AddressDTO>> getMyAddressList() {
+        List<AddressDTO> myList = addressService.getAllMyAddresses();
 
         return ResponseEntity.ok(myList);
     }
@@ -37,7 +37,7 @@ public class AddressController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressDTO addressDTO, Principal principal) {
         try {
-            AddressDTO updatedAddress = addressService.updateAddress(id, addressDTO, principal);
+            AddressDTO updatedAddress = addressService.updateAddress(id, addressDTO);
 
             return ResponseEntity.ok(updatedAddress);
         } catch (AddressNotFoundException e) {
@@ -54,9 +54,9 @@ public class AddressController {
 
     @DeleteMapping("/remove/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> removeAddress(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<String> removeAddress(@PathVariable Long id) {
         try {
-            addressService.deleteAddressById(id, principal);
+            addressService.deleteAddressById(id);
 
             return ResponseEntity.ok().body("Address was successfully deleted.");
         } catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {

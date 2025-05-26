@@ -17,9 +17,11 @@ import com.example.courier.service.address.AddressService;
 import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.payment.PaymentService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.specification.order.OrderSpecificationBuilder;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import com.example.courier.validation.DeliveryOptionValidator;
+import com.example.courier.validation.order.OrderCreationValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -49,10 +51,13 @@ public class OrderServiceImpl implements OrderService {
     private final DeliveryMethodService deliveryMethodService;
     private final OrderUpdateValidator orderUpdateValidator;
     private final DeliveryOptionValidator deliveryOptionValidator;
+    private final OrderCreationValidator orderCreationValidator;
+    private final CurrentPersonService currentPersonService;
 
     public OrderServiceImpl(OrderMapper orderMapper, OrderRepository orderRepository, OrderUpdateValidator orderUpdateValidator,
                             DeliveryOptionValidator deliveryOptionValidator, AddressService addressService,
-                            PaymentService paymentService, AuthService authService, DeliveryMethodService deliveryMethodService) {
+                            PaymentService paymentService, AuthService authService, DeliveryMethodService deliveryMethodService,
+                            OrderCreationValidator orderCreationValidator, CurrentPersonService currentPersonService) {
         this.orderMapper = orderMapper;
         this.orderRepository = orderRepository;
         this.orderUpdateValidator = orderUpdateValidator;
@@ -61,6 +66,8 @@ public class OrderServiceImpl implements OrderService {
         this.authService = authService;
         this.paymentService = paymentService;
         this.deliveryMethodService = deliveryMethodService;
+        this.orderCreationValidator = orderCreationValidator;
+        this.currentPersonService = currentPersonService;
     }
 
     @Transactional
@@ -123,7 +130,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public Long placeOrder(Long userId, OrderDTO orderDTO) {
-        User user = authService.getUserById(userId);
+        log.info("validating dto");
+        orderCreationValidator.validate(orderDTO);
+        log.info("validated dto");
+
+        Person person = currentPersonService.getCurrentPerson();
+        if (!(person instanceof User user)) {
+            throw new UnauthorizedAccessException("Not allowed to place orders");
+        }
 
         OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
         OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);
@@ -238,8 +252,8 @@ public class OrderServiceImpl implements OrderService {
 
         return allOrdersDTO;
     }
-    
+
     public List<Order> fetchAllByParcelDetails(List<Parcel> parcels) {
         return orderRepository.findAllByParcelDetails(parcels);
     }
-}
+    }
