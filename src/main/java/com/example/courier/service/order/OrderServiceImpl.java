@@ -125,9 +125,6 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toAdminOrderDTO(order, paymentMao.get(id));
     }
 
-
-
-
     @Transactional
     public Long placeOrder(Long userId, OrderDTO orderDTO) {
         log.info("validating dto");
@@ -163,21 +160,21 @@ public class OrderServiceImpl implements OrderService {
         order.setUser(user);
         order.setSenderAddress(senderAddress);
         order.setRecipientAddress(recipientAddress);
-        order.setDeliveryMethod(getDeliveryOptionDescription(orderDTO.deliveryMethod()));
+        order.setDeliveryMethod(getDeliveryOptionDescription(Long.parseLong(orderDTO.deliveryMethod())));
         order.setStatus(OrderStatus.PENDING);
         order.setCreateDate(LocalDateTime.now().withNano(0));
 
         return order;
     }
 
-    private String getDeliveryOptionDescription(String id) {
+    private String getDeliveryOptionDescription(Long id) {
         return deliveryMethodService.getDescriptionById(id);
     }
 
     private Parcel createParcelFromDTO(ParcelDTO parcelDTO) {
         Parcel parcelDetails = new Parcel();
-        parcelDetails.setWeight(getDeliveryOptionDescription(parcelDTO.weight()));
-        parcelDetails.setDimensions(getDeliveryOptionDescription(parcelDTO.dimensions()));
+        parcelDetails.setWeight(getDeliveryOptionDescription(Long.parseLong(parcelDTO.weight())));
+        parcelDetails.setDimensions(getDeliveryOptionDescription(Long.parseLong(parcelDTO.dimensions())));
         parcelDetails.setContents(parcelDTO.contents());
         parcelDetails.setTrackingNumber(UUID.randomUUID().toString());
         parcelDetails.setStatus(ParcelStatus.WAITING_FOR_PAYMENT);
@@ -194,20 +191,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void cancelOrder(Long orderId, Principal principal) {
-        Order order = findOrderById(orderId);
+    public void cancelOrder(Long orderId) {
+        Order order = findOrderByIdAndUserId(orderId, currentPersonService.getCurrentPersonId());
         Payment payment = paymentService.getPaymentByOrderId(order.getId());
 
-        checkIfOrderValidToCancel(order, principal);
+        checkIfOrderValidToCancel(order);
         handleOrderCancel(order, payment);
 
         paymentService.savePayment(payment);
     }
 
-    public OrderDTO findUserOrderDTOById(Long orderId, Principal principal) {
-        Order order = findOrderById(orderId);
-        checkIfOrderBelongsToUser(order, principal);
+    public OrderDTO findUserOrderDTOById(Long orderId) {
+        Order order = findOrderByIdAndUserId(orderId, currentPersonService.getCurrentPersonId());
         return orderMapper.toOrderDTO(order);
+    }
+
+    private Order findOrderByIdAndUserId(Long orderId, Long userId) {
+        return orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found or not owned by the user."));
     }
 
     private void handleOrderCancel(Order order, Payment payment) {
@@ -222,9 +223,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void checkIfOrderValidToCancel(Order order, Principal principal) {
-        checkIfOrderBelongsToUser(order, principal);
-
+    private void checkIfOrderValidToCancel(Order order) {
         if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
             throw new OrderCancellationException("Order already confirmed and paid for. " +
                     "Contact support for more information how to abort it.");

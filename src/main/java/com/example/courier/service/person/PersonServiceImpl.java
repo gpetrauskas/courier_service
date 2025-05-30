@@ -85,7 +85,7 @@ public class PersonServiceImpl implements PersonService {
 
         if (dto.defaultAddressId().isPresent()) {
             Long addressId = dto.defaultAddressId().get();
-            addressService.validateAddressUser(addressId, user.getEmail());
+            addressService.validateAddressPerson(addressId);
             user.setDefaultAddress(addressService.getAddressById(addressId));
         }
 

@@ -114,4 +114,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
     }
 
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<ApiResponseDTO> handleNumberFormatException(NumberFormatException ex) {
+        logger.error("Number format error");
+        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+    }
+
 }

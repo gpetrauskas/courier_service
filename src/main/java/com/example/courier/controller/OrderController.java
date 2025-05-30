@@ -126,7 +126,7 @@ public class OrderController {
     @GetMapping("/getUserOrderById/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long orderId, Principal principal) {
-        OrderDTO orderDTO = orderService.findUserOrderDTOById(orderId, principal);
+        OrderDTO orderDTO = orderService.findUserOrderDTOById(orderId);
         return ResponseEntity.ok(orderDTO);
     }
 
@@ -178,7 +178,7 @@ public class OrderController {
                     "Contact support for more information how to abort it.");
         }
 
-        orderService.cancelOrder(orderId, principal);
+        orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
 

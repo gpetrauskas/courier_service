@@ -16,9 +16,9 @@ import java.util.List;
 public interface OrderService {
     Long placeOrder(Long id, OrderDTO orderDTO);
     List<OrderDTO> findUserOrders(User user);
-    void cancelOrder(Long orderId, Principal principal);
+    void cancelOrder(Long orderId);
     Order findOrderById(Long orderId);
-    OrderDTO findUserOrderDTOById(Long orderId, Principal principal);
+    OrderDTO findUserOrderDTOById(Long orderId);
     List<OrderDTO> findAllOrders();
     void orderSectionUpdate(OrderSectionUpdateRequest updateRequest);
     Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id);

@@ -15,6 +15,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     List<Order> findByUserId(Long userId);
     Order findByParcelDetails_TrackingNumber(String trackingNumber);
     Optional<Order> findByParcelDetails(Parcel parcel);
+    Optional<Order> findByIdAndUserId(Long orderId, Long userId);
 
     @Query("SELECT o FROM Order o JOIN o.parcelDetails p WHERE p.status = :status")
     List<Order> findByParcelStatus(@Param("status") ParcelStatus status);

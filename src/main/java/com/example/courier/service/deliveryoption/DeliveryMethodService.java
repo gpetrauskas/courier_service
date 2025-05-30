@@ -131,8 +131,8 @@ public class DeliveryMethodService {
                 new DeliveryOptionNotFoundException("Delivery option was not found with id " + id));
     }
 
-    public String getDescriptionById(String id) {
-        return deliveryOptionRepository.findById(Long.parseLong(id))
+    public String getDescriptionById(Long id) {
+        return deliveryOptionRepository.findById(id)
                 .map(DeliveryMethod::getDescription)
                 .orElseThrow(() -> new DeliveryOptionNotFoundException("Delivery option not found."));
     }

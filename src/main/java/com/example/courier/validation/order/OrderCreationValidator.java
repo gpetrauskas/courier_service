@@ -1,6 +1,5 @@
 package com.example.courier.validation.order;
 
-import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.OrderDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +21,13 @@ public class OrderCreationValidator {
         }
         if (orderDTO.recipientAddress() == null) {
             throw new IllegalArgumentException("Recipient address cannot be null");
+        }
+        if (orderDTO.deliveryMethod() == null) {
+            throw new IllegalArgumentException("Delivery method cannot be null");
+        }
+
+        if (orderDTO.parcelDetails() == null) {
+            throw new IllegalArgumentException("Parcel details cannot be null");
         }
 
     }
