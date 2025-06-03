@@ -164,7 +164,7 @@ public class OrderServiceTest {
 
 
         @Test
-        @DisplayName("placeOrder - should correct initial order status")
+        @DisplayName("placeOrder - set correct initial order status, should pass")
         void placeOrder_shouldSetInitialOrderStatus() {
             when(orderMapper.toOrder(any())).thenReturn(testOrder);
             when(addressService.fetchOrCreateOrderAddress(any(), any())).thenReturn(new OrderAddress());
