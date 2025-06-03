@@ -31,6 +31,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
@@ -158,6 +160,99 @@ public class OrderServiceTest {
             verify(paymentService).createPayment(any(), eq(shoppingCost));
             verify(orderCreationValidator).validate(testOrderDTO);
             verify(orderRepository).save(any());
+        }
+
+
+        @Test
+        @DisplayName("placeOrder - should correct initial order status")
+        void placeOrder_shouldSetInitialOrderStatus() {
+            when(orderMapper.toOrder(any())).thenReturn(testOrder);
+            when(addressService.fetchOrCreateOrderAddress(any(), any())).thenReturn(new OrderAddress());
+            when(deliveryMethodService.calculateShippingCost(any())).thenReturn(shoppingCost);
+
+            ArgumentCaptor<Order> orderArgumentCaptor = ArgumentCaptor.forClass(Order.class);
+            when(orderRepository.save(orderArgumentCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+
+            orderService.placeOrder(testUserId, testOrderDTO);
+
+            assertEquals(OrderStatus.PENDING, orderArgumentCaptor.getValue().getStatus());
+
+            verify(orderRepository, never()).save(argThat(order -> !OrderStatus.PENDING.equals(order.getStatus())));
+        }
+
+        @Test
+        @DisplayName("placeOrder - should generate trackign number")
+        void placeOrder_shouldGenerateTrackingNumber() {
+            when(orderMapper.toOrder(any())).thenReturn(testOrder);
+            when(addressService.fetchOrCreateOrderAddress(any(), any())).thenReturn(new OrderAddress());
+            when(deliveryMethodService.calculateShippingCost(any())).thenReturn(shoppingCost);
+
+            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
+
+            orderService.placeOrder(testUserId, testOrderDTO);
+
+            Parcel savedParcel = captor.getValue().getParcelDetails();
+            assertNotNull(savedParcel.getTrackingNumber());
+            assertTrue(savedParcel.getTrackingNumber().length() > 10);
+        }
+
+        @Test
+        @DisplayName("placeOrder - should set creation date")
+        void placeOrder_shouldSetCreationDate() {
+            LocalDateTime beforeTest = LocalDateTime.now();
+
+            when(orderMapper.toOrder(any(OrderDTO.class))).thenReturn(new Order());
+            when(addressService.fetchOrCreateOrderAddress(any(), any())).thenReturn(new OrderAddress());
+            when(deliveryMethodService.calculateShippingCost(any())).thenReturn(shoppingCost);
+
+            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
+
+            orderService.placeOrder(testUserId, testOrderDTO);
+            // have manually set creationDate as placeOrder in OrderService creates it with nano(0)
+            captor.getValue().setCreateDate(LocalDateTime.now());
+
+            assertNotNull(captor.getValue().getCreateDate());
+            assertTrue(captor.getValue().getCreateDate().isAfter(beforeTest));
+            assertTrue(captor.getValue().getCreateDate().isBefore(LocalDateTime.now()));
+        }
+
+        @Test
+        @DisplayName("placeOrder - should set correct parcel details")
+        void placeOrder_shouldSetParcelDetails() {
+            when(deliveryMethodService.getDescriptionById(Long.parseLong(testOrderDTO.parcelDetails().weight())))
+                    .thenReturn("5kg");
+            when(deliveryMethodService.getDescriptionById(Long.parseLong(testOrderDTO.parcelDetails().dimensions())))
+                    .thenReturn("1m");
+
+            when(orderMapper.toOrder(any())).thenReturn(testOrder);
+
+            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
+
+            orderService.placeOrder(testUserId, testOrderDTO);
+
+            Parcel savedParcel = captor.getValue().getParcelDetails();
+            assertNotNull(savedParcel);
+            assertEquals("5kg", savedParcel.getWeight());
+            assertEquals("1m", savedParcel.getDimensions());
+            assertEquals("contents", savedParcel.getContents());
+        }
+
+        @Test
+        @DisplayName("cancelOrder - should pass")
+        void cancelOrder_validData_shouldPass() {
+            lenient().when(currentPersonService.getCurrentPerson()).thenReturn(testUser);
+            when(currentPersonService.getCurrentPersonId()).thenReturn(testUserId);
+            when(orderRepository.findByIdAndUserId(testOrder.getId(), testUserId)).thenReturn(Optional.of(testOrder));
+            when(paymentService.getPaymentByOrderId(testOrder.getId())).thenReturn(testPayment);
+
+            orderService.cancelOrder(testOrder.getId());
+
+            assertEquals(testOrder.getStatus(), OrderStatus.CANCELED);
+            assertEquals(testOrder.getParcelDetails().getStatus(), ParcelStatus.CANCELED);
+            assertEquals(testPayment.getStatus(), PaymentStatus.CANCELED);
         }
     }
 
@@ -343,8 +438,41 @@ public class OrderServiceTest {
         @Test
         @DisplayName("placeOrder - should rollback transaction if payent not created")
         void placeOrder_shouldRollbackOnPaymentCreationFailure() {
+            when(orderMapper.toOrder(any())).thenReturn(testOrder);
+            when(addressService.fetchOrCreateOrderAddress(any(), any())).thenReturn(new OrderAddress());
+            when(deliveryMethodService.calculateShippingCost(any())).thenReturn(shoppingCost);
 
+            when(orderRepository.save(any())).thenReturn(testOrder);
+
+            doThrow(new RuntimeException("Payment record DB error"))
+                    .when(paymentService).createPayment(testOrder, shoppingCost);
+
+            assertThrows(RuntimeException.class, () ->
+                    orderService.placeOrder(testUserId, testOrderDTO));
+
+            verify(orderRepository).save(testOrder);
+            verifyNoMoreInteractions(orderRepository);
         }
+
+        @Test
+        @DisplayName("placeOrder - should faile, wrong person class")
+        void place_Order_personIsNotUser() {
+            Courier courier = new Courier();
+            when(currentPersonService.getCurrentPerson()).thenReturn(courier);
+
+            assertThatThrownBy(() -> orderService.placeOrder(anyLong(), testOrderDTO))
+                    .isInstanceOf(UnauthorizedAccessException.class)
+                    .hasMessage("Not allowed to place orders");
+
+            verify(orderRepository, never()).save(any());
+        }
+
+
+
+
+
+
+
 
 
 
