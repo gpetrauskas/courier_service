@@ -217,12 +217,6 @@ public class OrderServiceImpl implements OrderService {
         payment.setStatus(PaymentStatus.CANCELED);
     }
 
-    private void checkIfOrderBelongsToUser(Order order, Principal principal) {
-        if (!order.getUser().getEmail().equals(principal.getName())) {
-            throw new UnauthorizedAccessException("You are not authorized to cancel this order.");
-        }
-    }
-
     private void checkIfOrderValidToCancel(Order order) {
         if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
             throw new OrderCancellationException("Order already confirmed and paid for. " +

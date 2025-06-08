@@ -117,13 +117,17 @@ public class PaymentService {
     }
 
     public void createPayment(Order order, BigDecimal amount) {
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(amount);
-        payment.setStatus(PaymentStatus.NOT_PAID);
+        try {
+            Payment payment = new Payment();
+            payment.setOrder(order);
+            payment.setAmount(amount);
+            payment.setStatus(PaymentStatus.NOT_PAID);
 
-        savePayment(payment);
-        log.info("Payment id {} created for order with id {}", payment.getId(), order.getId());
+            savePayment(payment);
+            log.info("Payment id {} created for order with id {}", payment.getId(), order.getId());
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Payment creation failure: " + e.getMessage());
+        }
     }
 
     @Transactional
