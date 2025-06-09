@@ -29,6 +29,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,6 +73,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public void orderSectionUpdate(OrderSectionUpdateRequest updateRequest) {
+        if (!currentPersonService.isAdmin()) {
+            throw new AccessDeniedException("Only ADMIN can update Order section");
+        }
+
         Order order = findOrderById(updateRequest.id());
 
         deliveryOptionValidator.validateDeliveryPrefForOrderStatusUpdate(updateRequest, order);
