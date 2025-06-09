@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +78,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = findOrderById(updateRequest.id());
 
-        deliveryOptionValidator.validateDeliveryPrefForOrderStatusUpdate(updateRequest, order);
-        orderUpdateValidator.validateOrderSectionUpdate(updateRequest, order);
+        deliveryOptionValidator.validateDeliveryPrefMethodUpdate(updateRequest, order);
+        orderUpdateValidator.validateOrderSectionStatusUpdate(updateRequest, order);
 
         orderMapper.updateOrderSectionFromRequest(updateRequest, order);
         orderRepository.save(order);

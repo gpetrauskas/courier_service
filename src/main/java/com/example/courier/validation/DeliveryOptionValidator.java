@@ -18,7 +18,7 @@ public class DeliveryOptionValidator {
     public DeliveryOptionValidator() {
     }
 
-    public void validateDeliveryPrefForOrderStatusUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {
+    public void validateDeliveryPrefMethodUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {
         String newPreference = updateRequest.deliveryPreferences();
         String currentPreference = existingOrder.getDeliveryMethod();
 

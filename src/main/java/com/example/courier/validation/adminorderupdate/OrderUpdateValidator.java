@@ -14,7 +14,7 @@ public class OrderUpdateValidator {
         this.deliveryMethodService = deliveryMethodService;
     }
 
-    public void validateOrderSectionUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {
+    public void validateOrderSectionStatusUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {
         validateOrderStatus(updateRequest.status(), existingOrder.getStatus().toString());
     }
 
