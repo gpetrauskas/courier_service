@@ -87,9 +87,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id) {
+        if (!currentPersonService.isAdmin()) {
+            throw new AccessDeniedException("Admin access only");
+        }
+
+        page = Math.max(page, 0);
+        size = size <= 0 ? 10 : Math.min(size, 100);
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate"));
         Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecification(orderStatus, id);
         log.info("test status {}", orderStatus);
+
         Page<Order> orderPage = orderRepository.findAll(specification, pageable);
         if (orderPage.isEmpty()) {
             return Page.empty();
@@ -102,10 +110,13 @@ public class OrderServiceImpl implements OrderService {
         Map<Long, Payment> paymentMap = paymentService.getPaymentsForOrders(orderIds);
 
         return orderPage.map(order -> {
-            Payment payment = paymentMap.get(order.getId());
-            return orderMapper.toAdminOrderResponseDTO(order, payment);
+            try {
+                Payment payment = paymentMap.get(order.getId());
+                return orderMapper.toAdminOrderResponseDTO(order, payment);
+            } catch (Exception e) {
+                throw new RuntimeException("Error while creating adminOrderDto");
+            }
         });
-
     }
 
     public PaginatedResponseDTO<OrderDTO> fetchAllTaskOrdersByTaskType(int page, int size, String taskType) {
