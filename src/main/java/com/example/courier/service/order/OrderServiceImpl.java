@@ -120,6 +120,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public PaginatedResponseDTO<OrderDTO> fetchAllTaskOrdersByTaskType(int page, int size, String taskType) {
+        if (!currentPersonService.isAdmin()) {
+            throw new AccessDeniedException("Admin access only");
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createDate"));
         Specification<Order> specification = OrderSpecificationBuilder.buildOrderSpecificationByTaskType(taskType);
 
