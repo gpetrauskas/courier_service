@@ -77,7 +77,7 @@ public class OrderController {
     @GetMapping("/taskOrdersByTaskType")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedResponseDTO<OrderDTO>> getAllOrdersByTaskType(
-            @RequestParam (defaultValue = "10") int page,
+            @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam String taskType
     ) {
