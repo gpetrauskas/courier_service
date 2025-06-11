@@ -42,20 +42,18 @@ public class PersonServiceImpl implements PersonService {
     private final BanHistoryRepository banHistoryRepository;
     private final BanHistoryMapper banHistoryMapper;
     private final PhoneValidator phoneValidator;
-    private final AddressService addressService;
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
                              BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
-                             PhoneValidator phoneValidator, AddressService addressService,
-                             PasswordValidator passwordValidator, PasswordEncoder passwordEncoder) {
+                             PhoneValidator phoneValidator, PasswordValidator passwordValidator,
+                             PasswordEncoder passwordEncoder) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
         this.banHistoryMapper = banHistoryMapper;
         this.phoneValidator = phoneValidator;
-        this.addressService = addressService;
         this.passwordValidator = passwordValidator;
         this.passwordEncoder = passwordEncoder;
     }
@@ -78,16 +76,12 @@ public class PersonServiceImpl implements PersonService {
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
         User user = fetchPersonByIdAndType(AuthUtils.getAuthenticatedPersonId(), User.class);
 
-        dto.phoneNumber().map(phoneValidator::validate).ifPresent(validated -> {
-            logger.info("Setting phone number to: {}", validated);
-            user.setPhoneNumber(validated);
-        });
+        dto.phoneNumber().map(phoneValidator::validate).ifPresent(user::setPhoneNumber);
 
-        if (dto.defaultAddressId().isPresent()) {
-            Long addressId = dto.defaultAddressId().get();
-            addressService.validateAddressPerson(addressId);
-            user.setDefaultAddress(addressService.getAddressById(addressId));
-        }
+        dto.defaultAddressId().flatMap(defaultId -> user.getAddresses().stream()
+                .filter(a -> a.getId().equals(defaultId))
+                .findFirst())
+                .ifPresent(user::setDefaultAddress);
 
         dto.subscribed().ifPresent(user::setSubscribed);
 
