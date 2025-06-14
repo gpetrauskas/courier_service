@@ -103,9 +103,7 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserOrders(@RequestParam("page") int page, @RequestParam("size") int size) {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = authService.getUserByEmail(auth.getName());
-            List<OrderDTO> orders = orderService.findUserOrders(user);
+            List<OrderDTO> orders = orderService.findUserOrders();
 
             int start = (page) * size;
             int end = Math.min(start + size, orders.size());

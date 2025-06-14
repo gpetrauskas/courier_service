@@ -202,7 +202,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-    public List<OrderDTO> findUserOrders(User user) {
+    public List<OrderDTO> findUserOrders() {
+        Person person = currentPersonService.getCurrentPerson();
+        if (!(person instanceof User user)) {
+            throw new AccessDeniedException("Only users can access their orders");
+        }
         List<Order> orders = user.getOrders();
         return orders.stream()
                 .map(orderMapper::toOrderDTO)

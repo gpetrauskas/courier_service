@@ -26,7 +26,6 @@ public class ParcelService {
 
     public void parcelSectionUpdate(ParcelSectionUpdateRequest updateRequest) {
         Parcel parcel = fetchById(updateRequest.id());
-        ParcelStatus.validateStatus(updateRequest.status());
         parcelMapper.updateParcelSectionFromRequest(updateRequest, parcel);
         parcelRepository.save(parcel);
     }

@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface OrderService {
     Long placeOrder(Long id, OrderDTO orderDTO);
-    List<OrderDTO> findUserOrders(User user);
+    List<OrderDTO> findUserOrders();
     void cancelOrder(Long orderId);
     Order findOrderById(Long orderId);
     OrderDTO findUserOrderDTOById(Long orderId);

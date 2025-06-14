@@ -8,7 +8,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class OrderSpecification {
     public static Specification<Order> hasParcelStatus(String parcelStatus) {
-
+        if (parcelStatus == null || parcelStatus.isBlank()) {
+            throw new IllegalArgumentException("Status cannot be null or blank");
+        }
         ParcelStatus.validateStatus(parcelStatus);
         return ((root, query, criteriaBuilder) -> {
             Join<Object, Object> parcelJoin = root.join("parcelDetails");
