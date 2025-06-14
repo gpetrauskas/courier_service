@@ -110,5 +110,13 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
 
             verify(orderRepository, never()).findAll(any(Specification.class), any(Pageable.class));
         }
+
+        @Test
+        @DisplayName("status null")
+        void fetchAll_statusNull() {
+            assertThatThrownBy(() -> orderService.fetchAllTaskOrdersByTaskType(0, 10, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Status cannot be null or blank");
+        }
     }
 }
