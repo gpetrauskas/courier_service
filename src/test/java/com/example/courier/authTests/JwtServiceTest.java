@@ -1,4 +1,4 @@
-package com.example.courier.authServiceTest;
+package com.example.courier.authTests;
 
 import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.service.auth.JwtService;
