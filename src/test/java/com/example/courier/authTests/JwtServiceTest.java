@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,11 +74,8 @@ public class JwtServiceTest {
 
         @Test
         @DisplayName("expired jwt")
-        void validateToken_expired() throws NoSuchFieldException, IllegalAccessException {
-            Field field = jwtService.getClass().getDeclaredField("secretKey");
-            field.setAccessible(true);
-
-            SecretKey secretKey = (SecretKey) field.get(jwtService);
+        void validateToken_expired() throws Exception {
+            SecretKey secretKey = getSecretKey();
 
             Instant expired = Instant.now().minus(1, ChronoUnit.HOURS);
 
@@ -97,6 +95,58 @@ public class JwtServiceTest {
             assertEquals("JWT expired", exception.getMessage());
             assertInstanceOf(ExpiredJwtException.class, exception.getCause());
         }
-    }
 
+        @Test
+        @DisplayName("jwt is null")
+        void validateToken_null() {
+            assertThrows(RuntimeException.class, () ->
+                    jwtService.validateToken(null));
+        }
+
+        @Test
+        @DisplayName("tampered token payload should be rejected")
+        void validateToken_rejectsTamperedPayload() {
+            String token = jwtService.createToken(TEST_EMAIL, TEST_ROLE, TEST_NAME);
+            String[] parts = token.split("\\.");
+            String tamperedPayload = Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString("{\"sub\":\"admin@example.com\"}".getBytes());
+
+            String tamperedToken = parts[0] + "." + tamperedPayload + "." + parts[2];
+
+            RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                    jwtService.validateToken(tamperedToken));
+            assertEquals("Invalid JWT token", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("encrypt nad decrypt should return original tokn")
+        void encryptDecrypt_shouldReturnOriginalValue() {
+            String original = "some-original-token-123";
+            String encrypted = jwtService.encryptAuthToken(original);
+            String decrypt = jwtService.decryptAuthToken(encrypted);
+
+            assertEquals(original, decrypt);
+        }
+
+        @Test
+        @DisplayName("decrypt invalid input should throw")
+        void decrypt_invalidInput() {
+            assertThrows(RuntimeException.class, () -> jwtService.decryptAuthToken("some-bs"));
+        }
+
+        @Test
+        @DisplayName("generated key should be HmacSha256")
+        void generateKey_shouldUseCorrectAlgorithm() throws Exception {
+            SecretKey key = getSecretKey();
+
+            assertNotNull(key);
+            assertEquals("HmacSHA256", key.getAlgorithm());
+        }
+
+        private SecretKey getSecretKey() throws Exception {
+            Field field = jwtService.getClass().getDeclaredField("secretKey");
+            field.setAccessible(true);
+            return (SecretKey) field.get(jwtService);
+        }
+    }
 }
