@@ -47,7 +47,7 @@ public class JwtService {
             return new JwtClaims(subject, role, name, authToken);
         } catch (ExpiredJwtException e) {
             logger.warn("JWT expired: {}", e.getMessage());
-            throw new RuntimeException("JWT expired");
+            throw new RuntimeException("JWT expired", e);
         } catch (JwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
             throw new RuntimeException("Invalid JWT token");
