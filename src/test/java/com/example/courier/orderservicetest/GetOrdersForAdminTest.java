@@ -1,4 +1,4 @@
-package com.example.courier.OrderServiceTest;
+package com.example.courier.orderServiceTest;
 
 import com.example.courier.common.OrderStatus;
 import com.example.courier.domain.Order;

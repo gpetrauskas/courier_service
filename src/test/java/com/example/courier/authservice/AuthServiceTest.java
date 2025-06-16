@@ -50,6 +50,8 @@ public class AuthServiceTest {
     private final LoginDTO invalidLoginNullPassword = new LoginDTO(TEST_EMAIL, null);
     private final JwtClaims mockUserClaims = new JwtClaims(TEST_EMAIL, TEST_ROLE, TEST_NAME, "mockAuthToken");
 
+    private Person testUser = createUser();
+
     private Person createUser() {
         return new Person(TEST_NAME, TEST_EMAIL, TEST_PASSWORD) {
             @Override public String getRole() {return TEST_ROLE;}
@@ -62,10 +64,8 @@ public class AuthServiceTest {
         @Test
         @DisplayName("Success user login - should return success response")
         void login_validCredentials_works() {
-            Person testUser = createUser();
-
-            when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
-            when(passwordEncoder.matches(TEST_PASSWORD, testUser.getPassword())).thenReturn(true);
+            mockUserLookup();
+            mockValidPassword(true);
             when(jwtService.createToken(TEST_EMAIL, TEST_ROLE, TEST_NAME)).thenReturn("fakeJWT");
             when(jwtService.validateToken("fakeJWT")).thenReturn(mockUserClaims);
             when(jwtService.encryptAuthToken("mockAuthToken")).thenReturn("encryptedAuthToken");
@@ -99,10 +99,8 @@ public class AuthServiceTest {
         @Test
         @DisplayName("User login, wrong password throws exception")
         void userLogin_invalidPassword_throwsException() {
-            Person testUser = createUser();
-
-            when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
-            when(passwordEncoder.matches(validLogin.password(), TEST_PASSWORD)).thenReturn(false);
+            mockUserLookup();
+            mockValidPassword(false);
 
             assertThrows(RuntimeException.class, () ->
                     authService.loginUser(validLogin, response));
@@ -128,10 +126,8 @@ public class AuthServiceTest {
         @Test
         @DisplayName("Login fails when JWT validation throws excption")
         void loginUser_jwtValidationFails_throwsRuntimeException() {
-            Person testUser = createUser();
-
-            when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
-            when(passwordEncoder.matches(validLogin.password(), TEST_PASSWORD)).thenReturn(true);
+            mockUserLookup();
+            mockValidPassword(true);
             when(jwtService.createToken(TEST_EMAIL, TEST_ROLE, TEST_NAME)).thenReturn("fakeJWT");
             when(jwtService.validateToken("fakeJWT")).thenThrow(new RuntimeException("Invalid jwt token"));
 
@@ -159,5 +155,13 @@ public class AuthServiceTest {
             assertThrows(RuntimeException.class, () ->
                     authService.loginUser(invalidLoginNullPassword, response));
         }
+    }
+
+    private void mockUserLookup() {
+        when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+    }
+
+    private void mockValidPassword(boolean isMatch) {
+        when(passwordEncoder.matches(TEST_PASSWORD, testUser.getPassword())).thenReturn(isMatch);
     }
 }
