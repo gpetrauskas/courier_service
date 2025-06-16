@@ -1,4 +1,4 @@
-package com.example.courier.authTests;
+package com.example.courier.authservice;
 
 import com.example.courier.domain.Person;
 import com.example.courier.dto.LoginDTO;
