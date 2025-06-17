@@ -9,9 +9,12 @@ import com.example.courier.dto.response.deliverymethod.DeliveryMethodAdminRespon
 import com.example.courier.dto.response.deliverymethod.DeliveryMethodDTO;
 import com.example.courier.exception.DeliveryOptionNotFoundException;
 import com.example.courier.repository.DeliveryOptionRepository;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.validation.DeliveryOptionValidator;
 import jakarta.validation.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,47 +30,57 @@ public class DeliveryMethodService {
     private static final String SIZE_KEYWORD = "size";
     private static final String WEIGHT_KEYWORD = "weight";
     private static final String PREFERENCE_KEYWORD = "preference";
+    private static final Logger log = LoggerFactory.getLogger(DeliveryMethodService.class);
 
     private final DeliveryOptionRepository deliveryOptionRepository;
     private final DeliveryMethodMapper deliveryMethodMapper;
     private final DeliveryOptionValidator validator;
+    private final CurrentPersonService currentPersonService;
 
     public DeliveryMethodService(
             DeliveryOptionRepository deliveryOptionRepository,
             DeliveryMethodMapper deliveryMethodMapper,
-            DeliveryOptionValidator validator) {
+            DeliveryOptionValidator validator,
+            CurrentPersonService currentPersonService) {
         this.deliveryOptionRepository = deliveryOptionRepository;
         this.deliveryMethodMapper = deliveryMethodMapper;
         this.validator = validator;
+        this.currentPersonService = currentPersonService;
     }
 
     public Map<String, List<DeliveryMethodDTO>> getAllDeliveryOptions() {
+        boolean isAdmin = currentPersonService.isAdmin();
         List<DeliveryMethod> allOptions =  deliveryOptionRepository.findAll();
-        boolean isAdmin = AuthUtils.isAdmin();
+        return allOptions.stream()
+                .filter(option -> isAdmin || !option.isDisabled())
+                .map(option -> mapDeliveryOption(option, isAdmin))
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(this::determinateDeliveryGroup));
+    }
 
-        return allOptions
-                .stream()
-                .map(option -> isAdmin ?
-                        deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(option) :
-                        deliveryMethodMapper.toUserDeliveryOptionResponseDTO(option))
-                .collect(Collectors.groupingBy(option -> {
-                    if (option.name().contains(WEIGHT_KEYWORD)) {
-                        return WEIGHT_KEYWORD;
-                    } else if (option.name().contains(SIZE_KEYWORD)) {
-                        return SIZE_KEYWORD;
-                    } else {
-                        return PREFERENCE_KEYWORD;
-                    }
-                }));
+    private DeliveryMethodDTO mapDeliveryOption(DeliveryMethod option, boolean isAdmin) {
+        try {
+            return isAdmin ?
+                    deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(option) :
+                    deliveryMethodMapper.toUserDeliveryOptionResponseDTO(option);
+        } catch (Exception e) {
+            log.error("Failed to map delivery option");
+            return null;
+        }
+    }
+
+    private String determinateDeliveryGroup(DeliveryMethodDTO dto) {
+        if (dto == null || dto.name() == null) {
+            throw new IllegalArgumentException("cannot be null");
+        }
+        String name = dto.name().toLowerCase();
+        if (name.contains(WEIGHT_KEYWORD)) return WEIGHT_KEYWORD;
+        if (name.contains(SIZE_KEYWORD)) return SIZE_KEYWORD;
+        return PREFERENCE_KEYWORD;
     }
 
     public List<DeliveryMethodAdminResponseDTO> getDeliveryOptionsNotCategorized() {
-        List<DeliveryMethod> list = deliveryOptionRepository.findAll();
-        if (list.isEmpty()) {
-            return List.of();
-        }
-
-        return list.stream()
+        return deliveryOptionRepository.findAll().stream()
                 .map(deliveryMethodMapper::toAdminDeliveryOptionResponseDTO)
                 .toList();
     }
