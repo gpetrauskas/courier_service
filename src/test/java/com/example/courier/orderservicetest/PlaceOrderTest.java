@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,6 +72,7 @@ public class PlaceOrderTest {
     private Parcel testParcel;
     private OrderDTO testOrderDTO;
     private final BigDecimal shoppingCost = new BigDecimal("10");
+    private ArgumentCaptor<Order> orderCaptor;
 
     @BeforeEach
     void setUp() {
@@ -150,11 +152,21 @@ public class PlaceOrderTest {
         verify(paymentService).createPayment(any(), eq(shoppingCost));
     }
 
+    private void stubSaveOrder() {
+        when(orderRepository.save(orderCaptor.capture())).thenAnswer(invocationOnMock -> {
+            Order order = invocationOnMock.getArgument(0);
+            order.setId(1L);
+            return order;
+        });
+    }
+
     @Nested
     @DisplayName("success tests")
     class SuccessfulTests {
         @BeforeEach
         void setUp() {
+            orderCaptor = ArgumentCaptor.forClass(Order.class);
+            stubSaveOrder();
             mockCurrentUser();
             mockOrderMapperToOrder();
             mockOrderCreationSuccess();
@@ -163,16 +175,10 @@ public class PlaceOrderTest {
         @Test
         @DisplayName("Should successfully place order")
         void testPlaceOrder_Success() {
-            when(orderRepository.save(any())).thenAnswer(invocation -> {
-                Order order = invocation.getArgument(0);
-                order.setId(1L);
-                return order;
-            });
+            Map<String, Object> result = orderService.placeOrder(testOrderDTO);
 
-            Long orderId = orderService.placeOrder(testUserId, testOrderDTO);
-
-            assertNotNull(orderId);
-            assertEquals(1L , orderId);
+            assertEquals(shoppingCost, result.get("amountToPay"));
+            assertEquals(1L, result.get("orderId"));
             verifyCommonOrderCreationInteractions();
             verify(orderRepository).save(any());
         }
@@ -181,26 +187,19 @@ public class PlaceOrderTest {
         @Test
         @DisplayName("set correct initial order status, should pass")
         void placeOrder_shouldSetInitialOrderStatus() {
+            orderService.placeOrder(testOrderDTO);
 
-            ArgumentCaptor<Order> orderArgumentCaptor = ArgumentCaptor.forClass(Order.class);
-            when(orderRepository.save(orderArgumentCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
-
-            orderService.placeOrder(testUserId, testOrderDTO);
-
-            assertEquals(OrderStatus.PENDING, orderArgumentCaptor.getValue().getStatus());
+            assertEquals(OrderStatus.PENDING, orderCaptor.getValue().getStatus());
             verifyCommonOrderCreationInteractions();
             verify(orderRepository, never()).save(argThat(order -> !OrderStatus.PENDING.equals(order.getStatus())));
         }
 
         @Test
-        @DisplayName("should generate trackign number")
+        @DisplayName("should generate tracking number")
         void placeOrder_shouldGenerateTrackingNumber() {
-            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
-            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
+            orderService.placeOrder(testOrderDTO);
 
-            orderService.placeOrder(testUserId, testOrderDTO);
-
-            Parcel savedParcel = captor.getValue().getParcelDetails();
+            Parcel savedParcel = orderCaptor.getValue().getParcelDetails();
             assertNotNull(savedParcel.getTrackingNumber());
             assertTrue(savedParcel.getTrackingNumber().length() > 10);
             verifyCommonOrderCreationInteractions();
@@ -211,16 +210,13 @@ public class PlaceOrderTest {
         void placeOrder_shouldSetCreationDate() {
             LocalDateTime beforeTest = LocalDateTime.now();
 
-            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
-            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
-
-            orderService.placeOrder(testUserId, testOrderDTO);
+            orderService.placeOrder(testOrderDTO);
             // have manually set creationDate as placeOrder in OrderService creates it with nano(0)
-            captor.getValue().setCreateDate(LocalDateTime.now());
+            orderCaptor.getValue().setCreateDate(LocalDateTime.now());
 
-            assertNotNull(captor.getValue().getCreateDate());
-            assertTrue(captor.getValue().getCreateDate().isAfter(beforeTest));
-            assertTrue(captor.getValue().getCreateDate().isBefore(LocalDateTime.now()));
+            assertNotNull(orderCaptor.getValue().getCreateDate());
+            assertTrue(orderCaptor.getValue().getCreateDate().isAfter(beforeTest));
+            assertTrue(orderCaptor.getValue().getCreateDate().isBefore(LocalDateTime.now()));
             verifyCommonOrderCreationInteractions();
         }
 
@@ -232,12 +228,9 @@ public class PlaceOrderTest {
             when(deliveryMethodService.getDescriptionById(Long.parseLong(testOrderDTO.parcelDetails().dimensions())))
                     .thenReturn("1m");
 
-            ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
-            when(orderRepository.save(captor.capture())).thenReturn(testOrder);
+            orderService.placeOrder(testOrderDTO);
 
-            orderService.placeOrder(testUserId, testOrderDTO);
-
-            Parcel savedParcel = captor.getValue().getParcelDetails();
+            Parcel savedParcel = orderCaptor.getValue().getParcelDetails();
             assertNotNull(savedParcel);
             assertEquals("5kg", savedParcel.getWeight());
             assertEquals("1m", savedParcel.getDimensions());
@@ -261,7 +254,7 @@ public class PlaceOrderTest {
                     .when(orderCreationValidator).validate(argThat(parcel -> parcel.parcelDetails() == null));
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                    orderService.placeOrder(testUserId, invalidOrderWithNullParcel));
+                    orderService.placeOrder(invalidOrderWithNullParcel));
 
             assertEquals("Parcel cannot be null", exception.getMessage());
 
@@ -279,7 +272,7 @@ public class PlaceOrderTest {
                     .when(orderCreationValidator).validate(argThat(o ->
                             o.senderAddress() == null));
 
-            assertThatThrownBy(() -> orderService.placeOrder(testUserId, orderWithNullSender))
+            assertThatThrownBy(() -> orderService.placeOrder(orderWithNullSender))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("cannot be null");
 
@@ -313,7 +306,7 @@ public class PlaceOrderTest {
             when(currentPersonService.getCurrentPerson())
                     .thenThrow(new ResourceNotFoundException("User was not found"));
 
-            assertThatThrownBy(() -> orderService.placeOrder(testUserId, testOrderDTO))
+            assertThatThrownBy(() -> orderService.placeOrder(testOrderDTO))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessage("User was not found");
 
@@ -326,7 +319,7 @@ public class PlaceOrderTest {
             when(currentPersonService.getCurrentPerson()).thenReturn(null);
 
             UnauthorizedAccessException exception = assertThrows(UnauthorizedAccessException.class, () ->
-                    orderService.placeOrder(testUserId, testOrderDTO));
+                    orderService.placeOrder(testOrderDTO));
 
             assertEquals("Not allowed to place orders", exception.getMessage());
         }
@@ -349,7 +342,7 @@ public class PlaceOrderTest {
             when(deliveryMethodService.getDescriptionById(Long.parseLong(invalidOrderDTO.deliveryMethod()))).thenThrow(new DeliveryOptionNotFoundException("Delivery method was not found"));
 
             assertThrows(DeliveryOptionNotFoundException.class, () ->
-                    orderService.placeOrder(testUserId, invalidOrderDTO));
+                    orderService.placeOrder(invalidOrderDTO));
         }
 
         @Test
@@ -367,7 +360,7 @@ public class PlaceOrderTest {
             );
 
             assertThrows(NumberFormatException.class, () ->
-                    orderService.placeOrder(testUserId, invalidOrderDTOBadMethod));
+                    orderService.placeOrder(invalidOrderDTOBadMethod));
         }
 
         @Test
@@ -378,7 +371,7 @@ public class PlaceOrderTest {
                     eq(testUser)
             )).thenThrow(new UserAddressMismatchException("Address not found or not owned by user"));
 
-            assertThatThrownBy(() -> orderService.placeOrder(testUserId, testOrderDTO))
+            assertThatThrownBy(() -> orderService.placeOrder(testOrderDTO))
                     .isInstanceOf(UserAddressMismatchException.class)
                     .hasMessageContaining("Address not found or not owned by user");
         }
@@ -391,7 +384,7 @@ public class PlaceOrderTest {
             doThrow(new RuntimeException("Payment creation failure"))
                     .when(paymentService).createPayment(any(), any());
 
-            assertThatThrownBy(() -> orderService.placeOrder(testUserId, testOrderDTO))
+            assertThatThrownBy(() -> orderService.placeOrder(testOrderDTO))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Payment creation failure");
 
@@ -407,7 +400,7 @@ public class PlaceOrderTest {
 
             when(currentPersonService.getCurrentPerson()).thenReturn(courier);
 
-            assertThatThrownBy(() -> orderService.placeOrder(testUserId, testOrderDTO))
+            assertThatThrownBy(() -> orderService.placeOrder(testOrderDTO))
                     .isInstanceOf(UnauthorizedAccessException.class)
                     .hasMessageContaining("Not allowed");
         }
