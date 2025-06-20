@@ -30,9 +30,9 @@ public class DeliveryOptionValidator {
     }
 
     public void validateDeliveryOptionForCreation(CreateDeliveryMethodDTO createDeliveryMethodDTO) {
-        validateString(createDeliveryMethodDTO.name(), "name", 20, NAME_PATTERN, "can opnly contain letters");
+        validateString(createDeliveryMethodDTO.name(), "name", 20, NAME_PATTERN, "can only contain letters");
         validateString(createDeliveryMethodDTO.description(), "description", 40, DESCRIPTION_PATTERN, "contains invalid characters");
-        validatePositive(createDeliveryMethodDTO.price(), "price");
+        validatePositive(createDeliveryMethodDTO.price());
     }
 
     private void validateString(String value, String fieldName, int maxLength, Pattern pattern, String errorMsg) {
@@ -47,9 +47,9 @@ public class DeliveryOptionValidator {
         }
     }
 
-    private void validatePositive(BigDecimal value, String fieldName) {
+    private void validatePositive(BigDecimal value) {
         if (value == null || value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException(fieldName + " must be positive value.");
+            throw new ValidationException("Price must be positive value.");
         }
     }
 

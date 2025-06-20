@@ -10,7 +10,6 @@ import com.example.courier.dto.response.deliverymethod.DeliveryMethodDTO;
 import com.example.courier.exception.DeliveryOptionNotFoundException;
 import com.example.courier.repository.DeliveryOptionRepository;
 import com.example.courier.service.security.CurrentPersonService;
-import com.example.courier.util.AuthUtils;
 import com.example.courier.validation.DeliveryOptionValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -115,11 +114,6 @@ public class DeliveryMethodService {
         return deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(option);
     }
 
-
-
-
-
-
     @Transactional
     public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws DeliveryOptionNotFoundException {
         BigDecimal shippingCost = new BigDecimal(0);
@@ -136,7 +130,7 @@ public class DeliveryMethodService {
     private BigDecimal getPriceById(String id) {
         return deliveryOptionRepository.findById(Long.parseLong(id))
                 .map(DeliveryMethod::getPrice)
-                .orElseThrow(() -> new RuntimeException("price by delivery options not found"));
+                .orElseThrow(() -> new DeliveryOptionNotFoundException("price by delivery options not found"));
     }
 
     private DeliveryMethod getDeliveryOptionById(Long id) {
