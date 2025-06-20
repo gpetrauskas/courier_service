@@ -145,21 +145,14 @@ public class OrderController {
     @PostMapping("/placeOrder")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = authService.getUserByEmail(auth.getName());
-            BigDecimal shippingCost = deliveryMethodService.calculateShippingCost(orderDTO);
-            Long orderId = orderService.placeOrder(user.getId(), orderDTO);
+        Map<String, Object> orderInfo = orderService.placeOrder(orderDTO);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Order was placed successfully. Order cost: " + shippingCost);
-            response.put("cost", shippingCost);
-            response.put("orderId", orderId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Order was placed successfully. Order cost: " + orderInfo.get("amountToPay"));
+        response.put("cost", orderInfo.get("amountToPay"));
+        response.put("orderId", orderInfo.get("orderId"));
 
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred placing order.");
-        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/cancelOrder/{orderId}")
