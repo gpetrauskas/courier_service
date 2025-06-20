@@ -12,9 +12,10 @@ import org.springframework.data.domain.Page;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService {
-    Long placeOrder(Long id, OrderDTO orderDTO);
+    Map<String, Object> placeOrder(OrderDTO orderDTO);
     List<OrderDTO> findUserOrders();
     void cancelOrder(Long orderId);
     Order findOrderById(Long orderId);

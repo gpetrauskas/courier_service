@@ -145,7 +145,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public Long placeOrder(Long userId, OrderDTO orderDTO) {
+    public Map<String, Object> placeOrder(OrderDTO orderDTO) {
         log.info("validating dto");
         orderCreationValidator.validate(orderDTO);
         log.info("validated dto");
@@ -155,19 +155,25 @@ public class OrderServiceImpl implements OrderService {
             throw new UnauthorizedAccessException("Not allowed to place orders");
         }
 
+        System.out.println("here");
         OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
         OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);
 
+        System.out.println("here2");
         Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
         Parcel parcelDetails = createParcelFromDTO(orderDTO.parcelDetails());
         order.setParcelDetails(parcelDetails);
 
+        System.out.println("calculating");
         BigDecimal amount = deliveryMethodService.calculateShippingCost(orderDTO);
+        System.out.println("calculated");
 
+        System.out.println("saving order, creating payment");
         saveOrder(order);
         paymentService.createPayment(order, amount);
+        System.out.println("order saved, payment created");
 
-        return order.getId();
+        return Map.of("orderId", order.getId(), "amountToPay", amount);
     }
 
     private OrderAddress getOrderAddress(AddressDTO addressDTO, User user) {
