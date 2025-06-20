@@ -1,6 +1,11 @@
 package com.example.courier.deliverymethodservice;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.DeliveryMethod;
+import com.example.courier.dto.AddressDTO;
+import com.example.courier.dto.OrderDTO;
+import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.DeliveryMethodMapper;
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import com.example.courier.dto.request.deliverymethod.UpdateDeliveryMethodDTO;
@@ -13,15 +18,16 @@ import com.example.courier.repository.DeliveryOptionRepository;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.DeliveryOptionValidator;
+import jakarta.validation.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,16 +40,11 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class DeliveryMethodServiceTest {
-    @Mock
     private DeliveryOptionRepository deliveryOptionRepository;
-    @Mock
     private DeliveryMethodMapper deliveryMethodMapper;
-    @Mock
     private CurrentPersonService currentPersonService;
-    @Mock
-    DeliveryOptionValidator validator;
+    private DeliveryOptionValidator validator;
 
-    @InjectMocks
     private DeliveryMethodService deliveryMethodService;
 
     private List<DeliveryMethod> allOptionsList = List.of(
@@ -51,6 +52,16 @@ public class DeliveryMethodServiceTest {
             createTestDeliverymethod("heavy weight", "heavy item", BigDecimal.valueOf(30)),
             createTestDeliverymethod("overnight", "next day delivery", BigDecimal.valueOf(3))
     );
+
+    @BeforeEach
+    void setUp() {
+        deliveryOptionRepository = mock(DeliveryOptionRepository.class);
+        deliveryMethodMapper = mock(DeliveryMethodMapper.class);
+        currentPersonService = mock(CurrentPersonService.class);
+        validator = new DeliveryOptionValidator();
+
+        deliveryMethodService = new DeliveryMethodService(deliveryOptionRepository, deliveryMethodMapper, validator, currentPersonService);
+    }
 
     @Nested
     @DisplayName("get delivery options tests")
@@ -142,7 +153,7 @@ public class DeliveryMethodServiceTest {
     }
 
     @Nested
-    @DisplayName("update delivery option")
+    @DisplayName("update delivery option tests")
     class UpdateTests {
         @Test
         @DisplayName("successfully updates delivery option")
@@ -181,21 +192,156 @@ public class DeliveryMethodServiceTest {
     }
 
     @Nested
-    @DisplayName("add new delivery option")
+    @DisplayName("add new delivery option tests")
     class AddTests {
         @Test
         @DisplayName("successfully adds new delivery option")
         void addNew_success() {
-            CreateDeliveryMethodDTO dto = new CreateDeliveryMethodDTO("standard", "3 - 5 days delivery", BigDecimal.valueOf(3));
-            DeliveryMethod deliveryMethod = new DeliveryMethod(dto.name(), dto.description(), dto.price(), false);
+            CreateDeliveryMethodDTO dto = new CreateDtoBuilder().build();
+            DeliveryMethod deliveryMethod = createTestDeliverymethod(dto.name(), dto.description(), dto.price());
+
             when(deliveryOptionRepository.existsByName(dto.name())).thenReturn(false);
             when(deliveryMethodMapper.toNewEntity(dto)).thenReturn(deliveryMethod);
 
             deliveryMethodService.addNewDeliveryOption(dto);
 
             verify(deliveryOptionRepository).existsByName(dto.name());
-            verify(validator).validateDeliveryOptionForCreation(dto);
             verify(deliveryOptionRepository).save(deliveryMethod);
+        }
+
+        @Test
+        @DisplayName("throws - option name already exists ")
+        void addNew_deliveryNameAlreadyExists() {
+            when(deliveryOptionRepository.existsByName("standard")).thenReturn(true);
+
+            assertThrows(ValidationException.class, () ->
+                    deliveryMethodService.addNewDeliveryOption(new CreateDeliveryMethodDTO("standard", "3-5 days delivery", BigDecimal.valueOf(5))));
+        }
+
+        @Test
+        @DisplayName("fail - bad name format")
+        void addNew_badNameFormat_fail() {
+            CreateDeliveryMethodDTO dto =  new CreateDtoBuilder().withName("invalid_name$$$%").build();
+            ValidationException ex = assertThrows(ValidationException.class, () -> deliveryMethodService.addNewDeliveryOption(dto));
+
+            assertEquals("name can only contain letters", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("throw - empty description")
+        void addNew_fails_emptyDescription() {
+            CreateDeliveryMethodDTO dto = new CreateDtoBuilder().withDescription("").build();
+            ValidationException ex = assertThrows(ValidationException.class, () -> deliveryMethodService.addNewDeliveryOption(dto));
+
+            assertEquals("description cannot be null or empty.", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("negative price - throws")
+        void addNew_fails_negativePrice() {
+            CreateDeliveryMethodDTO dto = new CreateDtoBuilder().withPrice(BigDecimal.valueOf(-2)).build();
+            ValidationException ex = assertThrows(ValidationException.class, () -> deliveryMethodService.addNewDeliveryOption(dto));
+
+            assertEquals("Price must be positive value.", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("name too long should throw")
+        void nameTooLong_throws() {
+            CreateDeliveryMethodDTO dto = new CreateDtoBuilder().withName("thisdeliverymethodnameiswaytoolong").build();
+            ValidationException ex = assertThrows(ValidationException.class, () -> deliveryMethodService.addNewDeliveryOption(dto));
+
+            assertEquals("name cannot exceed 20 characters", ex.getMessage());
+        }
+
+        static class CreateDtoBuilder {
+            private String name = "standard";
+            private String description = "up to 5 days delivery";
+            private BigDecimal price = BigDecimal.valueOf(5);
+
+            public CreateDtoBuilder withName(String name) {
+                this.name = name;
+                return this;
+            }
+
+            public CreateDtoBuilder withDescription(String description) {
+                this.description = description;
+                return this;
+            }
+
+            public CreateDtoBuilder withPrice(BigDecimal price) {
+                this.price = price;
+                return this;
+            }
+
+            public CreateDeliveryMethodDTO build() {
+                return new CreateDeliveryMethodDTO(name, description, price);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("delete tests")
+    class DeleteTests {
+        @Test
+        @DisplayName("delete success")
+        void delete_success() {
+            when(deliveryOptionRepository.existsById(1L)).thenReturn(true);
+
+            deliveryMethodService.deleteDeliveryOption(1L);
+
+            verify(deliveryOptionRepository).existsById(1L);
+            verify(deliveryOptionRepository).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("not found - thorws")
+        void delete_notFound() {
+            when(deliveryOptionRepository.existsById(1L)).thenReturn(false);
+
+            assertThrows(DeliveryOptionNotFoundException.class, () -> deliveryMethodService.deleteDeliveryOption(1L));
+
+            verify(deliveryOptionRepository, never()).deleteById(anyLong());
+        }
+    }
+
+    @Nested
+    @DisplayName("calculate shipping cost")
+    class CalculateShippingCost {
+
+        private AddressDTO testAddress() {
+            return new AddressDTO(1L, "city", "street", "housN", "flatN", "123456789", "123LT", "me");
+        }
+
+        private DeliveryMethod createDeliveryMethodWithPrice(BigDecimal price) {
+            return new DeliveryMethod("name", "desc", price, false);
+        }
+
+        @Test
+        @DisplayName("successfully - calculate shipping cost")
+        void success() {
+            ParcelDTO p = new ParcelDTO(2L, "1", "5", "books", null, ParcelStatus.WAITING_FOR_PAYMENT);
+            OrderDTO dto = new OrderDTO(1L, testAddress(), testAddress(), p, "3", OrderStatus.PENDING, LocalDateTime.now());
+
+            when(deliveryOptionRepository.findById(Long.parseLong(p.weight()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(10))));
+            when(deliveryOptionRepository.findById(Long.parseLong(p.dimensions()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(30))));
+            when(deliveryOptionRepository.findById(Long.parseLong(dto.deliveryMethod()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(20))));
+
+            BigDecimal price = deliveryMethodService.calculateShippingCost(dto);
+            assertEquals(BigDecimal.valueOf(60), price);
+        }
+
+        @Test
+        @DisplayName("delivery option not found - throw")
+        void deliveryOptionNotFound_throws() {
+            ParcelDTO parcelDTO = new ParcelDTO(1L, "1", "2", "xx", "xxx", ParcelStatus.WAITING_FOR_PAYMENT);
+            OrderDTO dto = new OrderDTO(1L, testAddress(), testAddress(), parcelDTO, "3", OrderStatus.PENDING, LocalDateTime.now());
+
+            when(deliveryOptionRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> deliveryMethodService.calculateShippingCost(dto))
+                    .isInstanceOf(DeliveryOptionNotFoundException.class)
+                    .hasMessageContaining("price by delivery options not found");
         }
     }
 
