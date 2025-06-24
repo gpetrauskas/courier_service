@@ -1,9 +1,6 @@
 package com.example.courier.controller;
 
-import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
-import com.example.courier.domain.Order;
-import com.example.courier.domain.User;
 import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
@@ -22,11 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -92,28 +86,17 @@ public class OrderController {
        return ResponseEntity.ok(adminOrderDTO);
     }
 
-
-
-
-
-
-
-
     @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserOrders(@RequestParam("page") int page, @RequestParam("size") int size) {
         try {
-            List<OrderDTO> orders = orderService.findUserOrders();
-
-            int start = (page) * size;
-            int end = Math.min(start + size, orders.size());
-            List<OrderDTO> paginatedOrders = orders.subList(start, end);
+            Page<OrderDTO> orders = orderService.findUserOrders(page, size);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("orders", paginatedOrders);
-            response.put("totalOrders", orders.size());
-            response.put("totalPages", (int) Math.ceil((double) orders.size() / size));
-            response.put("currentPage", page);
+            response.put("orders", orders.getContent());
+            response.put("totalOrders", orders.getTotalElements());
+            response.put("totalPages", orders.getTotalPages());
+            response.put("currentPage", orders.getNumber());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -126,20 +109,6 @@ public class OrderController {
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long orderId, Principal principal) {
         OrderDTO orderDTO = orderService.findUserOrderDTOById(orderId);
         return ResponseEntity.ok(orderDTO);
-    }
-
-    //used in user service ts
-    @GetMapping("/getAllOrders")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<OrderDTO>> getOrders() {
-        try {
-            List<OrderDTO> orders = orderService.findAllOrders();
-
-            return ResponseEntity.ok(orders);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).build();
-        }
     }
 
     @PostMapping("/placeOrder")
@@ -157,18 +126,7 @@ public class OrderController {
 
     @PostMapping("/cancelOrder/{orderId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId, Principal principal) {
-        Order order = orderService.findOrderById(orderId);
-
-        if (!order.getUser().getEmail().equals(principal.getName())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are ot authorized to cancel this order");
-        }
-
-        if (order.getStatus().equals(OrderStatus.CONFIRMED)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Order already confirmed and paid for. " +
-                    "Contact support for more information how to abort it.");
-        }
-
+    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }

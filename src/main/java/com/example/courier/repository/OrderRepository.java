@@ -3,6 +3,8 @@ package com.example.courier.repository;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Parcel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
     List<Order> findByUserId(Long userId);
+    Page<Order> findByUserId(Long userId, Pageable pageable);
     Order findByParcelDetails_TrackingNumber(String trackingNumber);
     Optional<Order> findByParcelDetails(Parcel parcel);
     Optional<Order> findByIdAndUserId(Long orderId, Long userId);

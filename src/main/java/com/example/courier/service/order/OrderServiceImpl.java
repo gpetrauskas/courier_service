@@ -22,6 +22,7 @@ import com.example.courier.specification.order.OrderSpecificationBuilder;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import com.example.courier.validation.DeliveryOptionValidator;
 import com.example.courier.validation.order.OrderCreationValidator;
+import com.example.courier.validation.shared.InternalUseOnly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -146,32 +147,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public Map<String, Object> placeOrder(OrderDTO orderDTO) {
-        log.info("validating dto");
         orderCreationValidator.validate(orderDTO);
-        log.info("validated dto");
 
         Person person = currentPersonService.getCurrentPerson();
         if (!(person instanceof User user)) {
             throw new UnauthorizedAccessException("Not allowed to place orders");
         }
 
-        System.out.println("here");
         OrderAddress orderSenderAddress = getOrderAddress(orderDTO.senderAddress(), user);
         OrderAddress orderRecipientAddress = getOrderAddress(orderDTO.recipientAddress(), user);
 
-        System.out.println("here2");
         Order order = createOrderFromDTO(orderDTO, user, orderSenderAddress, orderRecipientAddress);
         Parcel parcelDetails = createParcelFromDTO(orderDTO.parcelDetails());
         order.setParcelDetails(parcelDetails);
 
-        System.out.println("calculating");
         BigDecimal amount = deliveryMethodService.calculateShippingCost(orderDTO);
-        System.out.println("calculated");
 
-        System.out.println("saving order, creating payment");
         saveOrder(order);
         paymentService.createPayment(order, amount);
-        System.out.println("order saved, payment created");
 
         return Map.of("orderId", order.getId(), "amountToPay", amount);
     }
@@ -207,16 +200,16 @@ public class OrderServiceImpl implements OrderService {
         return parcelDetails;
     }
 
-
-    public List<OrderDTO> findUserOrders() {
+    public Page<OrderDTO> findUserOrders(int page, int size) {
         Person person = currentPersonService.getCurrentPerson();
-        if (!(person instanceof User user)) {
+        if (!(person instanceof User)) {
             throw new AccessDeniedException("Only users can access their orders");
         }
-        List<Order> orders = user.getOrders();
-        return orders.stream()
-                .map(orderMapper::toOrderDTO)
-                .toList();
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+        Page<Order> orders = orderRepository.findByUserId(person.getId(), pageable);
+
+        return orders.map(orderMapper::toOrderDTO);
     }
 
     @Transactional
@@ -261,21 +254,13 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
+    @InternalUseOnly
     public Order findOrderById(Long orderId) {
         return orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
 
-    public List<OrderDTO> findAllOrders() {
-        List<Order> allOrders = orderRepository.findAll();
-
-        List<OrderDTO> allOrdersDTO = allOrders.stream()
-                .map(OrderMapper.INSTANCE::toOrderDTO)
-                .toList();
-
-        return allOrdersDTO;
-    }
-
+    @InternalUseOnly
     public List<Order> fetchAllByParcelDetails(List<Parcel> parcels) {
         return orderRepository.findAllByParcelDetails(parcels);
     }
-    }
+}

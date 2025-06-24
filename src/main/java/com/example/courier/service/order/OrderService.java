@@ -16,11 +16,10 @@ import java.util.Map;
 
 public interface OrderService {
     Map<String, Object> placeOrder(OrderDTO orderDTO);
-    List<OrderDTO> findUserOrders();
+    Page<OrderDTO> findUserOrders(int page, int size);
     void cancelOrder(Long orderId);
     Order findOrderById(Long orderId);
     OrderDTO findUserOrderDTOById(Long orderId);
-    List<OrderDTO> findAllOrders();
     void orderSectionUpdate(OrderSectionUpdateRequest updateRequest);
     Page<AdminOrderResponseDTO> getAllOrdersForAdmin(int page, int size, String orderStatus, Long id);
     List<Order> fetchAllByParcelDetails(List<Parcel> parcels);
