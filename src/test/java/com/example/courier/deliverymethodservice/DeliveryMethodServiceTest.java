@@ -48,9 +48,9 @@ public class DeliveryMethodServiceTest {
     private DeliveryMethodService deliveryMethodService;
 
     private List<DeliveryMethod> allOptionsList = List.of(
-            createTestDeliverymethod("light size", "small package", BigDecimal.valueOf(20)),
-            createTestDeliverymethod("heavy weight", "heavy item", BigDecimal.valueOf(30)),
-            createTestDeliverymethod("overnight", "next day delivery", BigDecimal.valueOf(3))
+            createTestDeliveryMethod("light size", "small package", BigDecimal.valueOf(20)),
+            createTestDeliveryMethod("heavy weight", "heavy item", BigDecimal.valueOf(30)),
+            createTestDeliveryMethod("overnight", "next day delivery", BigDecimal.valueOf(3))
     );
 
     @BeforeEach
@@ -160,7 +160,7 @@ public class DeliveryMethodServiceTest {
         void successfullyUpdates() {
             UpdateDeliveryMethodDTO dto = new UpdateDeliveryMethodDTO(
                     1L, "medium size", "size up to 10kg", BigDecimal.valueOf(10));
-            DeliveryMethod updatedOption = createTestDeliverymethod("small size", "up to 5kg", BigDecimal.valueOf(5));
+            DeliveryMethod updatedOption = createTestDeliveryMethod("small size", "up to 5kg", BigDecimal.valueOf(5));
 
             when(deliveryOptionRepository.findById(1L)).thenReturn(Optional.of(updatedOption));
             doAnswer(invocationOnMock -> {
@@ -198,7 +198,7 @@ public class DeliveryMethodServiceTest {
         @DisplayName("successfully adds new delivery option")
         void addNew_success() {
             CreateDeliveryMethodDTO dto = new CreateDtoBuilder().build();
-            DeliveryMethod deliveryMethod = createTestDeliverymethod(dto.name(), dto.description(), dto.price());
+            DeliveryMethod deliveryMethod = createTestDeliveryMethod(dto.name(), dto.description(), dto.price());
 
             when(deliveryOptionRepository.existsByName(dto.name())).thenReturn(false);
             when(deliveryMethodMapper.toNewEntity(dto)).thenReturn(deliveryMethod);
@@ -345,6 +345,29 @@ public class DeliveryMethodServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("get description by by id")
+    class GetDescriptionById {
+        @Test
+        void getDescriptionById_success() {
+            DeliveryMethod xx = createTestDeliveryMethod("yes", "yes yes", BigDecimal.valueOf(50));
+            when(deliveryOptionRepository.findById(1L)).thenReturn(Optional.of(xx));
+
+            String description = deliveryMethodService.getDescriptionById(1L);
+
+            assertEquals(xx.getDescription(), description);
+            verify(deliveryOptionRepository).findById(1L);
+        }
+
+        @Test
+        void getDescriptionById_failure() {
+            when(deliveryOptionRepository.findById(1L)).thenReturn(Optional.empty());
+
+            assertThrows(DeliveryOptionNotFoundException.class, () ->
+                    deliveryMethodService.getDescriptionById(1L));
+        }
+    }
+
     private void mockIsAdmin(boolean is) {
         when(currentPersonService.isAdmin()).thenReturn(is);
     }
@@ -360,7 +383,7 @@ public class DeliveryMethodServiceTest {
         assertThat(response.get("preference")).hasSize(1);
     }
 
-    private DeliveryMethod createTestDeliverymethod(String name, String description, BigDecimal price) {
+    private DeliveryMethod createTestDeliveryMethod(String name, String description, BigDecimal price) {
         return new DeliveryMethod(name, description, price, false);
     }
 
