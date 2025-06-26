@@ -24,7 +24,7 @@ public class CurrentPersonServiceImpl implements CurrentPersonService {
     private Person getAuthenticatedPerson() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof Person person)) {
-            throw new UnauthorizedAccessException("Not logged id");
+            throw new UnauthorizedAccessException("Not logged in");
         }
         return person;
     }
