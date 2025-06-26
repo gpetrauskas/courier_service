@@ -27,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.hibernate.Hibernate.map;
-
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
@@ -36,7 +34,6 @@ public class NotificationServiceImpl implements NotificationService {
     private final PersonService personService;
     private final PersonNotificationRepository personNotificationRepository;
     private final NotificationMapper notificationMapper;
-
 
     public NotificationServiceImpl(
             NotificationRepository notificationRepository,

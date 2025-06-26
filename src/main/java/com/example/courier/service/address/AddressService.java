@@ -2,7 +2,6 @@ package com.example.courier.service.address;
 
 import com.example.courier.domain.Address;
 import com.example.courier.domain.OrderAddress;
-import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.util.List;
 
 @Service
