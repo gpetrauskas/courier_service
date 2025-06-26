@@ -96,7 +96,7 @@ public class AddressService {
             if (addressDTO.id() != null) {
                 logger.info("Address found with id {}", addressDTO.id());
                 address = addressRepository.findByIdAndUserId(addressDTO.id(), user.getId())
-                                .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
+                        .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
 
                 if (address.getName() == null || !address.getName().equals(addressDTO.name())) {
                     address.setName(addressDTO.name());
@@ -111,6 +111,8 @@ public class AddressService {
             }
             logger.info("Creating order address from address. ID: {}", address.getId());
             return createOrderAddressFromAddress(address);
+        } catch (UserAddressMismatchException ex) {
+            throw ex;
         } catch (Exception e) {
             logger.error("Failed to fetch or create OrderAddress for addressDTO {} and user {}", addressDTO, user, e);
             throw new RuntimeException("Failed to fetch or create OrderAddress", e);
@@ -119,13 +121,9 @@ public class AddressService {
 
     public Address validateAddressPerson(Long addressId) {
         Long personId = currentPersonService.getCurrentPersonId();
-        Address address = getAddressById(addressId);
-
-        if (!address.getUser().getId().equals(personId)) {
-            logger.error("Address id {} does nto match to the user with email {}", addressId, personId);
-            throw new UserAddressMismatchException("Address does not belong to the user.");
-        }
-        return address;
+        return addressRepository.findByIdAndUserId(addressId, personId)
+                .orElseThrow(() -> new AddressNotFoundException("Address was not found using userId: "
+                        + personId + " and addressId: " + addressId));
     }
 
     @Transactional
