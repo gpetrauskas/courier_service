@@ -91,31 +91,35 @@ public class AddressService {
         if (addressDTO == null) {
             throw new IllegalArgumentException("AddressDTO cannot be null");
         }
-        Address address;
-        try {
-            if (addressDTO.id() != null) {
-                logger.info("Address found with id {}", addressDTO.id());
-                address = addressRepository.findByIdAndUserId(addressDTO.id(), user.getId())
-                        .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
 
-                if (address.getName() == null || !address.getName().equals(addressDTO.name())) {
-                    address.setName(addressDTO.name());
-                }
-                if (!address.getPhoneNumber().equals(addressDTO.phoneNumber())) {
-                    address.setPhoneNumber(addressDTO.phoneNumber());
-                }
-            } else {
-                logger.info("Address not found. Creating new one.");
-                address = createNewAddress(addressDTO, user);
-                logger.info("New address created. Id: {}", address.getId());
-            }
-            logger.info("Creating order address from address. ID: {}", address.getId());
+        try {
+            Address address = addressDTO.id() == null
+                    ? createNewAddress(addressDTO, user)
+                    : handleExistingAddress(addressDTO, user);
+
             return createOrderAddressFromAddress(address);
-        } catch (UserAddressMismatchException ex) {
-            throw ex;
-        } catch (Exception e) {
+        }
+        catch (UserAddressMismatchException ex) { throw ex; }
+        catch (Exception e) {
             logger.error("Failed to fetch or create OrderAddress for addressDTO {} and user {}", addressDTO, user, e);
             throw new RuntimeException("Failed to fetch or create OrderAddress", e);
+        }
+    }
+
+    private Address handleExistingAddress(AddressDTO dto, User user) {
+        logger.info("Fetching existing address with id {}", dto.id());
+        Address address = addressRepository.findByIdAndUserId(dto.id(), user.getId())
+                .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
+        updateNameAndPhoneIfChanged(address, dto);
+        return address;
+    }
+
+    private void updateNameAndPhoneIfChanged(Address address, AddressDTO dto) {
+        if (address.getName() == null || !address.getName().equals(dto.name())) {
+            address.setName(dto.name());
+        }
+        if (address.getPhoneNumber() == null || !address.getPhoneNumber().equals(dto.phoneNumber())) {
+            address.setPhoneNumber(dto.phoneNumber());
         }
     }
 
