@@ -121,4 +121,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
     }
 
+    @ExceptionHandler(NoRecipientFoundException.class)
+    public ResponseEntity<String> handleNoRecipientFound(NoRecipientFoundException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 }
