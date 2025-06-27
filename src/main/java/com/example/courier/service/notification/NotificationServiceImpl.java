@@ -10,12 +10,15 @@ import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
+import com.example.courier.exception.NoRecipientFoundException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.util.AuthUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +33,7 @@ import java.util.List;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
     private final NotificationRepository notificationRepository;
     private final PersonService personService;
     private final PersonNotificationRepository personNotificationRepository;
@@ -48,13 +52,11 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void createNotification(NotificationRequestDTO request) {
-        switch (request.type()) {
-            case NotificationTarget.BroadCast broadcast ->
-                    broadcastToType(getPersonClass(broadcast.type()), request);
-            case NotificationTarget.Individual individual ->
-                    sendToPerson(request, individual.personId());
-        }
+    public ApiResponseDTO createNotification(NotificationRequestDTO request) {
+        return switch (request.type()) {
+            case NotificationTarget.BroadCast broadcast -> handleBroadCast(request, broadcast);
+            case NotificationTarget.Individual individual -> handleIndividual(request, individual);
+        };
     }
 
     private Class<? extends Person> getPersonClass(NotificationTargetType type) {
@@ -65,9 +67,15 @@ public class NotificationServiceImpl implements NotificationService {
         };
     }
 
-    @Override
-    public void sendToPerson(NotificationRequestDTO request, Long personId) {
+    private ApiResponseDTO handleIndividual(NotificationRequestDTO request, NotificationTarget.Individual individual) {
+        Long personId = individual.personId();
+
+        if (personId == null) {
+            throw new IllegalArgumentException("Person ID cannot be null for individual notification");
+        }
         createNotificationWithRecipients(request, List.of(personId));
+        log.info("Sending individual notification to ID {}", personId);
+        return new ApiResponseDTO("success", "Notification sent to person with id " + personId);
     }
 
     @Override
@@ -169,11 +177,17 @@ public class NotificationServiceImpl implements NotificationService {
                 dto.getTotalPages());
     }
 
-    private void broadcastToType(Class<? extends Person> personClass, NotificationRequestDTO message) {
+    private ApiResponseDTO handleBroadCast(NotificationRequestDTO message, NotificationTarget.BroadCast broadCast) {
+        Class<? extends Person> personClass = getPersonClass(broadCast.type());
         List<Long> recipients = personService.findAllActiveIdsByType(personClass);
-        System.out.println(recipients);
-        System.out.println("test " + personClass.getSimpleName());
+
+        if (recipients.isEmpty()) {
+            return new ApiResponseDTO("warning", "No recipients found for " + personClass.getSimpleName());
+        }
+
         createNotificationWithRecipients(message, recipients);
+        log.info("Broadcasting to {} recipient(s) of type {}", recipients.size(), personClass.getSimpleName());
+        return new ApiResponseDTO("success", "Notification sent to " + recipients.size() + " " + personClass.getSimpleName() + "(s)");
     }
 
     @Transactional

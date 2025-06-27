@@ -10,8 +10,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface NotificationService {
-    void createNotification(NotificationRequestDTO request);
-    void sendToPerson(NotificationRequestDTO message, Long personId);
+    ApiResponseDTO createNotification(NotificationRequestDTO request);
+    //ApiResponseDTO handleIndividual(NotificationRequestDTO message, NotificationTarget.Individual individual);
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
     PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable);
     ApiResponseDTO markAsRead(List<Long> ids);

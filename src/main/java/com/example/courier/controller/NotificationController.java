@@ -37,8 +37,7 @@ public class NotificationController {
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> create(@RequestBody NotificationRequestDTO requestDTO) {
-        notificationService.createNotification(requestDTO);
-        return ResponseEntity.ok(new ApiResponseDTO("success", "Notification sent"));
+        return ResponseEntity.ok(notificationService.createNotification(requestDTO));
     }
 
     @PostMapping("/markAsRead")
