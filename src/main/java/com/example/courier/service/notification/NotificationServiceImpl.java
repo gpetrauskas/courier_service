@@ -10,12 +10,12 @@ import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
-import com.example.courier.exception.NoRecipientFoundException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.person.PersonService;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +38,17 @@ public class NotificationServiceImpl implements NotificationService {
     private final PersonService personService;
     private final PersonNotificationRepository personNotificationRepository;
     private final NotificationMapper notificationMapper;
+    private final CurrentPersonService currentPersonService;
 
     public NotificationServiceImpl(
-            NotificationRepository notificationRepository,
-            PersonService personService,
-            PersonNotificationRepository personNotificationRepository,
-            NotificationMapper notificationMapper) {
+            NotificationRepository notificationRepository, PersonService personService,
+            PersonNotificationRepository personNotificationRepository, NotificationMapper notificationMapper,
+            CurrentPersonService currentPersonService) {
         this.notificationRepository = notificationRepository;
         this.personService = personService;
         this.personNotificationRepository = personNotificationRepository;
         this.notificationMapper = notificationMapper;
+        this.currentPersonService = currentPersonService;
     }
 
     @Override
@@ -80,13 +81,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponseDTO> getUnreadNotifications(Long personId) {
+        // for later
         return List.of();
     }
 
     @Override
     public PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable) {
         return getNotificationsPaginated(pageable);
-
     }
 
     @Override
@@ -96,11 +97,11 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("Notification list cannot be empty");
         }
 
-        final Long personId = AuthUtils.getAuthenticatedPersonId();
+        final Long personId = currentPersonService.getCurrentPersonId();
         if (ids.size() > 1) {
             return markMultipleNotificationsAsRead(personId, ids);
         } else {
-            return markSingleNotificationAsRead(personId, ids.get(0));
+            return markSingleNotificationAsRead(personId, ids.getFirst());
         }
     }
 
@@ -202,54 +203,40 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     public PaginatedResponseDTO<NotificationResponseDTO> getNotificationsPaginated(Pageable pageable) {
-        Long recipientId = AuthUtils.getAuthenticatedPersonId();
-
-        Page<NotificationWithReadStatus> notificationPage = notificationRepository.findAllByRecipientIdPageable(recipientId, pageable);
+        Page<NotificationWithReadStatus> notificationPage = notificationRepository
+                .findAllByRecipientIdPageable(currentPersonService.getCurrentPersonId(), pageable);
 
         List<NotificationResponseDTO> content = notificationPage.getContent()
                 .stream()
-                .map(n ->
-                        new NotificationResponseDTO(
-                                n.getId(),
-                                n.getTitle(),
-                                n.getMessage(),
-                                n.getCreatedAt(),
-                                n.getReadAt(),
-                                n.getIsRead()
-                        ))
+                .map(notificationMapper::toDTO)
                 .toList();
 
         return new PaginatedResponseDTO<>(
                 content,
-                pageable.getPageNumber(),
+                notificationPage.getNumber(),
                 notificationPage.getTotalElements(),
                 notificationPage.getTotalPages()
         );
     }
 
     private ApiResponseDTO markMultipleNotificationsAsRead(Long personId, List<Long> notificationsIds) {
-        int updatedRows = personNotificationRepository.markMultipleAsRead(
-                personId,
-                notificationsIds,
-                LocalDateTime.now()
-        );
+        int updatedRows = personNotificationRepository.markMultipleAsRead(personId, notificationsIds, LocalDateTime.now());
 
-        if (updatedRows > 0) {
-            return ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_SUCCESS.withParams(updatedRows, notificationsIds.size());
-        } else {
-            return ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_INFO.apiResponseDTO();
-        }
+        return (updatedRows > 0)
+                ? ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_SUCCESS.withParams(updatedRows, notificationsIds.size())
+                : ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_INFO.apiResponseDTO();
     }
 
     private ApiResponseDTO markSingleNotificationAsRead(Long personId, Long notificationId) {
-        PersonNotification personNotification = personNotificationRepository.findByIdAndPersonId(notificationId, personId)
+        PersonNotification pn = personNotificationRepository.findByIdAndPersonId(notificationId, personId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification was ot found"));
-        if (personNotification.isRead()) {
+
+        if (pn.isRead()) {
             return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_INFO.apiResponseDTO();
-        } else {
-            personNotification.markAsRead();
-            return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_SUCCESS.apiResponseDTO();
         }
+
+        pn.markAsRead();
+        return ApiResponseType.SINGLE_NOTIFICATION_MARK_AS_READ_SUCCESS.apiResponseDTO();
     }
 
     private ApiResponseDTO deleteMultipleNotifications(Long personId, List<Long> ids) {
