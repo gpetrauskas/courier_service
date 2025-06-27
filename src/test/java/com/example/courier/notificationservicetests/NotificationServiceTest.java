@@ -1,8 +1,10 @@
 package com.example.courier.notificationservicetests;
 
 import com.example.courier.common.NotificationTargetType;
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.Notification;
 import com.example.courier.domain.User;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.mapper.NotificationMapper;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.repository.NotificationRepository;
@@ -21,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -46,7 +50,7 @@ public class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(notificationRepository.save(any(Notification.class)))
+        lenient().when(notificationRepository.save(any(Notification.class)))
                 .thenAnswer(invocationOnMock -> {
                     Notification notification = invocationOnMock.getArgument(0);
                     notification.setId(99L);
@@ -57,36 +61,68 @@ public class NotificationServiceTest {
     @Nested
     class CreateNotification {
         @Test
-        @DisplayName("success broadcast ")
+        @DisplayName("success broadcast to class")
         void success_broadcast() {
             NotificationRequestDTO requestDTO = createTestNotificationRequestDTO(
                     new NotificationTarget.BroadCast(NotificationTargetType.USER));
 
             when(personService.findAllActiveIdsByType(User.class)).thenReturn(listOfUserIds);
 
-            notificationService.createNotification(requestDTO);
+            ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
 
             verify(personService).findAllActiveIdsByType(User.class);
             verify(notificationRepository).save(any(Notification.class));
             verify(personNotificationRepository).bulkInsert(99L, listOfUserIds);
             verify(notificationRepository).save(argThat(notification ->
                     notification.getCreatedAt() != null));
+            verify(notificationRepository).save(argThat(notification ->
+                    "test title".equals(notification.getTitle()) &&
+                    "test message".equals(notification.getMessage())));
+            assertEquals("success", responseDTO.status());
         }
 
         @Test
-        @DisplayName("success individual ")
+        @DisplayName("success individual")
         void success_individual() {
             NotificationRequestDTO requestDTO = createTestNotificationRequestDTO(
                     new NotificationTarget.Individual(1L)
             );
 
-            notificationService.createNotification(requestDTO);
+            ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
 
             verify(notificationRepository).save(any(Notification.class));
             verify(personNotificationRepository).bulkInsert(99L, List.of(1L));
             verify(personService, never()).findAllActiveIdsByType(any());
+            assertEquals("success", responseDTO.status());
         }
 
+        @Test
+        @DisplayName("throws when null person ID in individual notification")
+        void individual_nullPersonId() {
+            NotificationRequestDTO request = createTestNotificationRequestDTO(
+                    new NotificationTarget.Individual(null)
+            );
+
+            assertThrows(IllegalArgumentException.class, () -> {
+                notificationService.createNotification(request);
+            });
+        }
+
+        @Test
+        @DisplayName("return warning response - empty ids list")
+        void emptyIdsList_returnWarningResponse() {
+            NotificationRequestDTO requestDTO = createTestNotificationRequestDTO(
+                    new NotificationTarget.BroadCast(NotificationTargetType.COURIER)
+            );
+
+            when(personService.findAllActiveIdsByType(Courier.class)).thenReturn(List.of());
+
+            ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
+
+            assertEquals("warning", responseDTO.status());
+            verify(notificationRepository, never()).save(any());
+            verify(personNotificationRepository, never()).bulkInsert(anyLong(), any());
+        }
 
     }
 }
