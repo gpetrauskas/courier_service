@@ -241,13 +241,6 @@ public class NotificationServiceTest {
             assertEquals("Notification already marked as read", responseDTO.message());
         }
 
-/*        @Test
-        @DisplayName("ids list is empty")
-        void throws_idsListIsEmpty() {
-            assertThrows(NoSuchElementException.class, () ->
-                    notificationService.markAsRead(List.of()));
-        }*/
-
         @Test
         @DisplayName("PersonNotification not found - throws")
         void personNotificationNotFound_throw() {
@@ -263,12 +256,6 @@ public class NotificationServiceTest {
 
     @Nested
     class delete {
-/*        @Test
-        @DisplayName("throws - empty ids list to delete")
-        void emptyIdsList() {
-            assertThrows(IllegalArgumentException.class, () -> notificationService.delete(List.of()));
-        }*/
-
         @Test
         @DisplayName("success is admin")
         void success_isAdmin() {
