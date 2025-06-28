@@ -51,7 +51,6 @@ public class NotificationServiceImpl implements NotificationService {
         this.currentPersonService = currentPersonService;
     }
 
-    @Override
     @Transactional
     public ApiResponseDTO createNotification(NotificationRequestDTO request) {
         return switch (request.type()) {
@@ -79,51 +78,35 @@ public class NotificationServiceImpl implements NotificationService {
         return new ApiResponseDTO("success", "Notification sent to person with id " + personId);
     }
 
-    @Override
     public List<NotificationResponseDTO> getUnreadNotifications(Long personId) {
         // for later
         return List.of();
     }
 
-    @Override
     public PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable) {
         return getNotificationsPaginated(pageable);
     }
 
-    @Override
     @Transactional
     public ApiResponseDTO markAsRead(List<Long> ids) {
-        if (ids.isEmpty()) {
-            throw new IllegalArgumentException("Notification list cannot be empty");
-        }
-
         final Long personId = currentPersonService.getCurrentPersonId();
-        if (ids.size() > 1) {
-            return markMultipleNotificationsAsRead(personId, ids);
-        } else {
-            return markSingleNotificationAsRead(personId, ids.getFirst());
-        }
+        return (ids.size() > 1)
+                ? markMultipleNotificationsAsRead(personId, ids)
+                : markSingleNotificationAsRead(personId, ids.getFirst());
     }
 
-    @Override
     @Transactional
     public ApiResponseDTO delete(List<Long> ids) {
-        if (ids.isEmpty()) {
-            throw new IllegalArgumentException("Notifications List cannot be empty");
-        }
-
-        if (AuthUtils.isAdmin()) {
+        if (currentPersonService.isAdmin()) {
             return adminDelete(ids);
         }
 
-        final Long personId = AuthUtils.getAuthenticatedPersonId();
-        return ids.size() > 1 ?
-                deleteMultipleNotifications(personId, ids)
-                :
-                deleteSingleNotification(personId, ids.get(0));
+        final Long personId = currentPersonService.getCurrentPersonId();
+        return (ids.size() > 1)
+                ? deleteMultipleNotifications(personId, ids)
+                : deleteSingleNotification(personId, ids.getFirst());
     }
 
-    @Override
     @PreAuthorize("hasRole('ADMIN')")
     public PaginatedResponseDTO<AdminNotificationResponseDTO> getAllForAdmin(Pageable pageable) {
         boolean isAdmin = AuthUtils.isAdmin();
@@ -145,7 +128,6 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
-    @Override
     public PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize) {
         Long personId = AuthUtils.getAuthenticatedPersonId();
 
@@ -257,16 +239,10 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-
     @PreAuthorize("hasRole('ADMIN')")
     private ApiResponseDTO adminDelete(List<Long> ids) {
-        boolean isAdmin = AuthUtils.isAdmin();
-        if (isAdmin) {
-            personNotificationRepository.deleteAllByNotificationIdIn(ids);
-            notificationRepository.deleteAllById(ids);
-            return ApiResponseType.SINGLE_NOTIFICATION_DELETE_SUCCESS.apiResponseDTO();
-        } else {
-            throw new UnauthorizedAccessException("Unauthorized access");
-        }
+        personNotificationRepository.deleteAllByNotificationIdIn(ids);
+        notificationRepository.deleteAllById(ids);
+        return ApiResponseType.SINGLE_NOTIFICATION_DELETE_SUCCESS.apiResponseDTO();
     }
 }

@@ -11,6 +11,8 @@ import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.service.notification.NotificationService;
 import com.example.courier.service.notification.NotificationTarget;
+import com.example.courier.validation.shared.NotEmptyField;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +38,13 @@ public class NotificationController {
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> create(@RequestBody NotificationRequestDTO requestDTO) {
+    public ResponseEntity<?> create(@RequestBody @Valid NotificationRequestDTO requestDTO) {
         return ResponseEntity.ok(notificationService.createNotification(requestDTO));
     }
 
     @PostMapping("/markAsRead")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestBody List<Long> ids) {
+    public ResponseEntity<ApiResponseDTO> markAsRead(@RequestBody @NotEmptyField List<Long> ids) {
         return ResponseEntity.ok(notificationService.markAsRead(ids));
     }
 
@@ -54,7 +56,7 @@ public class NotificationController {
 
     @PostMapping("/delete")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<ApiResponseDTO> delete(@RequestBody List<Long> ids) {
+    public ResponseEntity<ApiResponseDTO> delete(@RequestBody @NotEmptyField List<Long> ids) {
         return ResponseEntity.ok(notificationService.delete(ids));
     }
 
