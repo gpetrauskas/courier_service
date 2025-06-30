@@ -1,7 +1,6 @@
 package com.example.courier.service.notification;
 
 import com.example.courier.common.ApiResponseType;
-import com.example.courier.common.NotificationTargetType;
 import com.example.courier.domain.*;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
@@ -14,7 +13,7 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.notification.strategy.NotificationDeliveryStrategy;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.util.AuthUtils;
 import org.slf4j.Logger;
@@ -35,47 +34,29 @@ public class NotificationServiceImpl implements NotificationService {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
     private final NotificationRepository notificationRepository;
-    private final PersonService personService;
     private final PersonNotificationRepository personNotificationRepository;
     private final NotificationMapper notificationMapper;
     private final CurrentPersonService currentPersonService;
+    private final List<NotificationDeliveryStrategy> strategies;
 
     public NotificationServiceImpl(
-            NotificationRepository notificationRepository, PersonService personService,
-            PersonNotificationRepository personNotificationRepository, NotificationMapper notificationMapper,
-            CurrentPersonService currentPersonService) {
+            NotificationRepository notificationRepository, PersonNotificationRepository personNotificationRepository, NotificationMapper notificationMapper,
+            CurrentPersonService currentPersonService, List<NotificationDeliveryStrategy> strategies) {
         this.notificationRepository = notificationRepository;
-        this.personService = personService;
         this.personNotificationRepository = personNotificationRepository;
         this.notificationMapper = notificationMapper;
         this.currentPersonService = currentPersonService;
+        this.strategies = strategies;
     }
 
+    @Override
     @Transactional
     public ApiResponseDTO createNotification(NotificationRequestDTO request) {
-        return switch (request.type()) {
-            case NotificationTarget.BroadCast broadcast -> handleBroadCast(request, broadcast);
-            case NotificationTarget.Individual individual -> handleIndividual(request, individual);
-        };
-    }
-
-    private Class<? extends Person> getPersonClass(NotificationTargetType type) {
-        return switch (type) {
-            case COURIER -> Courier.class;
-            case ADMIN -> Admin.class;
-            case USER -> User.class;
-        };
-    }
-
-    private ApiResponseDTO handleIndividual(NotificationRequestDTO request, NotificationTarget.Individual individual) {
-        Long personId = individual.personId();
-
-        if (personId == null) {
-            throw new IllegalArgumentException("Person ID cannot be null for individual notification");
-        }
-        createNotificationWithRecipients(request, List.of(personId));
-        log.info("Sending individual notification to ID {}", personId);
-        return new ApiResponseDTO("success", "Notification sent to person with id " + personId);
+        return strategies.stream()
+                .filter(strategy -> strategy.supports(request.type()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported notification type"))
+                .deliver(request);
     }
 
     public List<NotificationResponseDTO> getUnreadNotifications(Long personId) {
@@ -158,30 +139,6 @@ public class NotificationServiceImpl implements NotificationService {
                 pageable.getPageNumber(),
                 dto.getTotalElements(),
                 dto.getTotalPages());
-    }
-
-    private ApiResponseDTO handleBroadCast(NotificationRequestDTO message, NotificationTarget.BroadCast broadCast) {
-        Class<? extends Person> personClass = getPersonClass(broadCast.type());
-        List<Long> recipients = personService.findAllActiveIdsByType(personClass);
-
-        if (recipients.isEmpty()) {
-            return new ApiResponseDTO("warning", "No recipients found for " + personClass.getSimpleName());
-        }
-
-        createNotificationWithRecipients(message, recipients);
-        log.info("Broadcasting to {} recipient(s) of type {}", recipients.size(), personClass.getSimpleName());
-        return new ApiResponseDTO("success", "Notification sent to " + recipients.size() + " " + personClass.getSimpleName() + "(s)");
-    }
-
-    @Transactional
-    private void createNotificationWithRecipients(NotificationRequestDTO message, List<Long> recipients) {
-        Notification notification = new Notification(
-                message.title(),
-                message.message(),
-                LocalDateTime.now()
-        );
-        notificationRepository.save(notification);
-        personNotificationRepository.bulkInsert(notification.getId(), recipients);
     }
 
     public PaginatedResponseDTO<NotificationResponseDTO> getNotificationsPaginated(Pageable pageable) {

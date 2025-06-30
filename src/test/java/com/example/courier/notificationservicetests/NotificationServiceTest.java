@@ -17,6 +17,9 @@ import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.notification.NotificationServiceImpl;
 import com.example.courier.service.notification.NotificationTarget;
+import com.example.courier.service.notification.strategy.BroadcastNotificationStrategy;
+import com.example.courier.service.notification.strategy.IndividualNotificationStrategy;
+import com.example.courier.service.notification.strategy.NotificationDeliveryStrategy;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.service.security.CurrentPersonService;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +48,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class NotificationServiceTest {
+
     @Mock
     private NotificationRepository notificationRepository;
     @Mock
@@ -56,8 +60,24 @@ public class NotificationServiceTest {
     @Mock
     private CurrentPersonService currentPersonService;
 
-    @InjectMocks
+    @Mock
+    private IndividualNotificationStrategy individual;
+    @Mock
+    private BroadcastNotificationStrategy broadcast;
+
     private NotificationServiceImpl notificationService;
+
+    @BeforeEach
+    void init() {
+        List<NotificationDeliveryStrategy> strategies = List.of(individual, broadcast);
+        notificationService = new NotificationServiceImpl(
+                notificationRepository,
+                personNotificationRepository,
+                notificationMapper,
+                currentPersonService,
+                strategies
+        );
+    }
 
     private final List<Long> listOfUserIds = List.of(1L, 2L);
     private Pageable pageable = PageRequest.of(0, 10);
@@ -84,18 +104,12 @@ public class NotificationServiceTest {
             NotificationRequestDTO requestDTO = createTestNotificationRequestDTO(
                     new NotificationTarget.BroadCast(NotificationTargetType.USER));
 
-            when(personService.findAllActiveIdsByType(User.class)).thenReturn(listOfUserIds);
+            when(broadcast.supports(any())).thenReturn(true);
+            when(broadcast.deliver(any())).thenReturn(new ApiResponseDTO("success", "sent"));
 
             ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
 
-            verify(personService).findAllActiveIdsByType(User.class);
-            verify(notificationRepository).save(any(Notification.class));
-            verify(personNotificationRepository).bulkInsert(99L, listOfUserIds);
-            verify(notificationRepository).save(argThat(notification ->
-                    notification.getCreatedAt() != null));
-            verify(notificationRepository).save(argThat(notification ->
-                    "test title".equals(notification.getTitle()) &&
-                    "test message".equals(notification.getMessage())));
+            verify(broadcast).deliver(requestDTO);
             assertEquals("success", responseDTO.status());
         }
 
@@ -106,11 +120,13 @@ public class NotificationServiceTest {
                     new NotificationTarget.Individual(1L)
             );
 
+            when(individual.supports(any())).thenReturn(true);
+            when(individual.deliver(any())).thenReturn(new ApiResponseDTO("success", "Sent"));
+
             ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
 
-            verify(notificationRepository).save(any(Notification.class));
-            verify(personNotificationRepository).bulkInsert(99L, List.of(1L));
-            verify(personService, never()).findAllActiveIdsByType(any());
+            verify(individual).deliver(requestDTO);
+            verifyNoInteractions(broadcast);
             assertEquals("success", responseDTO.status());
         }
 
@@ -131,13 +147,15 @@ public class NotificationServiceTest {
                     new NotificationTarget.BroadCast(NotificationTargetType.COURIER)
             );
 
-            when(personService.findAllActiveIdsByType(Courier.class)).thenReturn(List.of());
+            when(broadcast.supports(any())).thenReturn(true);
+            when(broadcast.deliver(requestDTO)).thenReturn(new ApiResponseDTO("warning", "empty list"));
 
             ApiResponseDTO responseDTO = notificationService.createNotification(requestDTO);
 
+            verify(broadcast).deliver(requestDTO);
+            verify(individual).supports(requestDTO.type());
+            verifyNoMoreInteractions(broadcast);
             assertEquals("warning", responseDTO.status());
-            verify(notificationRepository, never()).save(any());
-            verify(personNotificationRepository, never()).bulkInsert(anyLong(), any());
         }
     }
 

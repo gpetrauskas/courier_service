@@ -11,7 +11,6 @@ import java.util.List;
 
 public interface NotificationService {
     ApiResponseDTO createNotification(NotificationRequestDTO request);
-    //ApiResponseDTO handleIndividual(NotificationRequestDTO message, NotificationTarget.Individual individual);
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
     PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable);
     ApiResponseDTO markAsRead(List<Long> ids);
