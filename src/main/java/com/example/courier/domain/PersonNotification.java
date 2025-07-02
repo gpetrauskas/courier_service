@@ -29,7 +29,7 @@ public class PersonNotification {
     private LocalDateTime readAt;
 
     @Column(name = "received_at", nullable = false)
-    private LocalDateTime receivedAt = LocalDateTime.now();
+    private final LocalDateTime receivedAt = LocalDateTime.now();
 
     protected PersonNotification() {}
 
