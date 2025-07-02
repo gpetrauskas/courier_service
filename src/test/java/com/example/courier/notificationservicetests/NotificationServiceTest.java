@@ -1,7 +1,6 @@
 package com.example.courier.notificationservicetests;
 
 import com.example.courier.common.NotificationTargetType;
-import com.example.courier.domain.Courier;
 import com.example.courier.domain.Notification;
 import com.example.courier.domain.PersonNotification;
 import com.example.courier.domain.User;
@@ -9,10 +8,9 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.NotificationMapper;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
+import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
-import com.example.courier.exception.ResourceNotFoundException;
-import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.notification.NotificationServiceImpl;
@@ -20,14 +18,12 @@ import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.notification.strategy.BroadcastNotificationStrategy;
 import com.example.courier.service.notification.strategy.IndividualNotificationStrategy;
 import com.example.courier.service.notification.strategy.NotificationDeliveryStrategy;
-import com.example.courier.service.person.PersonService;
 import com.example.courier.service.security.CurrentPersonService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -36,13 +32,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -51,8 +43,6 @@ public class NotificationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-    @Mock
-    private PersonService personService;
     @Mock
     private PersonNotificationRepository personNotificationRepository;
     @Mock
@@ -190,7 +180,7 @@ public class NotificationServiceTest {
             when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
             when(notificationRepository.findAllByRecipientIdPageable(1L, pageable)).thenReturn(notificationPage);
 
-            PaginatedResponseDTO<NotificationResponseDTO> responseDTO = notificationService.getNotificationsPaginated(pageable);
+            PaginatedResponseDTO<NotificationResponseDTO> responseDTO = notificationService.getNotificationHistory(pageable);
 
             assertEquals(12, responseDTO.totalItems());
             assertEquals(10, responseDTO.data().size());
@@ -240,11 +230,11 @@ public class NotificationServiceTest {
         void singleNotification() {
             List<Long> singleNotificationList = List.of(1L);
 
-            when(personNotificationRepository.findByIdAndPersonId(singleNotificationList.getFirst(), 1L)).thenReturn(Optional.of(pn));
+            when(personNotificationRepository.markMultipleAsRead(eq(singleNotificationList.getFirst()), anyList(), any(LocalDateTime.class))).thenReturn(1);
 
             ApiResponseDTO responseDTO = notificationService.markAsRead(singleNotificationList);
 
-            assertEquals("Notification marked as read successfully", responseDTO.message());
+            assertEquals("Marked 1 of 1 notifications as read", responseDTO.message());
         }
 
         @Test
@@ -252,23 +242,22 @@ public class NotificationServiceTest {
         void singleNotification_alreadyIsRead() {
             pn.markAsRead();
 
-            when(personNotificationRepository.findByIdAndPersonId(listOfUserIds.getFirst(), 1L)).thenReturn(Optional.of(pn));
+            when(personNotificationRepository.markMultipleAsRead(eq(listOfUserIds.getFirst()), anyList(), any(LocalDateTime.class))).thenReturn(0);
 
             ApiResponseDTO responseDTO = notificationService.markAsRead(List.of(listOfUserIds.getFirst()));
 
-            assertEquals("Notification already marked as read", responseDTO.message());
+            assertEquals("No notifications were updated. Please check the IDs", responseDTO.message());
         }
 
         @Test
         @DisplayName("PersonNotification not found - throws")
         void personNotificationNotFound_throw() {
-            when(personNotificationRepository.findByIdAndPersonId(listOfUserIds.getFirst(), 1L))
-                    .thenThrow(new ResourceNotFoundException("Notification was not found"));
+            when(personNotificationRepository.markMultipleAsRead(eq(listOfUserIds.getFirst()), anyList(), any(LocalDateTime.class)))
+                    .thenReturn(0);
 
-            ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
-                    notificationService.markAsRead(List.of(listOfUserIds.getFirst())));
+            ApiResponseDTO responseDTO = notificationService.markAsRead(List.of(listOfUserIds.getFirst()));
 
-            assertEquals("Notification was not found", ex.getMessage());
+            assertEquals("No notifications were updated. Please check the IDs", responseDTO.message());
         }
     }
 
@@ -289,13 +278,49 @@ public class NotificationServiceTest {
         void success_singleNotification() {
             when(currentPersonService.isAdmin()).thenReturn(false);
             when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
-            when(personNotificationRepository.deleteByNotificationIdAndPersonId(1L, 1L)).thenReturn(1);
+            when(personNotificationRepository.deleteMultipleByIdAndPersonId(List.of(1L), 1L)).thenReturn(1);
 
             ApiResponseDTO responseDTO = notificationService.delete(List.of(1L));
 
             assertEquals("success", responseDTO.status());
-            assertEquals("Notification was deleted successfully", responseDTO.message());
-            verify(personNotificationRepository).deleteByNotificationIdAndPersonId(anyLong(), anyLong());
+            assertEquals("Deleted 1 of 1 notifications", responseDTO.message());
+            verify(personNotificationRepository).deleteMultipleByIdAndPersonId(anyList(), anyLong());
+        }
+    }
+
+    @Nested
+    class GetAllForAdmin {
+        @Test
+        @DisplayName("success")
+        void success() {
+            List<AdminNotificationResponseDTO> dtos = List.of(mock(AdminNotificationResponseDTO.class));
+            Page<AdminNotificationResponseDTO> page = new PageImpl<>(dtos);
+
+            when(notificationRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
+
+            PaginatedResponseDTO<AdminNotificationResponseDTO> responseDTO =
+                    notificationService.getAllForAdmin(PageRequest.of(0, 10));
+
+            assertEquals(1, responseDTO.data().size());
+            assertEquals(1, responseDTO.totalPages());
+            assertEquals(1, responseDTO.totalItems());
+            assertEquals(0, responseDTO.currentPage());
+        }
+
+        @Test
+        @DisplayName("returns empty paginated response")
+        void shouldReturnEmptyResponse() {
+            Page<AdminNotificationResponseDTO> emptypage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+            when(notificationRepository.findAllProjectedBy(pageable)).thenReturn(emptypage);
+
+            PaginatedResponseDTO<AdminNotificationResponseDTO> responseDTO = notificationService.getAllForAdmin(pageable);
+
+            assertNotNull(responseDTO);
+            assertTrue(responseDTO.data().isEmpty());
+            assertEquals(0, responseDTO.totalPages());
+            assertEquals(0, responseDTO.currentPage());
+            assertEquals(0, responseDTO.totalItems());
         }
     }
 }
