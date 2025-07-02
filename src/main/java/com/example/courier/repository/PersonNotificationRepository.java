@@ -3,8 +3,6 @@ package com.example.courier.repository;
 import com.example.courier.domain.PersonNotification;
 import com.example.courier.domain.keys.PersonNotificationId;
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -73,5 +71,10 @@ public interface PersonNotificationRepository extends JpaRepository<PersonNotifi
     @Modifying
     @Query("DELETE FROM PersonNotification pn WHERE pn.notification.id IN :ids")
     void deleteAllByNotificationIdIn(@Param("ids") List<Long> ids);
+
+    @Query("SELECT COUNT(pn) FROM PersonNotification pn " +
+            "WHERE pn.person.id = :personId AND pn.notification.createdAt > " +
+            "(SELECT pn2.notification.createdAt FROM PersonNotification pn2 WHERE pn2.notification.id = :notificationId)")
+    Optional<Integer> findNotificationPosition(@Param("personId") Long personId,@Param("notificationId") Long notificationId);
 }
 
