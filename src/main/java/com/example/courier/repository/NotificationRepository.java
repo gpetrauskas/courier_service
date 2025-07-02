@@ -1,6 +1,7 @@
 package com.example.courier.repository;
 
 import com.example.courier.domain.Notification;
+import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,4 +28,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
  Page<NotificationWithReadStatus> findAllByRecipientIdPageable(
          @Param("recipientId") Long recipientId, Pageable pageable);
 
+ Page<AdminNotificationResponseDTO> findAllProjectedBy(Pageable pageable);
 }
