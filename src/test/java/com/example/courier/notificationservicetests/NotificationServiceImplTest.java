@@ -11,6 +11,7 @@ import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.response.notification.AdminNotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.dto.response.notification.NotificationWithReadStatus;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.notification.NotificationServiceImpl;
@@ -26,20 +27,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class NotificationServiceTest {
+public class NotificationServiceImplTest {
 
     @Mock
     private NotificationRepository notificationRepository;
@@ -152,22 +151,10 @@ public class NotificationServiceTest {
     @Nested
     class GetNotificationsHistory {
         private List<NotificationWithReadStatus> createTestNotificationWIthReadStatus() {
-            List<NotificationWithReadStatus> list = new ArrayList<>();
-
-            for (int i = 0; i < 12; i ++) {
-                int id = i;
-                list.add(new NotificationWithReadStatus() {
-                    @Override public Long getId() { return (long) id; }
-                    @Override public String getTitle() { return "Test Title " + id; }
-                    @Override public String getMessage() { return "Test Message " + id; }
-                    @Override public LocalDateTime getCreatedAt() { return LocalDateTime.now(); }
-                    @Override public LocalDateTime getReadAt() { return null; }
-                    @Override public Boolean getIsRead() { return false; }
-                });
-            }
-            return list;
+            return IntStream.range(0, 12)
+                    .mapToObj(i -> mock(NotificationWithReadStatus.class))
+                    .toList();
         }
-
 
         @Test
         @DisplayName("success - get notifications history")
@@ -191,24 +178,17 @@ public class NotificationServiceTest {
 
     @Nested
     class MarkAsRead {
-        private List<Long> notificationIds = List.of(1L, 2L, 3L, 4L);
-        private Notification notification;
-        private User user;
-        private PersonNotification pn;
+        private final List<Long> notificationIds = List.of(1L, 2L, 3L, 4L);
 
         @BeforeEach
         void setup() {
             lenient().when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
-
-            notification = new Notification("test title", "test message", LocalDateTime.now());
-            user = new User();
-            pn = new PersonNotification(user, notification);
         }
 
         @Test
         @DisplayName("mark as read multiple notifications")
         void multipleNotifications() {
-            when(personNotificationRepository.markMultipleAsRead(eq(1L), eq(notificationIds), any(LocalDateTime.class))).thenReturn(4);
+            when(personNotificationRepository.markMultipleAsRead(anyLong(), eq(notificationIds), any(LocalDateTime.class))).thenReturn(4);
 
             ApiResponseDTO responseDTO = notificationService.markAsRead(notificationIds);
 
@@ -228,11 +208,9 @@ public class NotificationServiceTest {
         @Test
         @DisplayName("mark as read single notification")
         void singleNotification() {
-            List<Long> singleNotificationList = List.of(1L);
+            when(personNotificationRepository.markMultipleAsRead(eq(notificationIds.getFirst()), anyList(), any(LocalDateTime.class))).thenReturn(1);
 
-            when(personNotificationRepository.markMultipleAsRead(eq(singleNotificationList.getFirst()), anyList(), any(LocalDateTime.class))).thenReturn(1);
-
-            ApiResponseDTO responseDTO = notificationService.markAsRead(singleNotificationList);
+            ApiResponseDTO responseDTO = notificationService.markAsRead(List.of(notificationIds.getFirst()));
 
             assertEquals("Marked 1 of 1 notifications as read", responseDTO.message());
         }
@@ -240,9 +218,7 @@ public class NotificationServiceTest {
         @Test
         @DisplayName("info response - single notification already isRead")
         void singleNotification_alreadyIsRead() {
-            pn.markAsRead();
-
-            when(personNotificationRepository.markMultipleAsRead(eq(listOfUserIds.getFirst()), anyList(), any(LocalDateTime.class))).thenReturn(0);
+            when(personNotificationRepository.markMultipleAsRead(anyLong(), anyList(), any())).thenReturn(0);
 
             ApiResponseDTO responseDTO = notificationService.markAsRead(List.of(listOfUserIds.getFirst()));
 
@@ -321,6 +297,39 @@ public class NotificationServiceTest {
             assertEquals(0, responseDTO.totalPages());
             assertEquals(0, responseDTO.currentPage());
             assertEquals(0, responseDTO.totalItems());
+        }
+    }
+
+    @Nested
+    class GetPageContainingNotification {
+        @Test
+        @DisplayName("success")
+        void returnPageContainingNotification_success() {
+            Long personId = 1L;
+            Long notificationId = 1L;
+            int notificationIndex = 7;
+            int pageSize = 3;
+            Pageable pageRequest = PageRequest.of(notificationIndex / pageSize, pageSize, Sort.by("notification.createdAt").descending());
+            List<NotificationWithReadStatus> mockContent = List.of(mock(NotificationWithReadStatus.class));
+            Page<NotificationWithReadStatus> mockPage = new PageImpl<>(mockContent, pageRequest, 20);
+
+            when(currentPersonService.getCurrentPersonId()).thenReturn(personId);
+            when(personNotificationRepository.findNotificationPosition(personId, notificationId)).thenReturn(Optional.of(notificationIndex));
+            when(notificationRepository.findAllByRecipientIdPageable(personId, pageRequest)).thenReturn(mockPage);
+
+            PaginatedResponseDTO<NotificationResponseDTO> responseDTO = notificationService.getPageContainingNotification(notificationId, pageSize);
+
+            assertNotNull(responseDTO);
+        }
+
+        @Test
+        @DisplayName("person notification not found")
+        void throws_PersonNotificationNotFound() {
+            when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
+            when(personNotificationRepository.findNotificationPosition(1L, 1L)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () ->
+                    notificationService.getPageContainingNotification(1L, 5));
         }
     }
 }
