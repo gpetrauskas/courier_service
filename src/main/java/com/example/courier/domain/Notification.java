@@ -1,11 +1,8 @@
 package com.example.courier.domain;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "notifications")

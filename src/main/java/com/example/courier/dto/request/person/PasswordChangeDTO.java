@@ -1,9 +1,9 @@
 package com.example.courier.dto.request.person;
 
-import com.example.courier.validation.shared.NotEmptyField;
+import com.example.courier.validation.shared.NotNullOrEmpty;
 
 public record PasswordChangeDTO(
-        @NotEmptyField String newPassword,
-        @NotEmptyField String currentPassword
+        @NotNullOrEmpty String newPassword,
+        @NotNullOrEmpty String currentPassword
 ) {
 }

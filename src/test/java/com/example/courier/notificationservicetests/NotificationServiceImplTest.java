@@ -2,8 +2,6 @@ package com.example.courier.notificationservicetests;
 
 import com.example.courier.common.NotificationTargetType;
 import com.example.courier.domain.Notification;
-import com.example.courier.domain.PersonNotification;
-import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.NotificationMapper;
