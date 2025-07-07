@@ -4,7 +4,6 @@ import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.NotificationTargetType;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.*;
-import com.example.courier.dto.request.NotificationMessage;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
 import com.example.courier.dto.response.task.AdminTaskDTO;
@@ -17,7 +16,6 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.TaskNotCancelableException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.notification.NotificationService;
-import com.example.courier.service.notification.NotificationServiceImpl;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.order.OrderService;
@@ -103,7 +101,7 @@ public class TaskService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
     public PaginatedResponseDTO<? extends TaskBase> getAllTaskLists(DeliveryTaskFilterDTO dto) {
-        Pageable pageable = PageableUtils.toPageable(dto);
+        Pageable pageable = PageableUtils.createPageable(dto.page(), dto.size(), dto.sortBy(), dto.direction().toString());
         if (!AuthUtils.isAdmin()) {
             return getCourierHistory(pageable);
         }

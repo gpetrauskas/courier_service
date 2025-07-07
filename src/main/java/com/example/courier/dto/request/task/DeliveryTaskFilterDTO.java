@@ -2,8 +2,6 @@ package com.example.courier.dto.request.task;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.TaskType;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 public record DeliveryTaskFilterDTO(
