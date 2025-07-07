@@ -15,9 +15,9 @@ import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
-import com.example.courier.service.address.AddressService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
+import com.example.courier.util.PageableUtils;
 import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.PhoneValidator;
 import jakarta.validation.ValidationException;
@@ -67,11 +67,13 @@ public class PersonServiceImpl implements PersonService {
     public void updatePassword(Long id, String newPassword) {
     }
 
+    @Override
     public PersonResponseDTO myInfo() {
         Person person = fetchById(AuthUtils.getAuthenticatedPersonId());
         return personMapper.toDto(person);
     }
 
+    @Override
     @Transactional
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
         User user = fetchPersonByIdAndType(AuthUtils.getAuthenticatedPersonId(), User.class);
@@ -123,34 +125,21 @@ public class PersonServiceImpl implements PersonService {
 
 
 
-    public PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(int page, int size, String role, String searchKeyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+    @Override
+    public PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(
+            int page, int size, String role, String searchKeyword, String sortBy, String direction
+    ) {
+        Pageable pageable = PageableUtils.createPageable(page, size, sortBy, direction);
         Specification<Person> specification = PersonSpecificationBuilder.buildPersonSpecification(role, searchKeyword);
 
         Page<Person> personPage = personRepository.findAll(specification, pageable);
 
-        return mapToPaginatedResponseDTO(personPage);
-    }
-
-    private PaginatedResponseDTO<AdminPersonResponseDTO> mapToPaginatedResponseDTO(Page<Person> personPage) {
-        List<AdminPersonResponseDTO> content = personPage.getContent()
-                .stream()
-                .map(personMapper::toAdminPersonResponseDTO)
-                .toList();
-
-        return new PaginatedResponseDTO<>(
-                content, personPage.getNumber(),
-                personPage.getTotalElements(), personPage.getTotalPages()
-        );
+        return new PaginatedResponseDTO<>(personPage, personMapper::toAdminPersonResponseDTO);
     }
 
     @Transactional
     public void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest) {
         Person person = fetchById(personId);
-
-        if (!person.getId().equals(updateRequest.id())) {
-            throw new IllegalArgumentException("Person ID in request does not match the path Id");
-        }
         
         personMapper.updatePersonFromRequest(updateRequest, person);
         personRepository.save(person);

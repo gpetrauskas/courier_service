@@ -1,9 +1,5 @@
 package com.example.courier.controller;
 
-import com.example.courier.domain.Admin;
-import com.example.courier.domain.Courier;
-import com.example.courier.domain.Person;
-import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
@@ -13,10 +9,6 @@ import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
-import com.example.courier.repository.AdminRepository;
-import com.example.courier.repository.CourierRepository;
-import com.example.courier.repository.PersonRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -27,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/person")
@@ -35,14 +26,6 @@ public class PersonController {
 
     @Autowired
     private PersonService personService;
-    @Autowired
-    private CourierRepository courierRepository;
-    @Autowired
-    private AdminRepository adminRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PersonRepository personRepository;
     private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -51,8 +34,10 @@ public class PersonController {
             @RequestParam int page,
             @RequestParam int size,
             @RequestParam(required = false) String role,
-            @RequestParam(required = false) String searchKeyword) {
-        return personService.findAllPaginated(page, size, role, searchKeyword);
+            @RequestParam(required = false) String searchKeyword,
+            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String direction) {
+        return personService.findAllPaginated(page, size, role, searchKeyword, sortBy, direction);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -94,16 +79,6 @@ public class PersonController {
     public ResponseEntity<Long> availableCouriersCount() {
         Long count = personService.availableCouriersCount();
         return ResponseEntity.ok(count);
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<?> getCourier() {
-        Optional<Courier> courier = courierRepository.findById(39L);
-        Optional<Admin> admin = adminRepository.findById(11L);
-        Optional<User> user = userRepository.findById(28L);
-        Optional<Person> person = personRepository.findById(50L);
-
-        return ResponseEntity.ok(courier + " " + admin + " " + user + " " + person);
     }
 
     @GetMapping("/{personId}/banHistory")

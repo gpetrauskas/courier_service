@@ -22,7 +22,7 @@ public interface PersonService {
     boolean checkIfPersonAlreadyExistsByEmail(String email);
     <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType);
     List<BanHistoryDTO> getBanHistory(Long personId);
-    PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(int page, int size, String role, String keyword);
+    PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(int page, int size, String role, String keyword, String sortBy, String direction);
     void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest);
     void delete(Long peronId);
     String banUnban(Long personId);
