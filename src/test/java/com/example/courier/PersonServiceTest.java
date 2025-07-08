@@ -1,9 +1,10 @@
 package com.example.courier;
 
+import com.example.courier.domain.Courier;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
-import com.example.courier.dto.PaginatedResponseDTO;
+import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
@@ -23,7 +24,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
@@ -65,23 +65,6 @@ public class PersonServiceTest {
 
     @Nested
     class FindAllPaginated {
-        private Person createMockPerson(Long id, String name, String role) {
-            return new Person() {
-                @Override
-                public String getRole() {
-                    return role;
-                }
-                @Override
-                public Long getId() {
-                    return id;
-                }
-                @Override
-                public String getName() {
-                    return name;
-                }
-            };
-        }
-
         @Test
         @DisplayName("should return all users paginated")
         void shouldReturnAllUsersPaginated() {
@@ -144,6 +127,115 @@ public class PersonServiceTest {
             verifyNoInteractions(personMapper);
         }
     }
+
+    @Nested
+    class Delete {
+        @Test
+        @DisplayName("should successfully delete person")
+        void delete_shouldSuccess() {
+            testPerson = createMockPerson(1L, "test", "USER");
+
+            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+
+            personService.delete(1L);
+
+            verify(personRepository).save(testPerson);
+            assertTrue(testPerson.isDeleted());
+        }
+
+        @Test
+        @DisplayName("should throw IllegalStateException as person not found")
+        void personNotFound_shouldThrow() {
+            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () ->
+                    personService.delete(1L));
+        }
+    }
+
+    @Nested
+    class BanUnban {
+        @Test
+        @DisplayName("successfully ban")
+        void shouldSuccessfullyBanUser() {
+            testPerson = createMockPerson(1L,"test name", "USER");
+
+            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+
+            String plainTextResponse = personService.banUnban(1L);
+
+            verify(personRepository).findByIdAndIsDeletedFalse(1L);
+            verify(personRepository).save(testPerson);
+            assertEquals("User was banned successfully.", plainTextResponse);
+            assertTrue(testPerson.isBlocked());
+        }
+
+        @Test
+        @DisplayName("should successfully unban a banned user")
+        void shouldSuccessfullyUnbanUser() {
+            testPerson = createMockPerson(1L, "name", "USER");
+            testPerson.setBlocked(true);
+
+            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+
+            String plainTextResponse = personService.banUnban(1L);
+
+            verify(personRepository).findByIdAndIsDeletedFalse(1L);
+            verify(personRepository).save(testPerson);
+            assertFalse(testPerson.isBlocked());
+            assertEquals("User was unbanned successfully.", plainTextResponse);
+        }
+    }
+
+    @Nested
+    class GetAvailableCouriers {
+        @Test
+        @DisplayName("successfully get available couriers")
+        void successfullyReceiveAvailableCouriersList() {
+            Person courier1 = createMockPerson(1L, "name", "COURIER");
+            Person courier2 = createMockPerson(2L, "name2", "COURIER");
+
+            CourierDTO dto1 = new CourierDTO(1L, "name", "e@m.lt", false);
+            CourierDTO dto2 = new CourierDTO(2L, "name2", "e2@m.lt", false);
+
+            when(personRepository.findAll(any(Specification.class))).thenReturn(List.of(courier1, courier2));
+            when(personMapper.toCourierDTO(courier1)).thenReturn(dto1);
+            when(personMapper.toCourierDTO(courier2)).thenReturn(dto2);
+
+            List<CourierDTO> response = personService.getAvailableCouriers();
+
+            verify(personRepository).findAll(any(Specification.class));
+            verify(personMapper, times(2)).toCourierDTO(any(Person.class));
+            assertNotNull(response);
+        }
+
+        @Test
+        @DisplayName("should return empty list and not call mapper when no available couriers")
+        void shouldReturnEmptyList() {
+            when(personRepository.findAll(any(Specification.class))).thenReturn(List.of());
+
+            List<CourierDTO> response = personService.getAvailableCouriers();
+
+            assertTrue(response.isEmpty());
+            verify(personMapper, times(0)).toCourierDTO(any(Person.class));
+        }
+    }
+
+    @Nested
+    class AvailableCouriersCount {
+        @Test
+        @DisplayName("receive available couriers count")
+        void shouldReturnAvailableCouriersCount() {
+            when(personRepository.countAvailableCouriers(any(Specification.class))).thenReturn(2L);
+
+            Long availableCouriersCount = personService.availableCouriersCount();
+
+            verify(personRepository).countAvailableCouriers(any());
+            assertEquals(2L, availableCouriersCount);
+        }
+    }
+
+
 
     @Nested
     class ChangePassword {
@@ -222,5 +314,22 @@ public class PersonServiceTest {
         person.setEmail((!email.isEmpty()) ? email : "test@example.com");
 
         return person;
+    }
+
+    private Person createMockPerson(Long id, String name, String role) {
+        return new Person() {
+            @Override
+            public String getRole() {
+                return role;
+            }
+            @Override
+            public Long getId() {
+                return id;
+            }
+            @Override
+            public String getName() {
+                return name;
+            }
+        };
     }
 }

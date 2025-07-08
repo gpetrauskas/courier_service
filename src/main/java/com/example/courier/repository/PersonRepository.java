@@ -1,6 +1,5 @@
 package com.example.courier.repository;
 
-import com.example.courier.domain.Admin;
 import com.example.courier.domain.Person;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecificationExecutor<Person> {
-    <S extends Person> S save(S entity);
+        <S extends Person> S save(S entity);
 
     Optional<Person>findByEmail(String email);
     @Query("SELECT p FROM Person p WHERE p.isDeleted = false")
@@ -36,4 +35,5 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     @Query("SELECT p.id FROM Person p WHERE TYPE(p) = :type AND p.isBlocked = false AND p.isDeleted = false")
     List<Long> findAllActiveIdsByType(@Param("type") Class<? extends Person> type);
 
+    Optional<Person> findByIdAndIsDeletedFalse(Long id);
 }

@@ -137,17 +137,22 @@ public class PersonServiceImpl implements PersonService {
         return new PaginatedResponseDTO<>(personPage, personMapper::toAdminPersonResponseDTO);
     }
 
+    @Override
     @Transactional
     public void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest) {
         Person person = fetchById(personId);
         
         personMapper.updatePersonFromRequest(updateRequest, person);
         personRepository.save(person);
+
+        logger.info("Updated person with ID {}", person.getId());
     }
 
     public List<CourierDTO> getAvailableCouriers() {
         Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
         List<Person> personList = personRepository.findAll(specification);
+
+        logger.info("Found " + personList.size() + " couriers available.");
 
         return personList.stream()
                 .map(personMapper::toCourierDTO)
@@ -172,30 +177,22 @@ public class PersonServiceImpl implements PersonService {
         return personRepository.existsByEmail(email);
     }
 
-
-
-
-
+    @Override
     @Transactional
     public void delete(Long personId) {
-        Person person = fetchById(personId);
-        if (person.isDeleted()) {
-            throw new IllegalStateException("User already deleted.");
-        }
+        Person person = findNotDeletedPerson(personId);
+        person.delete();
 
-        person.setDeleted(true);
         personRepository.save(person);
-        logger.info("Person ID {}, deleted", personId);
+        logger.info("Person with ID {}, deleted successfully", personId);
     }
 
     public String banUnban(Long id) {
-        Person person = fetchById(id);
-        if (person.isDeleted()) {
-            throw new IllegalStateException("Cannot ban/unban deleted user");
-        }
+        Person person = findNotDeletedPerson(id);
 
         person.setBlocked(!person.isBlocked());
         personRepository.save(person);
+
         logger.info("Person ID {}, was {}.",id, person.isBlocked() ? "banned" : "unbanned");
         return person.isBlocked() ? "User was banned successfully." : "User was unbanned successfully.";
     }
@@ -236,6 +233,11 @@ public class PersonServiceImpl implements PersonService {
 
     public List<Long> findAllActiveIdsByType(Class<? extends Person> type) {
         return personRepository.findAllActiveIdsByType(type);
+    }
+
+    private Person findNotDeletedPerson(Long id) {
+        return personRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User was not found"));
     }
 
 }

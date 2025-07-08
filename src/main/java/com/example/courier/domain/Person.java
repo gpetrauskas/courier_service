@@ -1,6 +1,7 @@
 package com.example.courier.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
@@ -8,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
@@ -39,6 +41,9 @@ public abstract class Person implements UserDetails {
     @Column(name = "is_deleted", nullable = false)
     @ColumnDefault("false")
     private boolean isDeleted;
+
+    @Column(name = "deleted_date")
+    private LocalDateTime deletedDate;
 
 
     public Person() {}
@@ -137,4 +142,18 @@ public abstract class Person implements UserDetails {
         return notifications.stream()
                 .anyMatch(n -> n.getPerson().equals(this) && !n.isRead());
     }
+
+    public LocalDateTime getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(LocalDateTime deletedDate) {
+        this.deletedDate = deletedDate;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
+        this.deletedDate = LocalDateTime.now();
+    }
+
 }

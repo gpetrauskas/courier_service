@@ -57,14 +57,14 @@ public class PersonController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        this.personService.delete(id);
+        personService.delete(id);
         return ResponseEntity.ok("Person was successfully deleted.");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/banUnban/{id}")
     public ResponseEntity<String> banUnban(@PathVariable Long id) {
-        String action = this.personService.banUnban(id);
+        String action = personService.banUnban(id);
         return ResponseEntity.ok(action);
     }
 
