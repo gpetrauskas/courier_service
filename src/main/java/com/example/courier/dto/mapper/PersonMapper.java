@@ -17,6 +17,7 @@ public interface PersonMapper {
     void updatePersonFromRequest(PersonDetailsUpdateRequest updateRequest, @MappingTarget Person person);
 
     @Named("toAdminPersonDto")
+    @Mapping(target = "isBlocked", source = "blocked")
     AdminPersonResponseDTO toAdminPersonResponseDTO(Person person);
 
     CourierDTO toCourierDTO(Person person);
