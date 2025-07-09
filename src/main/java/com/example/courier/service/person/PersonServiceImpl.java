@@ -7,6 +7,7 @@ import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
@@ -15,6 +16,7 @@ import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
@@ -44,11 +46,12 @@ public class PersonServiceImpl implements PersonService {
     private final PhoneValidator phoneValidator;
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentPersonService currentPersonService;
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
                              BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
                              PhoneValidator phoneValidator, PasswordValidator passwordValidator,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
@@ -56,6 +59,7 @@ public class PersonServiceImpl implements PersonService {
         this.phoneValidator = phoneValidator;
         this.passwordValidator = passwordValidator;
         this.passwordEncoder = passwordEncoder;
+        this.currentPersonService = currentPersonService;
     }
 
     @Override
@@ -133,7 +137,6 @@ public class PersonServiceImpl implements PersonService {
         Specification<Person> specification = PersonSpecificationBuilder.buildPersonSpecification(role, searchKeyword);
 
         Page<Person> personPage = personRepository.findAll(specification, pageable);
-
         return new PaginatedResponseDTO<>(personPage, personMapper::toAdminPersonResponseDTO);
     }
 
@@ -187,11 +190,13 @@ public class PersonServiceImpl implements PersonService {
         logger.info("Person with ID {}, deleted successfully", personId);
     }
 
-    public String banUnban(Long id) {
+    public String banUnban(Long id, BanActionRequestDTO requestDTO) {
         Person person = findNotDeletedPerson(id);
 
         person.setBlocked(!person.isBlocked());
         personRepository.save(person);
+
+        logBanAction(person, requestDTO);
 
         logger.info("Person ID {}, was {}.",id, person.isBlocked() ? "banned" : "unbanned");
         return person.isBlocked() ? "User was banned successfully." : "User was unbanned successfully.";
@@ -220,13 +225,8 @@ public class PersonServiceImpl implements PersonService {
     }
 
     public List<BanHistoryDTO> getBanHistory(Long personId) {
-        Person person = fetchById(personId);
-        List<BanHistory> banHistories = banHistoryRepository.findByPersonOrderByActionTimeDesc(person);
-        if (banHistories.isEmpty()) {
-            return List.of();
-        }
-
-        return banHistories.stream()
+        return banHistoryRepository.findByPersonIdOrderByActionTimeDesc(personId)
+                .stream()
                 .map(banHistoryMapper::toDTO)
                 .toList();
     }
@@ -239,5 +239,13 @@ public class PersonServiceImpl implements PersonService {
         return personRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User was not found"));
     }
+
+    private void logBanAction(Person person, BanActionRequestDTO requestDTO) {
+        String adminEmail = currentPersonService.getCurrentPerson().getEmail();
+        BanHistory banHistory = new BanHistory(person, person.isBlocked(), adminEmail, requestDTO.reason());
+
+        banHistoryRepository.save(banHistory);
+    }
+
 
 }

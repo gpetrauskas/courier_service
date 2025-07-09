@@ -6,6 +6,7 @@ import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
@@ -25,7 +26,7 @@ public interface PersonService {
     PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(int page, int size, String role, String keyword, String sortBy, String direction);
     void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest);
     void delete(Long peronId);
-    String banUnban(Long personId);
+    String banUnban(Long personId, BanActionRequestDTO requestDTO);
     List<CourierDTO> getAvailableCouriers();
     Long availableCouriersCount();
     PersonResponseDTO myInfo();
