@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecificationExecutor<Person> {
-        <S extends Person> S save(S entity);
+    <S extends Person> S save(S entity);
 
     Optional<Person>findByEmail(String email);
-    @Query("SELECT p FROM Person p WHERE p.isDeleted = false")
+
     Page<Person> findAll(Specification<Person> specification, Pageable pageable);
+
     boolean existsByEmail(String email);
 
     @Query("SELECT COUNT(c) FROM Courier c WHERE c.hasActiveTask = false")

@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface BanHistoryRepository extends JpaRepository<BanHistory, Long> {
-    List<BanHistory> findByPersonOrderByActionTimeDesc(Person person);
+    List<BanHistory> findByPersonIdOrderByActionTimeDesc(Long personId);
 }
