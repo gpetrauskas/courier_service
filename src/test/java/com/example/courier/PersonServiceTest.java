@@ -1,6 +1,6 @@
 package com.example.courier;
 
-import com.example.courier.domain.Courier;
+import com.example.courier.domain.BanHistory;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
@@ -8,13 +8,15 @@ import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
+import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
-import com.example.courier.specification.person.PersonSpecificationBuilder;
+import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.PhoneValidator;
 import jakarta.validation.ValidationException;
@@ -36,6 +38,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -52,6 +55,7 @@ public class PersonServiceTest {
     @Mock private BanHistoryRepository banHistoryRepository;
     @Mock private BanHistoryMapper banHistoryMapper;
     @Mock private PhoneValidator phoneValidator;
+    @Mock private CurrentPersonService currentPersonService;
 
     private Person testPerson;
 
@@ -60,7 +64,7 @@ public class PersonServiceTest {
     @BeforeEach
     void setup() {
         personService = new PersonServiceImpl(personRepository, personMapper, banHistoryRepository, banHistoryMapper,
-                phoneValidator, passwordValidator, passwordEncoder);
+                phoneValidator, passwordValidator, passwordEncoder, currentPersonService);
     }
 
     @Nested
@@ -155,14 +159,17 @@ public class PersonServiceTest {
 
     @Nested
     class BanUnban {
+        private final BanActionRequestDTO actionRequestDTO = new BanActionRequestDTO("ban reason");
+
         @Test
         @DisplayName("successfully ban")
         void shouldSuccessfullyBanUser() {
             testPerson = createMockPerson(1L,"test name", "USER");
 
             when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
 
-            String plainTextResponse = personService.banUnban(1L);
+            String plainTextResponse = personService.banUnban(1L, actionRequestDTO);
 
             verify(personRepository).findByIdAndIsDeletedFalse(1L);
             verify(personRepository).save(testPerson);
@@ -177,8 +184,9 @@ public class PersonServiceTest {
             testPerson.setBlocked(true);
 
             when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
 
-            String plainTextResponse = personService.banUnban(1L);
+            String plainTextResponse = personService.banUnban(1L, actionRequestDTO);
 
             verify(personRepository).findByIdAndIsDeletedFalse(1L);
             verify(personRepository).save(testPerson);
@@ -232,6 +240,42 @@ public class PersonServiceTest {
 
             verify(personRepository).countAvailableCouriers(any());
             assertEquals(2L, availableCouriersCount);
+        }
+    }
+
+    @Nested
+    class GetBanHistory {
+        @Test
+        @DisplayName("successfully retrieve ban history")
+        void successfullyReturnsBanHistory() {
+            BanHistoryDTO dto = mock(BanHistoryDTO.class);
+            BanHistoryDTO dto2 = mock(BanHistoryDTO.class);
+
+            when(banHistoryRepository.findByPersonIdOrderByActionTimeDesc(1L))
+                    .thenReturn(List.of(mock(BanHistory.class), mock(BanHistory.class)));
+            when(banHistoryMapper.toDTO(any(BanHistory.class))).thenReturn(dto, dto2);
+
+            var response = personService.getBanHistory(1L);
+
+            assertNotNull(response);
+            verify(banHistoryRepository).findByPersonIdOrderByActionTimeDesc(eq(1L));
+            verify(banHistoryMapper, times(2)).toDTO(any(BanHistory.class));
+            assertThat(response).hasSize(2).containsExactly(dto, dto2);
+            assertSame(dto, response.getFirst());
+            assertSame(dto2, response.get(1));
+        }
+
+        @Test
+        @DisplayName("returns empty list")
+        void returnsEmptyList() {
+            when(banHistoryRepository.findByPersonIdOrderByActionTimeDesc(1L)).thenReturn(List.of());
+
+            var response = personService.getBanHistory(1L);
+
+            assertNotNull(response);
+            verifyNoInteractions(banHistoryMapper);
+            verify(banHistoryRepository, times(1)).findByPersonIdOrderByActionTimeDesc(eq(1L));
+            assertThat(response).isEmpty();
         }
     }
 
