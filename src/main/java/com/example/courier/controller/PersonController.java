@@ -4,6 +4,7 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
+import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
@@ -63,8 +64,9 @@ public class PersonController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/banUnban/{id}")
-    public ResponseEntity<String> banUnban(@PathVariable Long id) {
-        String action = personService.banUnban(id);
+    public ResponseEntity<String> banUnban(@PathVariable Long id,
+                                           @RequestBody(required = false)  BanActionRequestDTO requestDTO) {
+        String action = personService.banUnban(id, requestDTO);
         return ResponseEntity.ok(action);
     }
 
