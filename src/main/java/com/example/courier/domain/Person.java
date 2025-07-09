@@ -1,7 +1,6 @@
 package com.example.courier.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
@@ -117,7 +116,7 @@ public abstract class Person implements UserDetails {
     }
 
     public void setBlocked(boolean blocked) {
-        isBlocked = blocked;
+        this.isBlocked = blocked;
     }
 
     public boolean isDeleted() {
@@ -125,7 +124,7 @@ public abstract class Person implements UserDetails {
     }
 
     public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
+        this.isDeleted = deleted;
     }
 
     public abstract String getRole();
