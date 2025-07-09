@@ -1,4 +1,4 @@
 package com.example.courier.dto.request.person;
 
-public record BanActionRequestDTO() {
+public record BanActionRequestDTO(String reason) {
 }
