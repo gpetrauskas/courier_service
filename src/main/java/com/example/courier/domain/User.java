@@ -1,6 +1,5 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -89,12 +88,6 @@ public class User extends Person {
 
     public void setOrders(List<Order> orders) {
         this.orders = orders;
-    }
-
-    public int getConfirmedOrdersCount() {
-        return this.orders == null ? 0 : (int) this.orders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.CONFIRMED)
-                .count();
     }
 
     public boolean isSubscribed() {

@@ -90,7 +90,7 @@ public class PersonController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<PersonResponseDTO> myInfo() {
         return ResponseEntity.ok(personService.myInfo());
     }

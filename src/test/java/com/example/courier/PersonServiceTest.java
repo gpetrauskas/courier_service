@@ -16,6 +16,7 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
+import com.example.courier.service.person.strategy.PersonInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.PhoneValidator;
@@ -56,6 +57,7 @@ public class PersonServiceTest {
     @Mock private BanHistoryMapper banHistoryMapper;
     @Mock private PhoneValidator phoneValidator;
     @Mock private CurrentPersonService currentPersonService;
+    @Mock private List<PersonInfoStrategy> strategies;
 
     private Person testPerson;
 
@@ -64,7 +66,7 @@ public class PersonServiceTest {
     @BeforeEach
     void setup() {
         personService = new PersonServiceImpl(personRepository, personMapper, banHistoryRepository, banHistoryMapper,
-                phoneValidator, passwordValidator, passwordEncoder, currentPersonService);
+                phoneValidator, passwordValidator, passwordEncoder, currentPersonService, strategies);
     }
 
     @Nested
@@ -278,6 +280,15 @@ public class PersonServiceTest {
             assertThat(response).isEmpty();
         }
     }
+
+   /* @Nested
+    class MyInfo {
+        @Test
+        @DisplayName("should return dto for simple user")
+        void shouldReturnForSimpleUser() {
+            when(personRepository.)
+        }
+    }*/
 
 
 

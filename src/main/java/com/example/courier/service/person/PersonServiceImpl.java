@@ -16,6 +16,7 @@ import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
+import com.example.courier.service.person.strategy.PersonInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
@@ -47,11 +48,13 @@ public class PersonServiceImpl implements PersonService {
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
     private final CurrentPersonService currentPersonService;
+    private final List<PersonInfoStrategy> strategies;
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
                              BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
                              PhoneValidator phoneValidator, PasswordValidator passwordValidator,
-                             PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService) {
+                             PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService,
+                             List<PersonInfoStrategy> strategies) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
@@ -60,6 +63,7 @@ public class PersonServiceImpl implements PersonService {
         this.passwordValidator = passwordValidator;
         this.passwordEncoder = passwordEncoder;
         this.currentPersonService = currentPersonService;
+        this.strategies = strategies;
     }
 
     @Override
@@ -73,8 +77,12 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonResponseDTO myInfo() {
-        Person person = fetchById(AuthUtils.getAuthenticatedPersonId());
-        return personMapper.toDto(person);
+        Person person = currentPersonService.getCurrentPerson();
+        return strategies.stream()
+                .filter(s -> s.supports(person))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("no handler"))
+                .map(person);
     }
 
     @Override

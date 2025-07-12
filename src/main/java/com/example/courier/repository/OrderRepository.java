@@ -1,5 +1,6 @@
 package com.example.courier.repository;
 
+import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Parcel;
@@ -25,4 +26,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     @Query("SELECT o FROM Order o WHERE o.parcelDetails IN :parcels")
     List<Order> findAllByParcelDetails(@Param("parcels") List<Parcel> parcels);
+
+    int countByUserIdAndStatus(Long userId, OrderStatus status);
 }
