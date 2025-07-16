@@ -12,9 +12,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PersonMapper {
 
-    @Mapping(target = "id", ignore = true)
-    void updatePersonFromRequest(PersonDetailsUpdateRequest updateRequest, @MappingTarget Person person);
-
     @Named("toAdminPersonDto")
     @Mapping(target = "isBlocked", source = "blocked")
     AdminPersonResponseDTO toAdminPersonResponseDTO(Person person);
