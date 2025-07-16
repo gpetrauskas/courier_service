@@ -6,5 +6,6 @@ public interface CurrentPersonService {
 
     Person getCurrentPerson();
     Long getCurrentPersonId();
+    <T extends Person> T getCurrentPersonAs(Class<T> tClass);
     boolean isAdmin();
 }

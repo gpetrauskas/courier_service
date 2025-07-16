@@ -37,4 +37,14 @@ public class CurrentPersonServiceImpl implements CurrentPersonService {
         return getAuthenticatedPerson().getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals(ROLE_ADMIN));
     }
+
+    @Override
+    public <T extends Person> T getCurrentPersonAs(Class<T> tClass) {
+        Person person = getAuthenticatedPerson();
+        if (!tClass.isInstance(person)) {
+            throw new UnauthorizedAccessException("Authorized person is not: " + tClass.getSimpleName());
+        }
+
+        return tClass.cast(person);
+    }
 }

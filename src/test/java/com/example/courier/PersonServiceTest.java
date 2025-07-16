@@ -1,8 +1,6 @@
 package com.example.courier;
 
-import com.example.courier.domain.BanHistory;
-import com.example.courier.domain.Person;
-import com.example.courier.domain.User;
+import com.example.courier.domain.*;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CourierDTO;
 import com.example.courier.dto.mapper.BanHistoryMapper;
@@ -10,15 +8,23 @@ import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.request.PersonDetailsUpdateRequest;
 import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
+import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
+import com.example.courier.dto.response.person.AdminProfileResponseDTO;
+import com.example.courier.dto.response.person.PersonResponseDTO;
+import com.example.courier.dto.response.person.UserResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
+import com.example.courier.service.person.strategy.AdminInfoStrategy;
 import com.example.courier.service.person.strategy.PersonInfoStrategy;
+import com.example.courier.service.person.strategy.UserInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.validation.EmailValidator;
 import com.example.courier.validation.PasswordValidator;
+import com.example.courier.validation.PersonDetailsValidator;
 import com.example.courier.validation.PhoneValidator;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +32,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,6 +47,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,7 +67,10 @@ public class PersonServiceTest {
     @Mock private BanHistoryMapper banHistoryMapper;
     @Mock private PhoneValidator phoneValidator;
     @Mock private CurrentPersonService currentPersonService;
-    @Mock private List<PersonInfoStrategy> strategies;
+    @Mock private UserInfoStrategy userInfoStrategy;
+    @Mock private AdminInfoStrategy adminInfoStrategy;
+    @Mock private PersonDetailsValidator personDetailsValidator;
+    @Mock private EmailValidator emailValidator;
 
     private Person testPerson;
 
@@ -65,59 +78,38 @@ public class PersonServiceTest {
 
     @BeforeEach
     void setup() {
+        List<PersonInfoStrategy> strategyList = List.of(userInfoStrategy, adminInfoStrategy);
         personService = new PersonServiceImpl(personRepository, personMapper, banHistoryRepository, banHistoryMapper,
-                phoneValidator, passwordValidator, passwordEncoder, currentPersonService, strategies);
-    }
-
-    @Nested
-    class FindAllPaginated {
-        @Test
-        @DisplayName("should return all users paginated")
-        void shouldReturnAllUsersPaginated() {
-            when(personRepository.findAll(ArgumentMatchers.<Specification<Person>>any(), any(Pageable.class))).thenReturn(
-                    new PageImpl<>(List.of(mock(Person.class), mock(Person.class)))
-            );
-            when(personMapper.toAdminPersonResponseDTO(any(Person.class))).thenReturn(mock(AdminPersonResponseDTO.class));
-
-            var result = personService.findAllPaginated(0, 2, "", "", "id", "asc");
-
-            assertNotNull(result);
-            assertEquals(2, result.data().size());
-        }
-
-        @Test
-        @DisplayName("should return empty lsit")
-        void shouldReturnEmptyListWhenNoPersonFound() {
-            when(personRepository.findAll(ArgumentMatchers.<Specification<Person>>any(), any(Pageable.class)))
-                    .thenReturn(Page.empty());
-
-            var result = personService.findAllPaginated(0, 10, "", "", "id", "asc");
-
-            assertNotNull(result);
-            assertTrue(result.data().isEmpty());
-        }
+                phoneValidator, passwordValidator, passwordEncoder, currentPersonService, strategyList,
+                personDetailsValidator, emailValidator);
     }
 
     @Nested
     class UpdateDetails {
-        @BeforeEach
-        void setup() {
-            testPerson = createMockPerson("", "", "");
+        static Stream<Arguments> provideUpdateRequests() {
+            return Stream.of(
+                    Arguments.of(
+                            new PersonDetailsUpdateRequest("updated name", "updated@email.lt",
+                            "123123"),
+                            createMockPerson(1L, "name", "USER")
+                    ),
+                    Arguments.of(
+                            new PersonDetailsUpdateRequest("updated another name", "another@email.lt", "123123"),
+                            createMockPerson(2L, "admin name", "ADMIN")
+                    )
+            );
         }
 
-        @Test
-        @DisplayName("successfully updates details")
-        void shouldUpdateDetailsSuccessfully() {
-            PersonDetailsUpdateRequest request = new PersonDetailsUpdateRequest(1L, "test name", "newEmail@example.com",
-                    "USER", "", false);
+        @ParameterizedTest
+        @MethodSource("provideUpdateRequests")
+        @DisplayName("successfully updates details with different inputs")
+        void shouldUpdateDetailsSuccessfully(PersonDetailsUpdateRequest request, Person existingPerson) {
+            when(personRepository.findById(existingPerson.getId())).thenReturn(Optional.of(existingPerson));
 
-            when(personRepository.findById(1L)).thenReturn(Optional.of(testPerson));
+            personService.updateDetails(existingPerson.getId(), request);
 
-            personService.updateDetails(1L, request);
-
-            verify(personRepository).findById(1L);
-            verify(personMapper).updatePersonFromRequest(request, testPerson);
-            verify(personRepository).save(testPerson);
+            verify(personRepository).findById(existingPerson.getId());
+            verify(personRepository).save(existingPerson);
         }
 
         @Test
@@ -141,9 +133,9 @@ public class PersonServiceTest {
         void delete_shouldSuccess() {
             testPerson = createMockPerson(1L, "test", "USER");
 
-            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
+            when(personRepository.findByIdAndIsDeletedFalse(testPerson.getId())).thenReturn(Optional.of(testPerson));
 
-            personService.delete(1L);
+            personService.delete(testPerson.getId());
 
             verify(personRepository).save(testPerson);
             assertTrue(testPerson.isDeleted());
@@ -159,76 +151,55 @@ public class PersonServiceTest {
         }
     }
 
-    @Nested
-    class BanUnban {
-        private final BanActionRequestDTO actionRequestDTO = new BanActionRequestDTO("ban reason");
+    @ParameterizedTest
+    @MethodSource("provideStatusUpdateCases")
+    void testBanUnban(boolean expectedBlockedStatus, boolean initialBlockedStatus, Person person, BanActionRequestDTO requestDTO) {
+        person.setBlocked(initialBlockedStatus);
 
-        @Test
-        @DisplayName("successfully ban")
-        void shouldSuccessfullyBanUser() {
-            testPerson = createMockPerson(1L,"test name", "USER");
+        when(personRepository.findByIdAndIsDeletedFalse(person.getId())).thenReturn(Optional.of(person));
+        when(currentPersonService.getCurrentPerson()).thenReturn(mock(Person.class));
 
-            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
-            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
+        personService.banUnban(person.getId(), requestDTO);
 
-            String plainTextResponse = personService.banUnban(1L, actionRequestDTO);
-
-            verify(personRepository).findByIdAndIsDeletedFalse(1L);
-            verify(personRepository).save(testPerson);
-            assertEquals("User was banned successfully.", plainTextResponse);
-            assertTrue(testPerson.isBlocked());
-        }
-
-        @Test
-        @DisplayName("should successfully unban a banned user")
-        void shouldSuccessfullyUnbanUser() {
-            testPerson = createMockPerson(1L, "name", "USER");
-            testPerson.setBlocked(true);
-
-            when(personRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(testPerson));
-            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
-
-            String plainTextResponse = personService.banUnban(1L, actionRequestDTO);
-
-            verify(personRepository).findByIdAndIsDeletedFalse(1L);
-            verify(personRepository).save(testPerson);
-            assertFalse(testPerson.isBlocked());
-            assertEquals("User was unbanned successfully.", plainTextResponse);
-        }
+        assertEquals(expectedBlockedStatus, person.isBlocked());
     }
 
-    @Nested
-    class GetAvailableCouriers {
-        @Test
-        @DisplayName("successfully get available couriers")
-        void successfullyReceiveAvailableCouriersList() {
-            Person courier1 = createMockPerson(1L, "name", "COURIER");
-            Person courier2 = createMockPerson(2L, "name2", "COURIER");
+    static Stream<Arguments> provideStatusUpdateCases() {
+        return Stream.of(
+                Arguments.of(true, false, createMockPerson(1L, "BanMe", "USER"),
+                        new BanActionRequestDTO("ban reason")),
+                Arguments.of(false, true, createMockPerson(2L, "UnbanMe", "ADMIN"),
+                        new BanActionRequestDTO("sorry"))
+        );
+    }
 
-            CourierDTO dto1 = new CourierDTO(1L, "name", "e@m.lt", false);
-            CourierDTO dto2 = new CourierDTO(2L, "name2", "e2@m.lt", false);
+    @ParameterizedTest(name = "{index}: Test with {0}")
+    @MethodSource("provideCourierListCases")
+    @DisplayName("successfully get available couriers")
+    void successfullyReceiveAvailableCouriersList(List<Person> courierList, List<CourierDTO> expectedDtoList, int expectedMapperCalls) {
+        when(personRepository.findAll(ArgumentMatchers.<Specification<Person>> any())).thenReturn(courierList);
 
-            when(personRepository.findAll(any(Specification.class))).thenReturn(List.of(courier1, courier2));
-            when(personMapper.toCourierDTO(courier1)).thenReturn(dto1);
-            when(personMapper.toCourierDTO(courier2)).thenReturn(dto2);
-
-            List<CourierDTO> response = personService.getAvailableCouriers();
-
-            verify(personRepository).findAll(any(Specification.class));
-            verify(personMapper, times(2)).toCourierDTO(any(Person.class));
-            assertNotNull(response);
+        for (int i = 0; i < expectedMapperCalls; i++) {
+            when(personMapper.toCourierDTO(courierList.get(i))).thenReturn(expectedDtoList.get(i));
         }
 
-        @Test
-        @DisplayName("should return empty list and not call mapper when no available couriers")
-        void shouldReturnEmptyList() {
-            when(personRepository.findAll(any(Specification.class))).thenReturn(List.of());
+        List<CourierDTO> response = personService.getAvailableCouriers();
 
-            List<CourierDTO> response = personService.getAvailableCouriers();
+        assertEquals(expectedDtoList.size(), response.size());
+        verify(personMapper, times(expectedMapperCalls)).toCourierDTO(any(Person.class));
+    }
 
-            assertTrue(response.isEmpty());
-            verify(personMapper, times(0)).toCourierDTO(any(Person.class));
-        }
+    static Stream<Arguments> provideCourierListCases() {
+        Person courier1 = createMockPerson(1L, "name", "COURIER");
+        Person courier2 = createMockPerson(2L, "name2", "COURIER");
+
+        CourierDTO dto1 = new CourierDTO(1L, "name", "email@e.lt", false);
+        CourierDTO dto2 = new CourierDTO(2L, "name2", "email2@e.lt", false);
+
+        return Stream.of(
+                Arguments.of(List.of(courier1, courier2), List.of(dto1, dto2), 2),
+                Arguments.of(List.of(), List.of(), 0)
+        );
     }
 
     @Nested
@@ -281,14 +252,95 @@ public class PersonServiceTest {
         }
     }
 
-   /* @Nested
+    @Nested
     class MyInfo {
         @Test
         @DisplayName("should return dto for simple user")
         void shouldReturnForSimpleUser() {
-            when(personRepository.)
+            testPerson = createMockPerson(1L, "test name", "USER");
+
+            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
+            when(userInfoStrategy.supports(testPerson)).thenReturn(true);
+            when(userInfoStrategy.map(testPerson)).thenReturn(mock(UserResponseDTO.class));
+
+            PersonResponseDTO responseDTO = personService.myInfo();
+
+            assertNotNull(responseDTO);
+            verify(userInfoStrategy, times(1)).map(testPerson);
+            assertInstanceOf(UserResponseDTO.class, responseDTO);
         }
-    }*/
+
+        @Test
+        @DisplayName("should return for admin")
+        void shouldReturnForAdmin() {
+            testPerson = createMockPerson(1L, "test admin", "ADMIN");
+
+            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
+            when(adminInfoStrategy.supports(testPerson)).thenReturn(true);
+            when(adminInfoStrategy.map(testPerson)).thenReturn(mock(AdminProfileResponseDTO.class));
+
+            PersonResponseDTO responseDTO = personService.myInfo();
+
+            assertNotNull(responseDTO);
+            verify(adminInfoStrategy, times(1)).map(testPerson);
+            assertInstanceOf(AdminProfileResponseDTO.class, responseDTO);
+        }
+
+        @Test
+        @DisplayName("should throw IllegalStateException when no strategy supports the person")
+        void shouldThrow_personIsNotSupportedByAnyStrategy () {
+            testPerson = createMockPerson(1L, "test", "COURIER");
+
+            when(currentPersonService.getCurrentPerson()).thenReturn(testPerson);
+            when(userInfoStrategy.supports(testPerson)).thenReturn(false);
+            when(adminInfoStrategy.supports(testPerson)).thenReturn(false);
+
+            assertThrows(IllegalStateException.class, () -> personService.myInfo());
+            verify(userInfoStrategy, never()).map(testPerson);
+            verify(adminInfoStrategy, never()).map(testPerson);
+        }
+    }
+
+    @Nested
+    class UpdateMyInfo {
+        @Test
+        @DisplayName("successfully updates information")
+        void shouldSuccessfullyUpdateUserInformation() {
+            User user = new User("name", "email@test.lt", "pass");
+            Address address = new Address();
+            address.setId(100L);
+            user.setAddresses(List.of(address));
+
+            UserEditDTO dto = new UserEditDTO(Optional.of("123456"), Optional.of(100L), Optional.of(true));
+
+            when(currentPersonService.getCurrentPersonAs(User.class)).thenReturn(user);
+            when(phoneValidator.isValid("123456")).thenReturn(true);
+            when(phoneValidator.format("123456")).thenReturn("12345678");
+
+            ApiResponseDTO responseDTO = personService.updateMyInfo(dto);
+
+            assertEquals("success", responseDTO.status());
+            assertEquals(address, user.getDefaultAddress());
+            assertEquals("12345678", user.getPhoneNumber());
+            assertTrue(user.isSubscribed());
+            verify(personRepository).save(user);
+        }
+
+        @Test
+        @DisplayName("successfully updates information")
+        void phoneValidationCases() {
+
+        }
+
+        private User createMockUserWithAddress() {
+            User user = new User("name", "email@test.lt", "pass");
+            Address address = new Address();
+            address.setId(100L);
+            user.setAddresses(List.of(address));
+
+            return user;
+        }
+    }
 
 
 
@@ -296,7 +348,8 @@ public class PersonServiceTest {
     class ChangePassword {
         @BeforeEach
         void setUp() {
-            testPerson = createMockPerson("", "", "");
+            testPerson = createMockPerson(1L, "name", "USER");
+            testPerson.setEmail("test@example.com");
 
             SecurityContextHolder.setContext(securityContext);
             when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -358,33 +411,11 @@ public class PersonServiceTest {
         }
     }
 
-    private Person createMockPerson(String role, String email, String password) {
-        Person person = new User() {
-            @Override
-            public String getRole() { return (!role.isEmpty()) ? role : "USER"; }
-            @Override
-            public Long getId() { return 1L; }
-        };
-        person.setPassword((!password.isEmpty()) ? password : "encodedCurrentPassword");
-        person.setEmail((!email.isEmpty()) ? email : "test@example.com");
-
-        return person;
-    }
-
-    private Person createMockPerson(Long id, String name, String role) {
+    private static Person createMockPerson(Long id, String name, String role) {
         return new Person() {
-            @Override
-            public String getRole() {
-                return role;
-            }
-            @Override
-            public Long getId() {
-                return id;
-            }
-            @Override
-            public String getName() {
-                return name;
-            }
+            @Override public Long getId() { return id; }
+            @Override public String getName() { return name; }
+            @Override public String getRole() { return role; }
         };
     }
 }

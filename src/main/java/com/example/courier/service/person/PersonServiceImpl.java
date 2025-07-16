@@ -21,8 +21,7 @@ import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
-import com.example.courier.validation.PasswordValidator;
-import com.example.courier.validation.PhoneValidator;
+import com.example.courier.validation.*;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,16 +44,20 @@ public class PersonServiceImpl implements PersonService {
     private final BanHistoryRepository banHistoryRepository;
     private final BanHistoryMapper banHistoryMapper;
     private final PhoneValidator phoneValidator;
+    private final EmailValidator emailValidator;
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
     private final CurrentPersonService currentPersonService;
     private final List<PersonInfoStrategy> strategies;
+    private final PersonDetailsValidator validator;
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
                              BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
                              PhoneValidator phoneValidator, PasswordValidator passwordValidator,
                              PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService,
-                             List<PersonInfoStrategy> strategies) {
+                             List<PersonInfoStrategy> strategies, PersonDetailsValidator validator,
+                             EmailValidator emailValidator
+    ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
@@ -64,6 +67,8 @@ public class PersonServiceImpl implements PersonService {
         this.passwordEncoder = passwordEncoder;
         this.currentPersonService = currentPersonService;
         this.strategies = strategies;
+        this.validator = validator;
+        this.emailValidator = emailValidator;
     }
 
     @Override
@@ -88,19 +93,16 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
-        User user = fetchPersonByIdAndType(AuthUtils.getAuthenticatedPersonId(), User.class);
+        User user = currentPersonService.getCurrentPersonAs(User.class);
 
-        dto.phoneNumber().map(phoneValidator::validate).ifPresent(user::setPhoneNumber);
-
-        dto.defaultAddressId().flatMap(defaultId -> user.getAddresses().stream()
-                .filter(a -> a.getId().equals(defaultId))
-                .findFirst())
-                .ifPresent(user::setDefaultAddress);
-
+        dto.phoneNumber()
+                .filter(phoneValidator::isValid)
+                .ifPresent(phone -> user.setPhoneNumber(phoneValidator.format(phone)));
+        dto.defaultAddressId().flatMap(user::getAddressById).ifPresent(user::setDefaultAddress);
         dto.subscribed().ifPresent(user::setSubscribed);
 
         personRepository.save(user);
-
+        logger.info("User {} successfully updated his information", user.getEmail());
         return new ApiResponseDTO("success", "Successfully updated");
     }
 
@@ -151,9 +153,14 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public void updateDetails(Long personId, PersonDetailsUpdateRequest updateRequest) {
+        validator.validate(updateRequest);
+
         Person person = fetchById(personId);
-        
-        personMapper.updatePersonFromRequest(updateRequest, person);
+
+        FieldUpdater.updateIfValid(updateRequest.email(), emailValidator::isValid, person::setEmail);
+        FieldUpdater.updateAndTransformIfValid(updateRequest.phoneNumber(), phoneValidator::isValid,
+                phoneValidator::format, person::setPhoneNumber);
+
         personRepository.save(person);
 
         logger.info("Updated person with ID {}", person.getId());
