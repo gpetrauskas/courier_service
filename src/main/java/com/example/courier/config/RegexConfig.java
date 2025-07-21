@@ -20,4 +20,10 @@ public class RegexConfig implements ValidationPatterns {
     public Pattern email() {
         return Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,20}$");
     }
+
+    @Bean
+    @Override
+    public Pattern fullName() {
+        return Pattern.compile("^[A-Za-z]{2,20} [A-Za-z]{2,30}$");
+    }
 }

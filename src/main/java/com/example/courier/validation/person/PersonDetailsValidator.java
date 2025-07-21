@@ -23,10 +23,12 @@ public final class PersonDetailsValidator {
         List<ApiResponseDTO> errors = new ArrayList<>();
 
         Optional.ofNullable(request.email())
+                .filter(e -> !e.isBlank())
                 .filter(e -> !emailValidator.isValid(e))
                 .ifPresent(e -> errors.add(new ApiResponseDTO("email error", "Invalid email")));
 
         Optional.ofNullable(request.phoneNumber())
+                .filter(e -> !e.isBlank())
                 .filter(e -> !phoneValidator.isValid(e))
                 .ifPresent(e -> errors.add(new ApiResponseDTO("phone error", "Invalid phone number")));
 
