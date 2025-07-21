@@ -1,5 +1,6 @@
-package com.example.courier.validation;
+package com.example.courier.validation.person;
 
+import com.example.courier.validation.ValidationPatterns;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
 
@@ -28,19 +29,4 @@ public class PhoneValidator {
     public String format(String phone) {
         return "370" + phone.replaceAll("[^0-9]", "");
     }
-
-
-/*    public String validate(String phone) throws ValidationException {
-        if (phone == null || phone.isEmpty()) {
-            throw new NullPointerException("Phone cannot be null");
-        }
-
-        String digits = phone.replaceAll("[^0-9]", "");
-
-        if (!PHONE_PATTERN.matcher(digits).matches()) {
-            throw new ValidationException("Phone must contain exactly 8 digits");
-        }
-
-        return "370" + digits;
-    }*/
 }

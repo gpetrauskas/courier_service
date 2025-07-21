@@ -10,7 +10,6 @@ import com.example.courier.dto.request.person.BanActionRequestDTO;
 import com.example.courier.dto.request.person.PasswordChangeDTO;
 import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
-import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.AdminProfileResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.dto.response.person.UserResponseDTO;
@@ -22,10 +21,11 @@ import com.example.courier.service.person.strategy.AdminInfoStrategy;
 import com.example.courier.service.person.strategy.PersonInfoStrategy;
 import com.example.courier.service.person.strategy.UserInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
-import com.example.courier.validation.EmailValidator;
+import com.example.courier.validation.person.EmailValidator;
 import com.example.courier.validation.PasswordValidator;
-import com.example.courier.validation.PersonDetailsValidator;
-import com.example.courier.validation.PhoneValidator;
+import com.example.courier.validation.person.NameValidator;
+import com.example.courier.validation.person.PersonDetailsValidator;
+import com.example.courier.validation.person.PhoneValidator;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +38,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -71,6 +70,7 @@ public class PersonServiceTest {
     @Mock private AdminInfoStrategy adminInfoStrategy;
     @Mock private PersonDetailsValidator personDetailsValidator;
     @Mock private EmailValidator emailValidator;
+    @Mock private NameValidator nameValidator;
 
     private Person testPerson;
 
@@ -81,7 +81,7 @@ public class PersonServiceTest {
         List<PersonInfoStrategy> strategyList = List.of(userInfoStrategy, adminInfoStrategy);
         personService = new PersonServiceImpl(personRepository, personMapper, banHistoryRepository, banHistoryMapper,
                 phoneValidator, passwordValidator, passwordEncoder, currentPersonService, strategyList,
-                personDetailsValidator, emailValidator);
+                personDetailsValidator, emailValidator, nameValidator);
     }
 
     @Nested

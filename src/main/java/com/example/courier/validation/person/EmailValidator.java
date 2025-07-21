@@ -1,5 +1,6 @@
-package com.example.courier.validation;
+package com.example.courier.validation.person;
 
+import com.example.courier.validation.ValidationPatterns;
 import org.springframework.stereotype.Component;
 
 @Component
