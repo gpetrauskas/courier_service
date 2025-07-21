@@ -22,6 +22,10 @@ import com.example.courier.specification.person.PersonSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
 import com.example.courier.validation.*;
+import com.example.courier.validation.person.EmailValidator;
+import com.example.courier.validation.person.NameValidator;
+import com.example.courier.validation.person.PersonDetailsValidator;
+import com.example.courier.validation.person.PhoneValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +49,7 @@ public class PersonServiceImpl implements PersonService {
     private final BanHistoryMapper banHistoryMapper;
     private final PhoneValidator phoneValidator;
     private final EmailValidator emailValidator;
+    private final NameValidator nameValidator;
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
     private final CurrentPersonService currentPersonService;
@@ -56,7 +61,7 @@ public class PersonServiceImpl implements PersonService {
                              PhoneValidator phoneValidator, PasswordValidator passwordValidator,
                              PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService,
                              List<PersonInfoStrategy> strategies, PersonDetailsValidator validator,
-                             EmailValidator emailValidator
+                             EmailValidator emailValidator, NameValidator nameValidator
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
@@ -69,6 +74,7 @@ public class PersonServiceImpl implements PersonService {
         this.strategies = strategies;
         this.validator = validator;
         this.emailValidator = emailValidator;
+        this.nameValidator = nameValidator;
     }
 
     @Override
@@ -157,6 +163,7 @@ public class PersonServiceImpl implements PersonService {
 
         Person person = fetchById(personId);
 
+        FieldUpdater.updateIfValid(updateRequest.name(), nameValidator::isValid, person::setName);
         FieldUpdater.updateIfValid(updateRequest.email(), emailValidator::isValid, person::setEmail);
         FieldUpdater.updateAndTransformIfValid(updateRequest.phoneNumber(), phoneValidator::isValid,
                 phoneValidator::format, person::setPhoneNumber);
