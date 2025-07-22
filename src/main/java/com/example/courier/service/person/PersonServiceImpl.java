@@ -101,11 +101,9 @@ public class PersonServiceImpl implements PersonService {
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
         User user = currentPersonService.getCurrentPersonAs(User.class);
 
-        dto.phoneNumber()
-                .filter(phoneValidator::isValid)
-                .ifPresent(phone -> user.setPhoneNumber(phoneValidator.format(phone)));
-        dto.defaultAddressId().flatMap(user::getAddressById).ifPresent(user::setDefaultAddress);
-        dto.subscribed().ifPresent(user::setSubscribed);
+        FieldUpdater.updateAndTransformIfValid(dto.phoneNumber(), phoneValidator::isValid, phoneValidator::format, user::setPhoneNumber);
+        user.getAddressById(dto.defaultAddressId()).ifPresent(user::setDefaultAddress);
+        FieldUpdater.updateBoolean(dto.subscribed(), user::setSubscribed);
 
         personRepository.save(user);
         logger.info("User {} successfully updated his information", user.getEmail());
@@ -268,6 +266,7 @@ public class PersonServiceImpl implements PersonService {
 
         banHistoryRepository.save(banHistory);
     }
+
 
 
 }

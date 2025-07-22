@@ -23,4 +23,10 @@ public final class FieldUpdater {
             updater.accept(transformer.apply(value));
         }
     }
+
+    public static void updateBoolean(@Nullable Boolean value, Consumer<Boolean> updater) {
+        if (value != null) {
+            updater.accept(value);
+        }
+    }
 }

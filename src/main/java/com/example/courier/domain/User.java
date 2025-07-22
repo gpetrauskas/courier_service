@@ -6,6 +6,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -96,7 +97,9 @@ public class User extends Person {
     }
 
     public void setSubscribed(Boolean subscribed) {
-        this.subscribed = subscribed;
+        if (!Objects.equals(this.subscribed, subscribed)) {
+            this.subscribed = subscribed;
+        }
     }
 
     public Optional<Address> getAddressById(Long id) {

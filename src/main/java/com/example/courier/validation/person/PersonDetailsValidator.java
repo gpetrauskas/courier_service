@@ -34,6 +34,12 @@ public final class PersonDetailsValidator {
         }
     }
 
+    public void validatePhone(String phone) {
+        if (phone != null && !phoneValidator.isValid(phone)) {
+            throw new CompositeValidationException(List.of(new ApiResponseDTO("phone error", "Invalid phone number")));
+        }
+    }
+
     private void validateField(String value, String code, String message, Predicate<String> validator, List<ApiResponseDTO> errors) {
         Optional.ofNullable(value)
                 .filter(v -> !v.isBlank())

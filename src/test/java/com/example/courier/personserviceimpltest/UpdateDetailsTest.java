@@ -117,6 +117,8 @@ public class UpdateDetailsTest {
             when(personRepository.findById(99L)).thenReturn(Optional.empty());
 
             assertThrows(ResourceNotFoundException.class, () -> personService.updateDetails(99L, request));
+
+            verify(personRepository, never()).save(any(Person.class));
         }
     }
 
