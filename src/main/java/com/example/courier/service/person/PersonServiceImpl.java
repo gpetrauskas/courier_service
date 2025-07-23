@@ -18,14 +18,12 @@ import com.example.courier.repository.BanHistoryRepository;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.strategy.PersonInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.service.transformation.PersonTransformationService;
+import com.example.courier.service.validation.PersonValidationService;
 import com.example.courier.specification.person.PersonSpecificationBuilder;
-import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
 import com.example.courier.validation.*;
-import com.example.courier.validation.person.EmailValidator;
-import com.example.courier.validation.person.NameValidator;
 import com.example.courier.validation.person.PersonDetailsValidator;
-import com.example.courier.validation.person.PhoneValidator;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +45,8 @@ public class PersonServiceImpl implements PersonService {
     private final PersonMapper personMapper;
     private final BanHistoryRepository banHistoryRepository;
     private final BanHistoryMapper banHistoryMapper;
-    private final PhoneValidator phoneValidator;
-    private final EmailValidator emailValidator;
-    private final NameValidator nameValidator;
-    private final PasswordValidator passwordValidator;
+    private final PersonValidationService personValidationService;
+    private final PersonTransformationService personTransformationService;
     private final PasswordEncoder passwordEncoder;
     private final CurrentPersonService currentPersonService;
     private final List<PersonInfoStrategy> strategies;
@@ -58,32 +54,25 @@ public class PersonServiceImpl implements PersonService {
 
     public PersonServiceImpl(PersonRepository personRepository, PersonMapper personMapper,
                              BanHistoryRepository banHistoryRepository, BanHistoryMapper banHistoryMapper,
-                             PhoneValidator phoneValidator, PasswordValidator passwordValidator,
                              PasswordEncoder passwordEncoder, CurrentPersonService currentPersonService,
                              List<PersonInfoStrategy> strategies, PersonDetailsValidator validator,
-                             EmailValidator emailValidator, NameValidator nameValidator
+                             PersonValidationService personValidationService, PersonTransformationService personTransformationService
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.banHistoryRepository = banHistoryRepository;
         this.banHistoryMapper = banHistoryMapper;
-        this.phoneValidator = phoneValidator;
-        this.passwordValidator = passwordValidator;
         this.passwordEncoder = passwordEncoder;
         this.currentPersonService = currentPersonService;
         this.strategies = strategies;
         this.validator = validator;
-        this.emailValidator = emailValidator;
-        this.nameValidator = nameValidator;
+        this.personValidationService = personValidationService;
+        this.personTransformationService = personTransformationService;
     }
 
     @Override
     public Optional<Person> findById(Long id) {
         return personRepository.findById(id);
-    }
-
-    @Override
-    public void updatePassword(Long id, String newPassword) {
     }
 
     @Override
@@ -101,7 +90,7 @@ public class PersonServiceImpl implements PersonService {
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
         User user = currentPersonService.getCurrentPersonAs(User.class);
 
-        FieldUpdater.updateAndTransformIfValid(dto.phoneNumber(), phoneValidator::isValid, phoneValidator::format, user::setPhoneNumber);
+        FieldUpdater.updateAndTransformIfValid(dto.phoneNumber(), personValidationService::isPhoneValid, personTransformationService::formatPhone, user::setPhoneNumber);
         user.getAddressById(dto.defaultAddressId()).ifPresent(user::setDefaultAddress);
         FieldUpdater.updateBoolean(dto.subscribed(), user::setSubscribed);
 
@@ -111,37 +100,18 @@ public class PersonServiceImpl implements PersonService {
     }
 
     public ApiResponseDTO changePassword(PasswordChangeDTO dto) {
-        Person person = fetchById(AuthUtils.getAuthenticatedPersonId());
+        Person person = fetchById(currentPersonService.getCurrentPersonId());
         if (!passwordEncoder.matches(dto.currentPassword(), person.getPassword())) {
             throw new ValidationException("Current password do not match.");
         }
 
-        passwordValidator.validatePassword(dto.newPassword());
+        personValidationService.validatePassword(dto.newPassword());
 
         person.setPassword(passwordEncoder.encode(dto.newPassword()));
         save(person);
 
         return new ApiResponseDTO("success", "Password updated successfully.");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(
@@ -161,10 +131,10 @@ public class PersonServiceImpl implements PersonService {
 
         Person person = fetchById(personId);
 
-        FieldUpdater.updateIfValid(updateRequest.name(), nameValidator::isValid, person::setName);
-        FieldUpdater.updateIfValid(updateRequest.email(), emailValidator::isValid, person::setEmail);
-        FieldUpdater.updateAndTransformIfValid(updateRequest.phoneNumber(), phoneValidator::isValid,
-                phoneValidator::format, person::setPhoneNumber);
+        FieldUpdater.updateIfValid(updateRequest.name(), personValidationService::isNameValid, person::setName);
+        FieldUpdater.updateIfValid(updateRequest.email(), personValidationService::isEmailValid, person::setEmail);
+        FieldUpdater.updateAndTransformIfValid(updateRequest.phoneNumber(), personValidationService::isPhoneValid,
+                personTransformationService::formatPhone, person::setPhoneNumber);
 
         personRepository.save(person);
 
@@ -266,7 +236,4 @@ public class PersonServiceImpl implements PersonService {
 
         banHistoryRepository.save(banHistory);
     }
-
-
-
 }
