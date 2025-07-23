@@ -6,7 +6,7 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.service.security.CurrentPersonService;
-import com.example.courier.validation.PasswordValidator;
+import com.example.courier.service.validation.PersonValidationService;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ public class ChangePasswordTest {
     @Mock private CurrentPersonService currentPersonService;
     @Mock private PersonRepository personRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private PasswordValidator passwordValidator;
+    @Mock private PersonValidationService personValidationService;
 
     @InjectMocks private PersonServiceImpl personService;
 
@@ -58,7 +58,7 @@ public class ChangePasswordTest {
 
         assertEquals("success", response.status());
         assertEquals("encodedNewPass123", person.getPassword());
-        verify(passwordValidator).validatePassword(dto.newPassword());
+        verify(personValidationService).validatePassword(dto.newPassword());
         verify(personRepository).save(person);
     }
 
@@ -81,7 +81,7 @@ public class ChangePasswordTest {
 
         when(passwordEncoder.matches(dto.currentPassword(), person.getPassword())).thenReturn(true);
         doThrow(new ValidationException("Password must contain at least one upper letter"))
-                .when(passwordValidator).validatePassword(dto.newPassword());
+                .when(personValidationService).validatePassword(dto.newPassword());
 
         ValidationException ex = assertThrows(ValidationException.class, () -> personService.changePassword(dto));
 

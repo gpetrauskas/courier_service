@@ -7,10 +7,9 @@ import com.example.courier.exception.CompositeValidationException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
-import com.example.courier.validation.person.EmailValidator;
-import com.example.courier.validation.person.NameValidator;
+import com.example.courier.service.transformation.PersonTransformationService;
+import com.example.courier.service.validation.PersonValidationService;
 import com.example.courier.validation.person.PersonDetailsValidator;
-import com.example.courier.validation.person.PhoneValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,9 +31,8 @@ public class UpdateDetailsTest {
 
     @Mock private PersonDetailsValidator personDetailsValidator;
     @Mock private PersonRepository personRepository;
-    @Mock private EmailValidator emailValidator;
-    @Mock private PhoneValidator phoneValidator;
-    @Mock private NameValidator nameValidator;
+    @Mock private PersonValidationService personValidationService;
+    @Mock private PersonTransformationService personTransformationService;
 
     private Person person;
 
@@ -56,7 +54,7 @@ public class UpdateDetailsTest {
             var request = new PersonDetailsUpdateRequest("name name", "new@email.lt", "12345678");
 
             mockValidators(true, true, true);
-            when(phoneValidator.format(request.phoneNumber())).thenReturn("370" + request.phoneNumber());
+            when(personTransformationService.formatPhone(request.phoneNumber())).thenReturn("370" + request.phoneNumber());
             mockRepo(1L, person);
 
             personService.updateDetails(1L, request);
@@ -123,9 +121,9 @@ public class UpdateDetailsTest {
     }
 
     private void mockValidators(boolean nameOk, boolean emailOk, boolean phoneOk) {
-        when(nameValidator.isValid(anyString())).thenReturn(nameOk);
-        when(emailValidator.isValid(anyString())).thenReturn(emailOk);
-        when(phoneValidator.isValid(anyString())).thenReturn(phoneOk);
+        when(personValidationService.isNameValid(anyString())).thenReturn(nameOk);
+        when(personValidationService.isEmailValid(anyString())).thenReturn(emailOk);
+        when(personValidationService.isPhoneValid(anyString())).thenReturn(phoneOk);
     }
 
     private void mockRepo(Long id, Person person) {

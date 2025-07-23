@@ -6,8 +6,9 @@ import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.service.person.PersonServiceImpl;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.service.transformation.PersonTransformationService;
+import com.example.courier.service.validation.PersonValidationService;
 import com.example.courier.validation.person.PersonDetailsValidator;
-import com.example.courier.validation.person.PhoneValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,9 @@ public class UpdateMyInfoTest {
 
     @Mock private CurrentPersonService currentPersonService;
     @Mock private PersonRepository personRepository;
-    @Mock private PhoneValidator phoneValidator;
     @Mock private PersonDetailsValidator validator;
+    @Mock private PersonValidationService personValidationService;
+    @Mock private PersonTransformationService personTransformationService;
 
     @InjectMocks private PersonServiceImpl personService;
 
@@ -47,8 +49,8 @@ public class UpdateMyInfoTest {
         UserEditDTO request = new UserEditDTO("12345678", null, null);
 
         when(currentPersonService.getCurrentPersonAs(User.class)).thenReturn(user);
-        when(phoneValidator.isValid(request.phoneNumber())).thenReturn(true);
-        when(phoneValidator.format(request.phoneNumber())).thenReturn("37012345678");
+        when(personValidationService.isPhoneValid(request.phoneNumber())).thenReturn(true);
+        when(personTransformationService.formatPhone(request.phoneNumber())).thenReturn("37012345678");
 
         var response = personService.updateMyInfo(request);
 

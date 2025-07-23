@@ -11,11 +11,12 @@ import com.example.courier.service.person.strategy.AdminInfoStrategy;
 import com.example.courier.service.person.strategy.PersonInfoStrategy;
 import com.example.courier.service.person.strategy.UserInfoStrategy;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.service.transformation.PersonTransformationService;
+import com.example.courier.service.validation.PersonValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -34,6 +35,8 @@ public class MyInfoTest {
     @Mock private UserInfoStrategy userInfoStrategy;
     @Mock private AdminInfoStrategy adminInfoStrategy;
     @Mock private List<PersonInfoStrategy> strategies;
+    @Mock private PersonValidationService personValidationService;
+    @Mock private PersonTransformationService personTransformationService;
 
     private PersonServiceImpl personService;
 
@@ -43,8 +46,8 @@ public class MyInfoTest {
     void setup() {
         strategies = List.of(adminInfoStrategy, userInfoStrategy);
         personService = new PersonServiceImpl(personRepository, personMapper, null, null,
-                null, null, null, currentPersonService, strategies,
-                null, null, null);
+                null, currentPersonService, strategies,
+                null, personValidationService, personTransformationService);
 
         person = new Person() {
             @Override public String getRole() { return "USER"; }
