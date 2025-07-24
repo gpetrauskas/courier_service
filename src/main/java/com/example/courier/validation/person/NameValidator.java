@@ -1,13 +1,13 @@
 package com.example.courier.validation.person;
 
-import com.example.courier.validation.ValidationPatterns;
+import com.example.courier.validation.PersonPatterns;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NameValidator {
-    private final ValidationPatterns patterns;
+    private final PersonPatterns patterns;
 
-    public NameValidator(ValidationPatterns patterns) {
+    public NameValidator(PersonPatterns patterns) {
         this.patterns = patterns;
     }
 

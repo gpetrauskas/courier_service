@@ -22,6 +22,7 @@ import java.util.List;
 public class AddressController {
 
     private Logger log = LoggerFactory.getLogger(AddressController.class);
+
     @Autowired
     private AddressService addressService;
 

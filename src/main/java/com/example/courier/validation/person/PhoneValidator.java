@@ -1,6 +1,6 @@
 package com.example.courier.validation.person;
 
-import com.example.courier.validation.ValidationPatterns;
+import com.example.courier.validation.PersonPatterns;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
 
@@ -9,9 +9,9 @@ import java.util.regex.Pattern;
 @Component
 public class PhoneValidator {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{8}$");
-    private final ValidationPatterns patterns;
+    private final PersonPatterns patterns;
 
-    public PhoneValidator(ValidationPatterns patterns) {
+    public PhoneValidator(PersonPatterns patterns) {
         this.patterns = patterns;
     }
 
