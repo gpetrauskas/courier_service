@@ -1,13 +1,13 @@
 package com.example.courier.config;
 
-import com.example.courier.validation.ValidationPatterns;
+import com.example.courier.validation.PersonPatterns;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.regex.Pattern;
 
 @Configuration
-public class RegexConfig implements ValidationPatterns {
+public class RegexConfig implements PersonPatterns {
 
     @Bean
     @Override
