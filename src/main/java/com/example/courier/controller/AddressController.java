@@ -29,28 +29,13 @@ public class AddressController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/myAddressList")
     public ResponseEntity<List<AddressDTO>> getMyAddressList() {
-        List<AddressDTO> myList = addressService.getAllMyAddresses();
-
-        return ResponseEntity.ok(myList);
+        return ResponseEntity.ok(addressService.getAllMyAddresses());
     }
 
     @PatchMapping("/update/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> updateAddress(@PathVariable Long id, @RequestBody AddressDTO addressDTO, Principal principal) {
-        try {
-            AddressDTO updatedAddress = addressService.updateAddress(id, addressDTO);
-
-            return ResponseEntity.ok(updatedAddress);
-        } catch (AddressNotFoundException e) {
-            log.error("Address with id {} not found", id);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (UserAddressMismatchException e) {
-            log.error("Address with id {} does not belong to user with email {}", id, principal.getName());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred.");
-        } catch (Exception e) {
-            log.error("Error updating address with id {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong.");
-        }
+    public ResponseEntity<AddressDTO> updateAddress(@PathVariable Long id, @RequestBody AddressDTO addressDTO) {
+        return ResponseEntity.ok(addressService.updateAddress(id, addressDTO));
     }
 
     @DeleteMapping("/remove/{id}")

@@ -147,4 +147,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<List<ApiResponseDTO>> handleValidationErrors(CompositeValidationException ex) {
         return ResponseEntity.badRequest().body(ex.getErrors());
     }
+
+    @ExceptionHandler(AddressNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO> handleAddressNotFound(AddressNotFoundException ex) {
+        ApiResponseDTO responseDTO = new ApiResponseDTO("address_error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDTO);
+    }
+
+    @ExceptionHandler(UserAddressMismatchException.class)
+    public ResponseEntity<ApiResponseDTO> handleUserAddressMismatch(UserAddressMismatchException ex) {
+        ApiResponseDTO responseDTO = new ApiResponseDTO("user_address_mismatch", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDTO);
+    }
 }

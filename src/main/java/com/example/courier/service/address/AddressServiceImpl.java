@@ -9,16 +9,12 @@ import com.example.courier.dto.request.order.AddressSectionUpdateRequest;
 import com.example.courier.exception.AddressNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.exception.UserAddressMismatchException;
-import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.repository.OrderAddressRepository;
-import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.service.validation.AddressValidationService;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,24 +55,18 @@ public class AddressServiceImpl implements AddressService {
 
     @Transactional(readOnly = true)
     public List<AddressDTO> getAllMyAddresses() {
-        try {
-            Long userId = currentPersonService.getCurrentPersonId();
-            List<Address> addresses = getAddressesByUserId(userId);
+        Long userId = currentPersonService.getCurrentPersonId();
+        List<Address> addresses = getAddressesByUserId(userId);
 
-            return addresses.stream()
-                    .map(addressMapper::toAddressDTO)
-                    .toList();
-        } catch (EntityNotFoundException e) {
-            logger.error("User not found");
-            throw new UserNotFoundException("User not found");
-        } catch (Exception e) {
-            logger.error("Error fetching addresses for user", e);
-            throw new RuntimeException("Error fetching addresses", e);
-        }
+        return addresses.stream()
+                .map(addressMapper::toAddressDTO)
+                .toList();
     }
 
     @Transactional
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
+        validationService.validateAddress(addressDTO);
+
         Address address = validateAddressPerson(addressId);
         addressMapper.updateAddressFromDTO(addressDTO, address);
         saveAddress(address);
