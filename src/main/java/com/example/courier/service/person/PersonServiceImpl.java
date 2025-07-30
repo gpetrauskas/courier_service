@@ -88,9 +88,9 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
-        User user = currentPersonService.getCurrentPersonAs(User.class);
+        User user = fetchPersonByIdAndType(currentPersonService.getCurrentPersonId(), User.class);
 
-        FieldUpdater.updateAndTransformIfValid(dto.phoneNumber(), personValidationService::isPhoneValid, personTransformationService::formatPhone, user::setPhoneNumber);
+        FieldUpdater.updateIfValidOrThrow(dto.phoneNumber(), personTransformationService::validateAndFormatPhone, user::setPhoneNumber);
         user.getAddressById(dto.defaultAddressId()).ifPresent(user::setDefaultAddress);
         FieldUpdater.updateBoolean(dto.subscribed(), user::setSubscribed);
 

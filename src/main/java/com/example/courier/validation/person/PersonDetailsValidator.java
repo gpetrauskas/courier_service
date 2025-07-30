@@ -24,9 +24,9 @@ public final class PersonDetailsValidator extends BaseValidator {
     public void validate(PersonDetailsUpdateRequest request) {
         List<ApiResponseDTO> errors = new ArrayList<>();
 
-        validateField(request.name(), "name error", "Invalid full name", nameValidator::isValid, errors);
-        validateField(request.email(), "email error", "Invalid email", emailValidator::isValid, errors);
-        validateField(request.phoneNumber(), "phone error", "Invalid phone number", phoneValidator::isValid, errors);
+        validateOptionalField(request.name(), "name error", "Invalid full name", nameValidator::isValid, errors);
+        validateOptionalField(request.email(), "email error", "Invalid email", emailValidator::isValid, errors);
+        validateOptionalField(request.phoneNumber(), "phone error", "Invalid phone number", phoneValidator::isValid, errors);
 
         if (!errors.isEmpty()) {
             throw new CompositeValidationException(errors);

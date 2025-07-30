@@ -1,20 +1,14 @@
 package com.example.courier.controller;
 
 import com.example.courier.dto.AddressDTO;
-import com.example.courier.exception.AddressNotFoundException;
-import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.service.address.AddressService;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -41,14 +35,7 @@ public class AddressController {
     @DeleteMapping("/remove/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> removeAddress(@PathVariable Long id) {
-        try {
-            addressService.deleteAddressById(id);
-
-            return ResponseEntity.ok().body("Address was successfully deleted.");
-        } catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred");
-        }
+        addressService.deleteAddressById(id);
+        return ResponseEntity.ok("Address was successfully deleted.");
     }
 }

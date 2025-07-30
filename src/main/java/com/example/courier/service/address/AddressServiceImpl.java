@@ -1,5 +1,6 @@
 package com.example.courier.service.address;
 
+import com.example.courier.common.AddressValidationMode;
 import com.example.courier.domain.Address;
 import com.example.courier.domain.OrderAddress;
 import com.example.courier.domain.User;
@@ -7,18 +8,19 @@ import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.mapper.AddressMapper;
 import com.example.courier.dto.request.order.AddressSectionUpdateRequest;
 import com.example.courier.exception.AddressNotFoundException;
-import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.exception.UserAddressMismatchException;
 import com.example.courier.repository.AddressRepository;
 import com.example.courier.repository.OrderAddressRepository;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.service.validation.AddressValidationService;
+import com.example.courier.validation.person.PhoneValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AddressServiceImpl implements AddressService {
@@ -30,27 +32,25 @@ public class AddressServiceImpl implements AddressService {
     private final OrderAddressRepository orderAddressRepository;
     private final CurrentPersonService currentPersonService;
     private final AddressValidationService validationService;
+    private final PhoneValidator phoneValidator;
 
 
     public AddressServiceImpl(AddressRepository addressRepository, AddressMapper addressMapper,
                           OrderAddressRepository orderAddressRepository, CurrentPersonService currentPersonService,
-                              AddressValidationService validationService) {
+                              AddressValidationService validationService, PhoneValidator phoneValidator) {
         this.addressRepository = addressRepository;
         this.addressMapper = addressMapper;
         this.orderAddressRepository = orderAddressRepository;
         this.currentPersonService = currentPersonService;
         this.validationService = validationService;
+        this.phoneValidator = phoneValidator;
     }
 
     @Transactional
     public void addressSectionUpdate(AddressSectionUpdateRequest updateRequest) {
-        if (currentPersonService.isAdmin()) {
-            OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
-            addressMapper.updateAddressSectionFromRequest(updateRequest, orderAddress);
-            orderAddressRepository.save(orderAddress);
-        } else {
-            throw new UnauthorizedAccessException("No access.");
-        }
+        OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
+        addressMapper.updateAddressSectionFromRequest(updateRequest, orderAddress);
+        orderAddressRepository.save(orderAddress);
     }
 
     @Transactional(readOnly = true)
@@ -65,9 +65,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Transactional
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
-        validationService.validateAddress(addressDTO);
+        validationService.validateAddress(addressDTO, AddressValidationMode.UPDATE);
 
-        Address address = validateAddressPerson(addressId);
+        Address address = findAddressForCurrentPerson(addressId);
         addressMapper.updateAddressFromDTO(addressDTO, address);
         saveAddress(address);
 
@@ -78,47 +78,36 @@ public class AddressServiceImpl implements AddressService {
 
     @Transactional
     public void deleteAddressById(Long addressId) {
-        addressRepository.delete(validateAddressPerson(addressId));
+        addressRepository.delete(findAddressForCurrentPerson(addressId));
         logger.info("Deleted address with id: {}", addressId);
     }
 
     public OrderAddress fetchOrCreateOrderAddress(AddressDTO addressDTO, User user) {
-        if (addressDTO == null) {
-            throw new IllegalArgumentException("AddressDTO cannot be null");
-        }
+        Objects.requireNonNull(addressDTO, "AddressDTO cannot be null");
+        Objects.requireNonNull(user, "User cannot be null");
 
-        try {
-            Address address = addressDTO.id() == null
-                    ? createNewAddress(addressDTO, user)
-                    : handleExistingAddress(addressDTO, user);
+        AddressValidationMode mode = determineValidationMode(addressDTO);
+        validationService.validateAddress(addressDTO, mode);
 
-            return createOrderAddressFromAddress(address);
-        }
-        catch (UserAddressMismatchException ex) { throw ex; }
-        catch (Exception e) {
-            logger.error("Failed to fetch or create OrderAddress for addressDTO {} and user {}", addressDTO, user, e);
-            throw new RuntimeException("Failed to fetch or create OrderAddress", e);
-        }
+        Address address = processAddressByMode(addressDTO, user, mode);
+        return createOrderAddressFromAddress(address);
     }
 
     private Address handleExistingAddress(AddressDTO dto, User user) {
         logger.info("Fetching existing address with id {}", dto.id());
+
         Address address = addressRepository.findByIdAndUserId(dto.id(), user.getId())
                 .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
-        updateNameAndPhoneIfChanged(address, dto);
+
+        updateRecipientDetailsIfChanged(address, dto);
         return address;
     }
 
-    private void updateNameAndPhoneIfChanged(Address address, AddressDTO dto) {
-        if (address.getName() == null || !address.getName().equals(dto.name())) {
-            address.setName(dto.name());
-        }
-        if (address.getPhoneNumber() == null || !address.getPhoneNumber().equals(dto.phoneNumber())) {
-            address.setPhoneNumber(dto.phoneNumber());
-        }
+    private void updateRecipientDetailsIfChanged(Address address, AddressDTO dto) {
+        addressMapper.updateNameAndPhoneOnly(dto, address, phoneValidator);
     }
 
-    private Address validateAddressPerson(Long addressId) {
+    private Address findAddressForCurrentPerson(Long addressId) {
         Long personId = currentPersonService.getCurrentPersonId();
         return addressRepository.findByIdAndUserId(addressId, personId)
                 .orElseThrow(() -> new AddressNotFoundException("Address was not found using userId: "
@@ -154,5 +143,19 @@ public class AddressServiceImpl implements AddressService {
     private OrderAddress getOrderAddressById(Long id) {
         return orderAddressRepository.findById(id)
                 .orElseThrow(() -> new AddressNotFoundException("No address with such id."));
+    }
+
+    private AddressValidationMode determineValidationMode(AddressDTO dto) {
+        return dto.id() == null
+                ? AddressValidationMode.CREATE_NEW
+                : AddressValidationMode.USE_EXISTING;
+    }
+
+    private Address processAddressByMode(AddressDTO addressDTO, User user, AddressValidationMode mode) {
+        return switch (mode) {
+            case CREATE_NEW -> createNewAddress(addressDTO, user);
+            case USE_EXISTING -> handleExistingAddress(addressDTO, user);
+            default -> throw new IllegalArgumentException("Unsuported mode: " + mode);
+        };
     }
 }

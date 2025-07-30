@@ -24,6 +24,12 @@ public final class FieldUpdater {
         }
     }
 
+    public static void updateIfValidOrThrow(String value, Function<String, String> validatorAndTransformer, Consumer<String> setter) {
+        if (value == null || value.isBlank()) return;
+        String result = validatorAndTransformer.apply(value);
+        setter.accept(result);
+    }
+
     public static void updateBoolean(@Nullable Boolean value, Consumer<Boolean> updater) {
         if (value != null) {
             updater.accept(value);

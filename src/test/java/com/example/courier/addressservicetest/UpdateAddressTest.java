@@ -1,5 +1,6 @@
 package com.example.courier.addressservicetest;
 
+import com.example.courier.common.AddressValidationMode;
 import com.example.courier.domain.Address;
 import com.example.courier.dto.AddressDTO;
 import com.example.courier.dto.ApiResponseDTO;
@@ -48,12 +49,12 @@ public class UpdateAddressTest {
         doThrow(new CompositeValidationException(List.of(
                 new ApiResponseDTO("street error", "Invalid street format"),
                 new ApiResponseDTO("flat error", "Invalid flat format")
-        ))).when(validationService).validateAddress(invalidAddressDTO);
+        ))).when(validationService).validateAddress(invalidAddressDTO, AddressValidationMode.UPDATE);
 
 
         CompositeValidationException thrown = assertThrows(
                 CompositeValidationException.class,
-                () -> validationService.validateAddress(invalidAddressDTO)
+                () -> validationService.validateAddress(invalidAddressDTO, AddressValidationMode.UPDATE)
         );
 
         assertEquals(2, thrown.getErrors().size());

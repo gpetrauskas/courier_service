@@ -16,11 +16,13 @@ public class AddressValidator {
     }
 
     public boolean isStreetValid(String street) {
-        return street != null && patterns.street().matcher(street).matches();
+        String s = normalize(street);
+        return s != null && patterns.street().matcher(s).matches();
     }
 
     public boolean isCityValid(String city) {
-        return city != null && patterns.city().matcher(city).matches();
+        String c = normalize(city);
+        return c != null && patterns.city().matcher(c).matches();
     }
 
     public boolean isHouseNumberValid(String houseNumber) {
@@ -29,5 +31,9 @@ public class AddressValidator {
 
     public boolean isFlatNumberValid(String flatNumber) {
         return flatNumber != null && patterns.flatNumber().matcher(flatNumber).matches();
+    }
+
+    private String normalize(String s) {
+        return s == null ? null : s.trim().replaceAll("\\s+", " ");
     }
 }

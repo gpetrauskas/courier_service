@@ -2,13 +2,15 @@ package com.example.courier.validation.person;
 
 import com.example.courier.validation.PersonPatterns;
 import jakarta.validation.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
 @Component
 public class PhoneValidator {
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{8}$");
+    private static final Logger logger = LoggerFactory.getLogger(PhoneValidator.class);
     private final PersonPatterns patterns;
 
     public PhoneValidator(PersonPatterns patterns) {
@@ -20,6 +22,7 @@ public class PhoneValidator {
     }
 
     public String validateAndFormat(String phone) throws ValidationException {
+        logger.info("Running validateAndFormat with phone: {}", phone);
         if (!isValid(phone)) {
             throw new ValidationException("Phone must be 8 digits");
         }
