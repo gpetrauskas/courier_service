@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -48,9 +49,9 @@ public class UpdateMyInfoTest {
     void shouldSuccessfullyUpdateUserinfo() {
         UserEditDTO request = new UserEditDTO("12345678", null, null);
 
-        when(currentPersonService.getCurrentPersonAs(User.class)).thenReturn(user);
-        when(personValidationService.isPhoneValid(request.phoneNumber())).thenReturn(true);
-        when(personTransformationService.formatPhone(request.phoneNumber())).thenReturn("37012345678");
+        when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
+        when(personRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(personTransformationService.validateAndFormatPhone(request.phoneNumber())).thenReturn("37012345678");
 
         var response = personService.updateMyInfo(request);
 
@@ -66,7 +67,8 @@ public class UpdateMyInfoTest {
         address.setId(1L);
         user.setAddresses(List.of(address));
 
-        when(currentPersonService.getCurrentPersonAs(User.class)).thenReturn(user);
+        when(currentPersonService.getCurrentPersonId()).thenReturn(2L);
+        when(personRepository.findById(2L)).thenReturn(Optional.of(user));
 
         var response = personService.updateMyInfo(request);
 
@@ -80,7 +82,8 @@ public class UpdateMyInfoTest {
         user.setSubscribed(!newValue);
         UserEditDTO request = new UserEditDTO(null, null, newValue);
 
-        when(currentPersonService.getCurrentPersonAs(User.class)).thenReturn(user);
+        when(currentPersonService.getCurrentPersonId()).thenReturn(1L);
+        when(personRepository.findById(1L)).thenReturn(Optional.of(user));
 
         var response = personService.updateMyInfo(request);
 
