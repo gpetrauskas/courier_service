@@ -1,5 +1,6 @@
 package com.example.courier.deliverymethodservice;
 
+import com.example.courier.common.DeliveryGroup;
 import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.DeliveryMethod;
@@ -15,7 +16,7 @@ import com.example.courier.dto.response.deliverymethod.DeliveryMethodUserRespons
 import com.example.courier.exception.DeliveryOptionNotFoundException;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.repository.DeliveryOptionRepository;
-import com.example.courier.service.deliveryoption.DeliveryMethodService;
+import com.example.courier.service.deliveryoption.DeliveryMethodServiceImpl;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.DeliveryOptionValidator;
 import jakarta.validation.ValidationException;
@@ -45,7 +46,7 @@ public class DeliveryMethodServiceTest {
     private CurrentPersonService currentPersonService;
     private DeliveryOptionValidator validator;
 
-    private DeliveryMethodService deliveryMethodService;
+    private DeliveryMethodServiceImpl deliveryMethodService;
 
     private List<DeliveryMethod> allOptionsList = List.of(
             createTestDeliveryMethod("light size", "small package", BigDecimal.valueOf(20)),
@@ -60,7 +61,7 @@ public class DeliveryMethodServiceTest {
         currentPersonService = mock(CurrentPersonService.class);
         validator = new DeliveryOptionValidator();
 
-        deliveryMethodService = new DeliveryMethodService(deliveryOptionRepository, deliveryMethodMapper, validator, currentPersonService);
+        deliveryMethodService = new DeliveryMethodServiceImpl(deliveryOptionRepository, deliveryMethodMapper, validator, currentPersonService);
     }
 
     @Nested
@@ -77,7 +78,7 @@ public class DeliveryMethodServiceTest {
                 when(deliveryMethodMapper.toAdminDeliveryOptionResponseDTO(any(DeliveryMethod.class)))
                         .thenAnswer(invocationOnMock -> newDeliveryMethodDTO.forAdmin(invocationOnMock.getArgument(0)));
 
-                Map<String, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
+                Map<DeliveryGroup, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
 
                 verifyOptionList(response);
                 verify(deliveryOptionRepository).findAll();
@@ -93,7 +94,7 @@ public class DeliveryMethodServiceTest {
                 when(deliveryMethodMapper.toUserDeliveryOptionResponseDTO(any(DeliveryMethod.class)))
                         .thenAnswer(invocationOnMock -> newDeliveryMethodDTO.forUser(invocationOnMock.getArgument(0)));
 
-                Map<String, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
+                Map<DeliveryGroup, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
 
                 verifyOptionList(response);
                 verify(deliveryOptionRepository).findAll();
@@ -107,7 +108,7 @@ public class DeliveryMethodServiceTest {
                 mockIsAdmin(true);
                 mockRepositoryFindAll(List.of());
 
-                Map<String, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
+                Map<DeliveryGroup, List<DeliveryMethodDTO>> response = deliveryMethodService.getAllDeliveryOptions();
 
                 assertTrue(response.isEmpty());
             }
@@ -376,11 +377,11 @@ public class DeliveryMethodServiceTest {
         when(deliveryOptionRepository.findAll()).thenReturn(options);
     }
 
-    private void verifyOptionList(Map<String, List<DeliveryMethodDTO>> response) {
+    private void verifyOptionList(Map<DeliveryGroup, List<DeliveryMethodDTO>> response) {
         assertEquals(3, response.size());
-        assertThat(response.get("size")).hasSize(1);
-        assertThat(response.get("weight")).hasSize(1);
-        assertThat(response.get("preference")).hasSize(1);
+        assertThat(response.get(DeliveryGroup.SIZE)).hasSize(1);
+        assertThat(response.get(DeliveryGroup.WEIGHT)).hasSize(1);
+        assertThat(response.get(DeliveryGroup.PREFERENCE)).hasSize(1);
     }
 
     private DeliveryMethod createTestDeliveryMethod(String name, String description, BigDecimal price) {

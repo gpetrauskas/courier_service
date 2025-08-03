@@ -1,5 +1,6 @@
 package com.example.courier.controller;
 
+import com.example.courier.common.DeliveryGroup;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import com.example.courier.dto.request.deliverymethod.UpdateDeliveryMethodDTO;
@@ -23,8 +24,8 @@ public class DeliveryMethodController {
     private DeliveryMethodService deliveryMethodService;
 
     @GetMapping
-    public ResponseEntity<Map<String, List<DeliveryMethodDTO>>> getAllDeliveryOptions() {
-        Map<String, List<DeliveryMethodDTO>> deliveryOptions = deliveryMethodService.getAllDeliveryOptions();
+    public ResponseEntity<Map<DeliveryGroup, List<DeliveryMethodDTO>>> getAllDeliveryOptions() {
+        Map<DeliveryGroup, List<DeliveryMethodDTO>> deliveryOptions = deliveryMethodService.getAllDeliveryOptions();
         return ResponseEntity.ok(deliveryOptions);
     }
 
