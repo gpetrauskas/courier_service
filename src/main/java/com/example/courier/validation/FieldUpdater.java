@@ -2,6 +2,7 @@ package com.example.courier.validation;
 
 import jakarta.annotation.Nullable;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -11,6 +12,20 @@ public final class FieldUpdater {
         if (value != null && validator.test(value)) {
             updater.accept(value);
         }
+    }
+
+    public static void updateIfPresent(@Nullable String value, Consumer<String> updater) {
+        Optional.ofNullable(value)
+                .filter(v -> !v.isBlank())
+                .ifPresent(updater);
+    }
+
+        public static void updateAndTransformIfPresent(@Nullable String value, Function<String, String> transformer,
+                                                   Consumer<String> updater) {
+        Optional.ofNullable(value)
+                .filter(v -> !v.isBlank())
+                .map(transformer)
+                .ifPresent(updater);
     }
 
     public static <T, R> void updateAndTransformIfValid(
