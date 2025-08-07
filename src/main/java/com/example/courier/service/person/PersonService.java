@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PersonService {
-    Optional<Person> findById(Long id);
     void save(Person person);
     boolean checkIfPersonAlreadyExistsByEmail(String email);
     <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType);
@@ -34,4 +33,5 @@ public interface PersonService {
     <T extends Person> List<T> fetchAllByType(Class<T> personType);
     <T extends Person> List<T> getAllActiveByType(Class<T> tClass);
     List<Long> findAllActiveIdsByType(Class<? extends Person> type);
+    Person findByUsername(String username);
 }
