@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,9 +69,9 @@ public class AuthServiceTest {
             when(jwtService.validateToken("fakeJWT")).thenReturn(mockUserClaims);
             when(jwtService.encryptAuthToken("mockAuthToken")).thenReturn("encryptedAuthToken");
 
-            Map<String, String> result = authService.loginUser(validLogin, response);
+            var result = authService.loginUser(validLogin, response);
 
-            assertEquals("Login successfully.", result.get("message"));
+            assertEquals("Logged in successfully.", result.message());
 
             verify(personRepository).findByEmail(TEST_EMAIL);
             verify(passwordEncoder).matches(TEST_PASSWORD, "encodedPassword");

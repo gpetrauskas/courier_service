@@ -49,8 +49,8 @@ public class DeliveryMethodServiceTest {
     private DeliveryMethodServiceImpl deliveryMethodService;
 
     private List<DeliveryMethod> allOptionsList = List.of(
-            createTestDeliveryMethod("light size", "small package", BigDecimal.valueOf(20)),
-            createTestDeliveryMethod("heavy weight", "heavy item", BigDecimal.valueOf(30)),
+            createTestDeliveryMethod("light_size", "small package", BigDecimal.valueOf(20)),
+            createTestDeliveryMethod("heavy_weight", "heavy item", BigDecimal.valueOf(30)),
             createTestDeliveryMethod("overnight", "next day delivery", BigDecimal.valueOf(3))
     );
 
