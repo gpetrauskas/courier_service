@@ -2,6 +2,7 @@ package com.example.courier.config;
 
 import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.auth.JwtService;
+import com.example.courier.service.person.PersonService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,16 +23,16 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
     @Autowired
     private final JwtService jwtService;
     @Autowired
-    private final AuthService authService;
+    private final PersonService personService;
     @Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
-    public SecurityConfig(JwtService jwtService, AuthService authService) {
+    public SecurityConfig(JwtService jwtService, PersonService personService) {
         this.jwtService = jwtService;
-        this.authService = authService;
+        this.personService = personService;
     }
 
     @Bean
@@ -51,7 +52,7 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                                 .requestMatchers("/api/courier/**", "/api/deliveryTaskManagement/").hasAnyRole("COURIER", "ADMIN")
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, authService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, personService),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler(customAccessDeniedHandler)

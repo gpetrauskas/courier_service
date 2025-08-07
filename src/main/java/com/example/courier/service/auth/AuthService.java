@@ -2,11 +2,13 @@ package com.example.courier.service.auth;
 
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PersonRepository;
 import com.example.courier.repository.UserRepository;
+import com.example.courier.service.person.PersonService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -17,8 +19,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 @Service
 public class AuthService {
@@ -31,10 +31,12 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
+    private PersonService personService;
+    @Autowired
     private JwtService jwtService;
 
     @Transactional
-    public Map<String, String> loginUser(LoginDTO loginDTO, HttpServletResponse response) {
+    public ApiResponseDTO loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
             Person person = personRepository.findByEmail(loginDTO.email()).orElseThrow(() ->
                     new RuntimeException("Invalid credentials"));
@@ -49,7 +51,7 @@ public class AuthService {
 
                 setCookies(response, jwt, encryptedAuthToken);
 
-                return Map.of("message", "Login successfully.");
+                return new ApiResponseDTO("success", "Logged in successfully.");
         } catch (UsernameNotFoundException | BadCredentialsException e) {
             logger.warn("Login failed: {}", e.getMessage());
             throw e;
@@ -70,23 +72,5 @@ public class AuthService {
         cookie.setHttpOnly(false);
         cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
-    }
-
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-    }
-
-    public Long getUserIdByEmail(String email) {
-        return userRepository.findByEmail(email).getId();
-    }
-
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public Person findByUsername(String username) {
-        return personRepository.findByEmail(username).orElseThrow(() ->
-             new UserNotFoundException("Person not found with username/email: " + username));
     }
 }

@@ -5,6 +5,7 @@ import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.auth.JwtService;
+import com.example.courier.service.person.PersonService;
 import com.example.courier.util.CookieUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -29,12 +30,12 @@ import java.util.*;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final AuthService authService;
+    private final PersonService personService;
     private Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    public JwtAuthenticationFilter(JwtService jwtService, AuthService authService) {
+    public JwtAuthenticationFilter(JwtService jwtService, PersonService personService) {
         this.jwtService = jwtService;
-        this.authService = authService;
+        this.personService = personService;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void authenticatePerson(String subject) {
-        Person person = authService.findByUsername(subject);
+        Person person = personService.findByUsername(subject);
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 person, null, person.getAuthorities()
         );
