@@ -97,7 +97,7 @@ public class PersonController {
 
     @PutMapping("/editMyInfo")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponseDTO> editMyInfo(@RequestBody UserEditDTO userEditDTO) {
+    public ResponseEntity<ApiResponseDTO> editMyInfo(@RequestBody @Valid UserEditDTO userEditDTO) {
         logger.info("Endpoint invoked");
         return ResponseEntity.ok(personService.updateMyInfo(userEditDTO));
     }

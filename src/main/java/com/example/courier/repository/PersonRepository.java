@@ -1,9 +1,13 @@
 package com.example.courier.repository;
 
+import com.example.courier.common.OrderStatus;
 import com.example.courier.domain.Person;
+import com.example.courier.domain.User;
+import com.example.courier.dto.UserWithOrdersCountByStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -37,4 +41,8 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     List<Long> findAllActiveIdsByType(@Param("type") Class<? extends Person> type);
 
     Optional<Person> findByIdAndIsDeletedFalse(Long id);
+
+    @EntityGraph(attributePaths = "addresses")
+    @Query("SELECT u FROM User u WHERE u.id = :personId")
+    Optional<User> findUserByIdWithAddresses(@Param("personId") Long personId);
 }

@@ -159,4 +159,10 @@ public class GlobalExceptionHandler {
         ApiResponseDTO responseDTO = new ApiResponseDTO("user_address_mismatch", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDTO);
     }
+
+    @ExceptionHandler(StrategyNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO> handleStrategyNotFound(StrategyNotFoundException ex) {
+        ApiResponseDTO responseDTO = new ApiResponseDTO("strategy_error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+    }
 }

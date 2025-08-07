@@ -7,6 +7,8 @@ import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.service.auth.AuthService;
+import com.example.courier.service.person.PersonService;
+import com.example.courier.service.security.CurrentPersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +29,15 @@ public class PaymentMethodService {
     private PaymentMethodRepository paymentMethodRepository;
     @Autowired
     private CreditCardService creditCardService;
+    @Autowired
+    private PersonService personService;
+    @Autowired
+    private CurrentPersonService currentPersonService;
 
     @Transactional
-    public void addPaymentMethod(Long userId, PaymentMethodDTO paymentMethodDTO) {
-        User user = authService.getUserById(userId);
+    public void addPaymentMethod(PaymentMethodDTO paymentMethodDTO) {
+        Long userId = currentPersonService.getCurrentPersonId();
+        User user = personService.fetchPersonByIdAndType(userId, User.class);
 
         PaymentMethod paymentMethod = createPaymentMethod(paymentMethodDTO, user);
         savePaymentMethod(paymentMethod);

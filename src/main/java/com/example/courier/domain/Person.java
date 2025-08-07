@@ -44,7 +44,6 @@ public abstract class Person implements UserDetails {
     @Column(name = "deleted_date")
     private LocalDateTime deletedDate;
 
-
     public Person() {}
 
     public Person(String name, String email, String password) {
@@ -154,5 +153,4 @@ public abstract class Person implements UserDetails {
         this.isDeleted = true;
         this.deletedDate = LocalDateTime.now();
     }
-
 }

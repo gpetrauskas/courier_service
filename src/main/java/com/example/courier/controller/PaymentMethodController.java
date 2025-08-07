@@ -37,10 +37,7 @@ public class PaymentMethodController {
     @PostMapping("/add")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addPaymentMethod(@RequestBody PaymentMethodDTO paymentMethodDTO) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = userRepository.findByEmail(auth.getName());
-
-        paymentMethodService.addPaymentMethod(user.getId(), paymentMethodDTO);
+        paymentMethodService.addPaymentMethod(paymentMethodDTO);
 
         return ResponseEntity.ok("Payment method added successfully.");
     }
