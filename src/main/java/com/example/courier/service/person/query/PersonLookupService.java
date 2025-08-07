@@ -1,6 +1,7 @@
-package com.example.courier.service.person.queries;
+package com.example.courier.service.person.query;
 
 import com.example.courier.domain.Person;
+import com.example.courier.domain.User;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PersonRepository;
@@ -41,11 +42,7 @@ public class PersonLookupService {
 
     public <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType) {
         Person person = fetchById(id);
-
-        return Optional.of(person)
-                .filter(personType::isInstance)
-                .map(personType::cast)
-                .orElseThrow(() -> new IllegalArgumentException("The person is no instance of " + personType.getSimpleName()));
+        return convertToType(person, personType);
     }
 
     public Person fetchById(Long personId) {
@@ -55,5 +52,17 @@ public class PersonLookupService {
 
     public boolean checkIfPersonAlreadyExistsByEmail(String email) {
         return personRepository.existsByEmail(email);
+    }
+
+    public User findUserByIdWithAddresses(Long userId) {
+        return personRepository.findUserByIdWithAddresses(userId).orElseThrow(() ->
+                new ResourceNotFoundException("User was not found"));
+    }
+
+    private <T extends Person> T convertToType(Person person, Class<T> personType) {
+        return Optional.of(person)
+                .filter(personType::isInstance)
+                .map(personType::cast)
+                .orElseThrow(() -> new IllegalArgumentException("The person is no instance of " + personType.getSimpleName()));
     }
 }
