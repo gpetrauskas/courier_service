@@ -1,4 +1,4 @@
-package com.example.courier.service.person.commands;
+package com.example.courier.service.person.command;
 
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
@@ -9,10 +9,13 @@ import com.example.courier.service.person.query.PersonLookupService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.service.transformation.PersonTransformationService;
 import com.example.courier.validation.FieldUpdater;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 public class PersonUpdateService {
@@ -31,14 +34,15 @@ public class PersonUpdateService {
     }
 
     @Transactional
-    public ApiResponseDTO updateMyInfo(UserEditDTO dto) {
-        User user = lookup.fetchPersonByIdAndType(currentPersonService.getCurrentPersonId(), User.class);
+    public ApiResponseDTO updateMyInfo(@Valid UserEditDTO dto) {
+        Long personId = currentPersonService.getCurrentPersonId();
+        User user = lookup.findUserByIdWithAddresses(personId);
 
         FieldUpdater.updateIfValidOrThrow(dto.phoneNumber(), transformationService::validateAndFormatPhone, user::setPhoneNumber);
         user.getAddressById(dto.defaultAddressId()).ifPresent(user::setDefaultAddress);
         FieldUpdater.updateBoolean(dto.subscribed(), user::setSubscribed);
 
-        personRepository.save(user);
+        persist(user);
         logger.info("User {} successfully updated his information", user.getEmail());
         return new ApiResponseDTO("success", "Successfully updated");
     }
