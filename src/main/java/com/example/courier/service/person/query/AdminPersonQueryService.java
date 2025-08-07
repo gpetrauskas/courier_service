@@ -1,4 +1,4 @@
-package com.example.courier.service.person.queries;
+package com.example.courier.service.person.query;
 
 import com.example.courier.domain.Person;
 import com.example.courier.dto.CourierDTO;
