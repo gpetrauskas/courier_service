@@ -3,12 +3,12 @@ package com.example.courier.authservice;
 import com.example.courier.domain.Person;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.jwt.JwtClaims;
-import com.example.courier.repository.PersonRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.auth.JwtService;
+import com.example.courier.service.person.PersonService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,8 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -27,9 +25,7 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
 
     @Mock
-    private UserRepository userRepository;
-    @Mock
-    private PersonRepository personRepository;
+    private PersonService personService;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
@@ -49,10 +45,11 @@ public class AuthServiceTest {
     private final LoginDTO invalidLoginNullPassword = new LoginDTO(TEST_EMAIL, null);
     private final JwtClaims mockUserClaims = new JwtClaims(TEST_EMAIL, TEST_ROLE, TEST_NAME, "mockAuthToken");
 
-    private Person testUser = createUser();
+    private Person testUser;
 
-    private Person createUser() {
-        return new Person(TEST_NAME, TEST_EMAIL, TEST_PASSWORD) {
+    @BeforeEach
+    void setup() {
+        testUser = new Person(TEST_NAME, TEST_EMAIL, TEST_PASSWORD) {
             @Override public String getRole() {return TEST_ROLE;}
         };
     }
@@ -73,7 +70,7 @@ public class AuthServiceTest {
 
             assertEquals("Logged in successfully.", result.message());
 
-            verify(personRepository).findByEmail(TEST_EMAIL);
+            verify(personService).findByUsername(TEST_EMAIL);
             verify(passwordEncoder).matches(TEST_PASSWORD, "encodedPassword");
             verify(jwtService).createToken(TEST_EMAIL, TEST_ROLE, TEST_NAME);
             verify(jwtService).validateToken("fakeJWT");
@@ -104,7 +101,7 @@ public class AuthServiceTest {
             assertThrows(RuntimeException.class, () ->
                     authService.loginUser(validLogin, response));
 
-            verify(personRepository).findByEmail(TEST_EMAIL);
+            verify(personService).findByUsername(TEST_EMAIL);
             verify(passwordEncoder).matches(validLogin.password(), TEST_PASSWORD);
             verifyNoInteractions(jwtService, response);
         }
@@ -112,12 +109,12 @@ public class AuthServiceTest {
         @Test
         @DisplayName("User login - fails when email not found")
         void loginUser_emailNotFound_throwsRuntimeException() {
-            when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+            when(personService.findByUsername(TEST_EMAIL)).thenReturn(null);
 
             assertThrows(RuntimeException.class, () ->
                     authService.loginUser(validLogin, response));
 
-            verify(personRepository).findByEmail(TEST_EMAIL);
+            verify(personService).findByUsername(TEST_EMAIL);
             verify(passwordEncoder, never()).matches(validLogin.password(), TEST_PASSWORD);
             verifyNoInteractions(jwtService);
         }
@@ -135,7 +132,7 @@ public class AuthServiceTest {
 
 
             assertEquals("Unexpected error occurred during login", exception.getMessage());
-            verify(personRepository).findByEmail(TEST_EMAIL);
+            verify(personService).findByUsername(TEST_EMAIL);
             verify(passwordEncoder).matches(validLogin.password(), TEST_PASSWORD);
             verify(jwtService).createToken(any(), any(), any());
             verify(jwtService).validateToken("fakeJWT");
@@ -157,7 +154,7 @@ public class AuthServiceTest {
     }
 
     private void mockUserLookup() {
-        when(personRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(personService.findByUsername(TEST_EMAIL)).thenReturn(testUser);
     }
 
     private void mockValidPassword(boolean isMatch) {
