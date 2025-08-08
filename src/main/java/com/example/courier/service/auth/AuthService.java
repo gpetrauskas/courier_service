@@ -1,13 +1,9 @@
 package com.example.courier.service.auth;
 
 import com.example.courier.domain.Person;
-import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.jwt.JwtClaims;
-import com.example.courier.exception.UserNotFoundException;
-import com.example.courier.repository.PersonRepository;
-import com.example.courier.repository.UserRepository;
 import com.example.courier.service.person.PersonService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,11 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-    private Logger logger = LoggerFactory.getLogger(AuthService.class);
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PersonRepository personRepository;
+    private final Logger logger = LoggerFactory.getLogger(AuthService.class);
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -38,8 +30,7 @@ public class AuthService {
     @Transactional
     public ApiResponseDTO loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            Person person = personRepository.findByEmail(loginDTO.email()).orElseThrow(() ->
-                    new RuntimeException("Invalid credentials"));
+            Person person = personService.findByUsername(loginDTO.email());
 
             if (!passwordEncoder.matches(loginDTO.password(), person.getPassword())) {
                 throw new BadCredentialsException("Invalid credentials");

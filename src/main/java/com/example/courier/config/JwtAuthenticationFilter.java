@@ -3,7 +3,6 @@ package com.example.courier.config;
 import com.example.courier.domain.Person;
 import com.example.courier.dto.jwt.JwtClaims;
 import com.example.courier.exception.UserNotFoundException;
-import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.auth.JwtService;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.util.CookieUtils;
