@@ -122,4 +122,8 @@ public class PersonService {
     public <T extends Person> T fetchPersonByIdAndType(Long id, Class<T> personType) {
         return lookupService.fetchPersonByIdAndType(id, personType);
     }
+
+    public void save(Person person) {
+        personUpdate.persist(person);
+    }
 }

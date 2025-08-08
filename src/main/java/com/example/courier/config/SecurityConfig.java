@@ -1,6 +1,7 @@
 package com.example.courier.config;
 
 import com.example.courier.service.auth.JwtService;
+import com.example.courier.service.person.PersonService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
