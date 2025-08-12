@@ -8,7 +8,6 @@ import com.example.courier.dto.response.notification.NotificationResponseDTO;
 import com.example.courier.service.notification.NotificationService;
 import com.example.courier.validation.shared.NotNullOrEmpty;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +19,11 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")

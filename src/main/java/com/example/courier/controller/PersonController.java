@@ -14,7 +14,6 @@ import com.example.courier.service.person.PersonService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +24,12 @@ import java.util.List;
 @RequestMapping("/api/person")
 public class PersonController {
 
-    @Autowired
-    private PersonService personService;
+    private final PersonService personService;
     private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
+
+    public PersonController(PersonService personService) {
+        this.personService = personService;
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping

@@ -10,7 +10,7 @@ import com.example.courier.exception.OrderCancellationException;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.repository.PaymentRepository;
-import com.example.courier.service.order.OrderServiceImpl;
+import com.example.courier.service.order.OrderService;
 import com.example.courier.service.payment.PaymentService;
 import com.example.courier.service.security.CurrentPersonService;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +40,7 @@ public class CancelOrderTest {
     @Mock
     private CurrentPersonService currentPersonService;
     @InjectMocks
-    OrderServiceImpl orderService;
+    OrderService orderService;
 
     private final Long testUserId = 123L;
 

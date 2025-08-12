@@ -6,7 +6,6 @@ import com.example.courier.service.RegistrationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +14,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/registration")
 public class RegistrationController {
-    private final Logger logger = LoggerFactory.getLogger(RegistrationController.class);
-    @Autowired
-    private RegistrationService registrationService;
+    private static final Logger logger = LoggerFactory.getLogger(RegistrationController.class);
+    private final RegistrationService registrationService;
+
+    public RegistrationController(RegistrationService registrationService) {
+        this.registrationService = registrationService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponseDTO> registerUser(@Valid @RequestBody RegistrationDTO registrationDTO) {

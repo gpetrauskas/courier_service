@@ -8,9 +8,15 @@ import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import java.time.LocalDateTime;
 
 public record AdminOrderResponseDTO(
-        Long id, AdminPersonResponseDTO adminPersonResponseDTO, AddressDTO senderAddress,
-        AddressDTO recipientAddress, String deliveryMethod, ParcelDTO parcelResponseDTO,
-        OrderStatus orderStatus, LocalDateTime createTime, AdminPaymentResponseDTO adminPaymentResponseDTO
+        Long id,
+        AdminPersonResponseDTO adminPersonResponseDTO,
+        AddressDTO senderAddress,
+        AddressDTO recipientAddress,
+        String deliveryMethod,
+        ParcelDTO parcelResponseDTO,
+        OrderStatus orderStatus,
+        LocalDateTime createTime,
+        AdminPaymentResponseDTO adminPaymentResponseDTO
 ) {
 
 }

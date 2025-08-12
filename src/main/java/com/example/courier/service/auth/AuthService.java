@@ -9,7 +9,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private PersonService personService;
-    @Autowired
-    private JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final PersonService personService;
+    private final JwtService jwtService;
+
+    public AuthService(PasswordEncoder passwordEncoder, PersonService personService, JwtService jwtService) {
+        this.passwordEncoder = passwordEncoder;
+        this.personService = personService;
+        this.jwtService = jwtService;
+    }
 
     @Transactional
     public ApiResponseDTO loginUser(LoginDTO loginDTO, HttpServletResponse response) {

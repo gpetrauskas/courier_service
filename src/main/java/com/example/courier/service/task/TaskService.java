@@ -19,6 +19,7 @@ import com.example.courier.service.notification.NotificationService;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.order.OrderService;
+import com.example.courier.service.order.query.OrderQueryService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
@@ -46,7 +47,7 @@ public class TaskService {
     private final DeliveryTaskMapper deliveryTaskMapper;
     private final ParcelService parcelService;
     private final PersonService personService;
-    private final OrderService orderService;
+    private final OrderQueryService queryService;
     private final TaskItemService taskItemService;
     private final TaskSpecificationBuilder specificationBuilder;
     private final AuthorizationService authorizationService;
@@ -55,7 +56,7 @@ public class TaskService {
     private final TaskItemValidator taskItemValidator;
 
     public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
-                       ParcelService parcelService, PersonService personService, OrderService orderService,
+                       ParcelService parcelService, PersonService personService, OrderQueryService queryService,
                        TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
                        AuthorizationService authorizationService, TaskValidator taskValidator,
                        NotificationService notificationService, TaskItemValidator taskItemValidator) {
@@ -63,7 +64,7 @@ public class TaskService {
         this.deliveryTaskMapper = deliveryTaskMapper;
         this.parcelService = parcelService;
         this.personService = personService;
-        this.orderService = orderService;
+        this.queryService = queryService;
         this.taskItemService = taskItemService;
         this.specificationBuilder = specificationBuilder;
         this.authorizationService = authorizationService;
@@ -79,7 +80,7 @@ public class TaskService {
         Courier courier = personService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
 
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
-        List<Order> orders = orderService.fetchAllByParcelDetails(parcels);
+        List<Order> orders = queryService.fetchAllByParcelDetails(parcels);
 
         parcels.forEach(parcel -> {
             if (parcel.getStatus() == ParcelStatus.PICKED_UP) {

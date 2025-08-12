@@ -2,7 +2,6 @@ package com.example.courier.dto.mapper;
 
 import com.example.courier.domain.Order;
 import com.example.courier.domain.Payment;
-import com.example.courier.dto.AdminOrderDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
@@ -26,10 +25,6 @@ public interface OrderMapper {
 
     @Mapping(target = "id", ignore = true)
     void updateOrderSectionFromRequest(OrderSectionUpdateRequest updateRequest, @MappingTarget Order order);
-
-    @Mapping(source = "order.id", target = "id")
-    @Mapping(source = "order.status", target = "status")
-    AdminOrderDTO toAdminOrderDTO(Order order, Payment payment);
 
     @Mapping(source = "order.id", target = "id")
     @Mapping(source = "order.user", target = "adminPersonResponseDTO")

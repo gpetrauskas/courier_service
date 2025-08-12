@@ -5,7 +5,7 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.repository.OrderRepository;
-import com.example.courier.service.order.OrderServiceImpl;
+import com.example.courier.service.order.OrderService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.specification.order.OrderSpecificationBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
     private OrderMapper orderMapper;
 
     @InjectMocks
-    private OrderServiceImpl orderService;
+    private OrderService orderService;
 
     private static final Order o = new Order();
     private static final OrderDTO oDto = new OrderDTO(null, null, null, null, null, null, null);
@@ -66,7 +66,7 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
             when(orderRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
             when(orderMapper.toOrderDTO(o)).thenReturn(oDto);
 
-            PaginatedResponseDTO<OrderDTO> result = orderService.fetchAllTaskOrdersByTaskType(0, 10, "PICKING_UP");
+            PaginatedResponseDTO<OrderDTO> result = orderService.getOrdersForTaskAssignment(0, 10, "PICKING_UP");
 
             assertEquals(1, result.data().size());
         }
@@ -81,7 +81,7 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
             Page<Order> mockPage = new PageImpl<>(orders, PageRequest.of(1, 2), 10);
             when(orderRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(mockPage);
 
-            PaginatedResponseDTO<OrderDTO> result = orderService.fetchAllTaskOrdersByTaskType(1, 2, "PICKING_UP");
+            PaginatedResponseDTO<OrderDTO> result = orderService.getOrdersForTaskAssignment(1, 2, "PICKING_UP");
 
             assertEquals(1, result.currentPage());
             assertEquals(5, result.data().size());
@@ -98,13 +98,13 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
             when(currentPersonService.isAdmin()).thenReturn(false);
 
             assertThrows(AccessDeniedException.class, () ->
-                    orderService.fetchAllTaskOrdersByTaskType(0, 10, "PICKING_UP"));
+                    orderService.getOrdersForTaskAssignment(0, 10, "PICKING_UP"));
         }
 
         @Test
         @DisplayName("invalid task type")
         void fetchAll_invalidTaskType() {
-            assertThatThrownBy(() -> orderService.fetchAllTaskOrdersByTaskType(0, 10, "invalidType"))
+            assertThatThrownBy(() -> orderService.getOrdersForTaskAssignment(0, 10, "invalidType"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Invalid status");
 
@@ -114,7 +114,7 @@ public class FetchAllTaskOrdersByTaskTypeAdminTest {
         @Test
         @DisplayName("status null")
         void fetchAll_statusNull() {
-            assertThatThrownBy(() -> orderService.fetchAllTaskOrdersByTaskType(0, 10, null))
+            assertThatThrownBy(() -> orderService.getOrdersForTaskAssignment(0, 10, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Status cannot be null or blank");
         }

@@ -1,7 +1,6 @@
 package com.example.courier.controller;
 
 import com.example.courier.service.parcel.ParcelService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +13,11 @@ import java.util.Map;
 @RequestMapping("/api/parcel")
 public class ParcelController {
 
-    @Autowired
-    private ParcelService parcelService;
+    private final ParcelService parcelService;
+
+    public ParcelController(ParcelService parcelService) {
+        this.parcelService = parcelService;
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/count")

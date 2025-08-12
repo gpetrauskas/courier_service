@@ -7,10 +7,8 @@ import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.OrderRepository;
-import com.example.courier.service.order.OrderServiceImpl;
+import com.example.courier.service.order.OrderService;
 import com.example.courier.service.payment.PaymentService;
-import com.example.courier.service.security.CurrentPersonService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -36,8 +33,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class GetOrdersForAdminTest {
     @Mock
-    private CurrentPersonService currentPersonService;
-    @Mock
     private OrderRepository orderRepository;
     @Mock
     private PaymentService paymentService;
@@ -45,9 +40,8 @@ public class GetOrdersForAdminTest {
     private OrderMapper orderMapper;
 
     @InjectMocks
-    private OrderServiceImpl orderService;
+    private OrderService orderService;
 
-    private static final Pageable PAGEABLE = PageRequest.of(0, 10, Sort.by("createDate"));
     private final Order ORDER_1 = createOrder(1L, OrderStatus.CONFIRMED);
     private final Order ORDER_2 = createOrder(2L, OrderStatus.CONFIRMED);
     private final Payment PAYMENT_1 = createPayment(1L, ORDER_1);
@@ -61,14 +55,9 @@ public class GetOrdersForAdminTest {
         return order;
     }
 
-    @BeforeEach
-    void setUp() {
-        when(currentPersonService.isAdmin()).thenReturn(true);
-    }
-
     class MockHelper {
         MockHelper repository(Order... orders) {
-            when(orderRepository.findAll(any(Specification.class), eq(PAGEABLE)))
+            when(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(orders)));
             return this;
         }
@@ -102,10 +91,10 @@ public class GetOrdersForAdminTest {
                     .paymentService(PAYMENT_1, PAYMENT_2)
                     .orderMapper(PAYMENT_1, PAYMENT_2);
 
-            var result = orderService.getAllOrdersForAdmin(0, 10, null, null);
+            var result = orderService.getDetailedOrdersForAdmin(0, 10, null, null);
 
-            assertEquals(2, result.getContent().size());
-            verify(orderRepository).findAll(any(Specification.class), eq(PAGEABLE));
+            assertEquals(2, result.data().size());
+            verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
             verify(paymentService).getPaymentsForOrders(List.of(1L, 2L));
             verify(orderMapper).toAdminOrderResponseDTO(ORDER_1, PAYMENT_1);
             verify(orderMapper).toAdminOrderResponseDTO(ORDER_2, PAYMENT_2);
@@ -114,12 +103,11 @@ public class GetOrdersForAdminTest {
         @Test
         @DisplayName("no orders found - returns empty list")
         void getAllOrdersForAdmin_returnsEmptyList() {
-            when(orderRepository.findAll(any(Specification.class), eq(PAGEABLE)))
-                    .thenReturn(new PageImpl<>(List.of()));
+            new MockHelper().repository();
 
-            var result = orderService.getAllOrdersForAdmin(0, 10, null, null);
+            var result = orderService.getDetailedOrdersForAdmin(0, 10, null, null);
 
-            assertEquals(0, result.getContent().size());
+            assertEquals(0, result.data().size());
             verify(paymentService, never()).getPaymentsForOrders(anyList());
             verify(orderMapper, never()).toAdminOrderResponseDTO(any(), any());
         }
@@ -131,10 +119,10 @@ public class GetOrdersForAdminTest {
 
             new MockHelper().repository(ORDER_1).paymentService(PAYMENT_1).orderMapper(PAYMENT_1);
 
-            var results = orderService.getAllOrdersForAdmin(0, 10, "CONFIRMED", null);
+            var results = orderService.getDetailedOrdersForAdmin(0, 10, "CONFIRMED", null);
 
-            assertEquals(1, results.getContent().size());
-            assertEquals(expectedDto, results.getContent().getFirst());
+            assertEquals(1, results.data().size());
+            assertEquals(expectedDto, results.data().getFirst());
             verify(paymentService).getPaymentsForOrders(List.of(ORDER_1.getId()));
         }
 
@@ -145,10 +133,10 @@ public class GetOrdersForAdminTest {
 
             new MockHelper().repository(ORDER_1).paymentService(PAYMENT_1).orderMapper(PAYMENT_1);
 
-            var results = orderService.getAllOrdersForAdmin(0, 10, null, 1L);
+            var results = orderService.getDetailedOrdersForAdmin(0, 10, null, 1L);
 
-            assertEquals(1, results.getContent().size());
-            assertEquals(expectedDto.id(), results.getContent().getFirst().id());
+            assertEquals(1, results.data().size());
+            assertEquals(expectedDto.id(), results.data().getFirst().id());
 
         }
     }
@@ -157,24 +145,12 @@ public class GetOrdersForAdminTest {
     @DisplayName("failure tests")
     class FailureTests {
         @Test
-        @DisplayName("user has no access")
-        void getAllOrdersForAdmin_nonAdmin_accessDenied() {
-            when(currentPersonService.isAdmin()).thenReturn(false);
-
-            assertThatThrownBy(() -> orderService.getAllOrdersForAdmin(0, 10, null, null))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessageContaining("Admin access only");
-
-            verify(orderRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @Test
         @DisplayName("payment not found")
         void getAllOrdersForAdmin_paymentNotFound() {
             new MockHelper().repository(ORDER_1);
             when(paymentService.getPaymentsForOrders(List.of(ORDER_1.getId()))).thenThrow(new ResourceNotFoundException("not found"));
 
-            assertThatThrownBy(() -> orderService.getAllOrdersForAdmin(0, 10, null, null))
+            assertThatThrownBy(() -> orderService.getDetailedOrdersForAdmin(0, 10, null, null))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
 
@@ -187,11 +163,11 @@ public class GetOrdersForAdminTest {
         void getAllOrdersForAdmin_failToMap() {
             new MockHelper().repository(ORDER_1).paymentService(PAYMENT_1);
 
-            when(orderMapper.toAdminOrderResponseDTO(ORDER_1, PAYMENT_1)).thenThrow(new RuntimeException("Error while creating adminOrderDto"));
+            when(orderMapper.toAdminOrderResponseDTO(ORDER_1, PAYMENT_1)).thenThrow(new RuntimeException("Failed to map order: 1"));
 
-            assertThatThrownBy(() -> orderService.getAllOrdersForAdmin(0, 10, null, null))
+            assertThatThrownBy(() -> orderService.getDetailedOrdersForAdmin(0, 10, null, null))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Error while creating adminOrderDto");
+                    .hasMessageContaining("Failed to map order: 1");
         }
     }
 

@@ -8,7 +8,6 @@ import com.example.courier.dto.response.deliverymethod.DeliveryMethodAdminRespon
 import com.example.courier.dto.response.deliverymethod.DeliveryMethodDTO;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,20 +19,21 @@ import java.util.Map;
 @RequestMapping("/api/delivery-options")
 public class DeliveryMethodController {
 
-    @Autowired
-    private DeliveryMethodService deliveryMethodService;
+    private final DeliveryMethodService deliveryMethodService;
+
+    public DeliveryMethodController(DeliveryMethodService deliveryMethodService) {
+        this.deliveryMethodService = deliveryMethodService;
+    }
 
     @GetMapping
     public ResponseEntity<Map<DeliveryGroup, List<DeliveryMethodDTO>>> getAllDeliveryOptions() {
-        Map<DeliveryGroup, List<DeliveryMethodDTO>> deliveryOptions = deliveryMethodService.getAllDeliveryOptions();
-        return ResponseEntity.ok(deliveryOptions);
+        return ResponseEntity.ok(deliveryMethodService.getAllDeliveryOptions());
     }
 
     @GetMapping("/notCategorized")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DeliveryMethodAdminResponseDTO>> getAllDeliveryOptionsNotCategorized() {
-        List<DeliveryMethodAdminResponseDTO> list = deliveryMethodService.getDeliveryOptionsNotCategorized();
-        return ResponseEntity.ok(list);
+        return ResponseEntity.ok(deliveryMethodService.getDeliveryOptionsNotCategorized());
     }
 
     @PutMapping("/update/{id}")
@@ -60,9 +60,7 @@ public class DeliveryMethodController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryMethodDTO> getById(@PathVariable Long id) {
-        DeliveryMethodDTO deliveryMethodDTO = deliveryMethodService.getById(id);
-
-        return ResponseEntity.ok(deliveryMethodDTO);
+        return ResponseEntity.ok(deliveryMethodService.getById(id));
     }
 
 }

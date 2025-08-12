@@ -11,6 +11,7 @@ import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.order.OrderService;
+import com.example.courier.service.order.query.OrderQueryService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.service.task.TaskItemService;
@@ -37,7 +38,7 @@ public class TaskServiceTest {
 
     @Mock private PersonService personService;
     @Mock private ParcelService parcelService;
-    @Mock private OrderService orderService;
+    @Mock private OrderQueryService queryService;
     @Mock private final TaskValidator taskValidator = new TaskValidator();
     @Mock private TaskRepository taskRepository;
     @Mock private TaskSpecificationBuilder specificationBuilder;
@@ -65,7 +66,7 @@ public class TaskServiceTest {
             when(personService.fetchPersonByIdAndType(2L, Courier.class))
                     .thenReturn(courier);
             when(parcelService.fetchParcelsByIdBatch(any())).thenReturn(List.of(parcel));
-            when(orderService.fetchAllByParcelDetails(any())).thenReturn(List.of(order));
+            when(queryService.fetchAllByParcelDetails(any())).thenReturn(List.of(order));
 
             when(taskItemService.createTaskItems(any(), any(), any()))
                     .thenAnswer(invocation -> {

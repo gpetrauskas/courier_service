@@ -8,7 +8,6 @@ import com.example.courier.validation.shared.NotNullOrEmpty;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class TaskItemController {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskItemController.class);
+    private final TaskItemService taskItemService;
 
-    @Autowired
-    private TaskItemService taskItemService;
+    public TaskItemController(TaskItemService taskItemService) {
+        this.taskItemService = taskItemService;
+    }
 
     @GetMapping("/getAllByTaskType")
     @PreAuthorize("hasRole('ADMIN')")

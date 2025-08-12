@@ -1,32 +1,29 @@
 package com.example.courier.controller;
 
-import com.example.courier.common.DeliveryStatus;
 import com.example.courier.dto.*;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
-import com.example.courier.dto.response.task.AdminTaskDTO;
 import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.service.task.TaskService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/deliveryTaskManagement")
 public class TaskController {
 
-    @Autowired
-    private TaskService taskService;
-    @Autowired
+    private final TaskService taskService;
     private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
 
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")

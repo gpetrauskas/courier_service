@@ -6,7 +6,7 @@ import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.OrderRepository;
-import com.example.courier.service.order.OrderServiceImpl;
+import com.example.courier.service.order.OrderService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.DeliveryOptionValidator;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
@@ -42,7 +42,7 @@ public class OrderSectionUpdateTest {
     private CurrentPersonService currentPersonService;
 
     @InjectMocks
-    private OrderServiceImpl orderService;
+    private OrderService orderService;
 
     private Order order;
 
