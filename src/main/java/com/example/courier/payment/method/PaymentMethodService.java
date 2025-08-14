@@ -5,13 +5,12 @@ import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.User;
 import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.service.auth.AuthService;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.service.security.CurrentPersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,18 +20,19 @@ import java.util.Optional;
 @Service
 public class PaymentMethodService {
 
-    private final Logger logger = LoggerFactory.getLogger(PaymentMethodService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PaymentMethodService.class);
+    private final PaymentMethodRepository repository;
+    private final CreditCardService creditCardService;
+    private final PersonService personService;
+    private final CurrentPersonService currentPersonService;
 
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private PaymentMethodRepository paymentMethodRepository;
-    @Autowired
-    private CreditCardService creditCardService;
-    @Autowired
-    private PersonService personService;
-    @Autowired
-    private CurrentPersonService currentPersonService;
+    public PaymentMethodService(PaymentMethodRepository repository, CreditCardService creditCardService,
+                                PersonService personService, CurrentPersonService currentPersonService) {
+        this.repository = repository;
+        this.creditCardService = creditCardService;
+        this.personService = personService;
+        this.currentPersonService = currentPersonService;
+    }
 
     @Transactional
     public void addPaymentMethod(PaymentMethodDTO paymentMethodDTO) {
@@ -45,7 +45,7 @@ public class PaymentMethodService {
 
     @Transactional(readOnly = true)
     public List<PaymentMethodDTO> getSavedPaymentMethods(Long userId) {
-        List<PaymentMethod> paymentMethods = paymentMethodRepository.findByUserIdAndSavedTrue(userId);
+        List<PaymentMethod> paymentMethods = repository.findByUserIdAndSavedTrue(userId);
 
         return paymentMethods.stream()
                 .map(this::covertToDTO)
@@ -61,7 +61,7 @@ public class PaymentMethodService {
 
     @Transactional(readOnly = true)
     public Optional<PaymentMethodDTO> getSavedPaymentMethod(Long id) {
-        return paymentMethodRepository.findById(id)
+        return repository.findById(id)
                 .map(this::covertToDTO);
     }
 
@@ -81,12 +81,12 @@ public class PaymentMethodService {
 
     @Transactional
     private void savePaymentMethod(PaymentMethod paymentMethod) {
-        paymentMethodRepository.save(paymentMethod);
+        repository.save(paymentMethod);
     }
 
     @Transactional
     public void deactivatePaymentMethodById(User user, Long paymentMethodId) {
-        PaymentMethod paymentMethodToDeactivate = paymentMethodRepository.findByIdAndSavedTrue(paymentMethodId)
+        PaymentMethod paymentMethodToDeactivate = repository.findByIdAndSavedTrue(paymentMethodId)
                 .orElseThrow(() -> new RuntimeException("Payment method was not found."));
 
         if (!paymentMethodToDeactivate.getUser().getId().equals(user.getId())) {
@@ -97,5 +97,10 @@ public class PaymentMethodService {
         savePaymentMethod(paymentMethodToDeactivate);
 
         logger.info("Payment method with ID: {} was successfully deleted", paymentMethodId);
+    }
+
+    public PaymentMethod fetchPaymentMethodById(Long paymentMethodId) {
+        return repository.findById(paymentMethodId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment method was not found"));
     }
 }

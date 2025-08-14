@@ -1,4 +1,4 @@
-package com.example.courier.service.payment;
+package com.example.courier.payment.method;
 
 import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
@@ -8,18 +8,16 @@ import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
 import com.example.courier.dto.mapper.PaymentMapper;
 import com.example.courier.dto.request.order.PaymentSectionUpdateRequest;
+import com.example.courier.dto.response.payment.PaymentResultResponse;
 import com.example.courier.exception.*;
 import com.example.courier.payment.handler.PaymentHandler;
 import com.example.courier.repository.PaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,50 +51,29 @@ public class PaymentService {
                 ));
     }
 
-
-
-
-
-
     @Transactional
-    public ResponseEntity<String> processPayment(PaymentRequestDTO paymentRequestDTO, Long orderId, Principal principal) {
-        try {
-            Payment payment = getPaymentByOrderId(orderId);
-            Order order = payment.getOrder();
+    public PaymentResultResponse processPayment(PaymentRequestDTO paymentRequestDTO, Long orderId) {
+        Payment payment = getPaymentByOrderId(orderId);
+        Order order = payment.getOrder();
 
-            if (!isPaymentValid(payment)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No valid payment founded.");
-            }
-
-            ResponseEntity<String> response = processPaymentHandler(paymentRequestDTO, payment);
-            if (response.getStatusCode().equals(HttpStatus.OK)) {
-                handlePaymentSuccess(payment, order);
-            } else {
-                throw new PaymentFailedException("Payment handler failed.");
-            }
-
-            return response;
-
-        } catch (PaymentFailedException e) {
-            log.error("Error occurred during payment: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred during payment. " + e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error during payment: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error during payment");
+        if (!isPaymentValid(payment)) {
+            return new PaymentResultResponse("failure", "No valid payment founded.");
         }
+
+        PaymentResultResponse response = processPaymentHandler(paymentRequestDTO, payment);
+        if (!response.status().equals("success")) {
+            throw new IllegalArgumentException(response.message());
+        }
+        handlePaymentSuccess(payment, order);
+        return response;
     }
 
-    private ResponseEntity<String> processPaymentHandler(PaymentRequestDTO paymentRequestDTO, Payment payment) {
-        for (PaymentHandler handler : paymentHandlers) {
-            if (handler.isSupported(paymentRequestDTO)) {
-                ResponseEntity<String> response = handler.handle(paymentRequestDTO, payment);
-                if (!response.getStatusCode().equals(HttpStatus.OK)) {
-                    throw new PaymentFailedException(response.getBody());
-                }
-                return response;
-            }
-        }
-        throw new PaymentFailedException("No handler for provided payment");
+    private PaymentResultResponse processPaymentHandler(PaymentRequestDTO paymentRequestDTO, Payment payment) {
+        return paymentHandlers.stream()
+                .filter(h -> h.isSupported(paymentRequestDTO))
+                .findFirst()
+                .orElseThrow(() -> new PaymentFailedException("No handler found"))
+                .handle(paymentRequestDTO);
     }
 
     private void handlePaymentSuccess(Payment payment, Order order) {

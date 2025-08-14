@@ -3,6 +3,7 @@ package com.example.courier.service.payment;
 import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.User;
 import com.example.courier.dto.CreditCardDTO;
+import com.example.courier.dto.response.payment.PaymentResultResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -49,26 +50,26 @@ public class CreditCardService {
         return card;
     }
 
-    public ResponseEntity<String> paymentTest(CreditCard card, String cvc) {
+    public PaymentResultResponse paymentTest(CreditCard card, String cvc) {
         if (card.getCardNumber().isEmpty() || card.getCardHolderName().isEmpty() || card.getExpiryDate().isEmpty() || cvc.isEmpty()) {
             logger.error("Payment test failed. Some fields are empty");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fields annot be empty");
+            return new PaymentResultResponse("failure", "fields annot be empty");
         }
         if (isCardExpired(card)) {
             logger.error("Payment test failed. Card is expired;");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CARD EXPIRED");
+            return new PaymentResultResponse("failure", "CARD EXPIRED");
         }
         if (card.getCardNumber().endsWith("00")) {
             logger.error("Payment test failed. Card declined");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DECLINED");
+            return new PaymentResultResponse("failure", "DECLINED");
         }
         if (cvc.endsWith("3")) {
             logger.error("Payment test failed. Card rejected/");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("REJECTED");
+            return new PaymentResultResponse("failure", "REJECTED");
         }
 
-        logger.info("Payment test aprved for card: {}", card.maskCardNumber());
-        return ResponseEntity.ok("APPROVED");
+        logger.info("Payment test approved for card: {}", card.maskCardNumber());
+        return new PaymentResultResponse("success", "APPROVED");
     }
 
     public boolean isCardExpired(CreditCard card) {

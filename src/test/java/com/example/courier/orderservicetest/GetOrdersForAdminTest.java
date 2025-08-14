@@ -8,7 +8,7 @@ import com.example.courier.dto.response.AdminOrderResponseDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.service.order.OrderService;
-import com.example.courier.service.payment.PaymentService;
+import com.example.courier.payment.PaymentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

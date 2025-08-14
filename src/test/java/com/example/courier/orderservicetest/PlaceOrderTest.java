@@ -17,7 +17,7 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.order.OrderServiceImpl;
-import com.example.courier.service.payment.PaymentService;
+import com.example.courier.payment.PaymentService;
 import com.example.courier.service.person.PersonService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.order.OrderCreationValidator;

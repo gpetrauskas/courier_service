@@ -5,7 +5,6 @@ import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import com.example.courier.domain.*;
 import com.example.courier.dto.AddressDTO;
-import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.mapper.OrderMapper;
@@ -15,11 +14,13 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.order.query.OrderQueryService;
-import com.example.courier.service.payment.PaymentService;
+import com.example.courier.payment.PaymentService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.DeliveryOptionValidator;
 import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import com.example.courier.validation.order.OrderCreationValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import java.util.*;
 @Service
 public class OrderCommandServiceImpl implements OrderCommandService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderCommandServiceImpl.class);
     private final OrderQueryService queryService;
     private final DeliveryOptionValidator deliveryOptionValidator;
     private final OrderRepository repository;
@@ -136,8 +138,8 @@ public class OrderCommandServiceImpl implements OrderCommandService {
 
     private void createParcelDetails(ParcelDTO parcelDTO, Order order) {
         Parcel parcel = new Parcel();
-        parcel.setWeight(getDeliveryOptionDescription(parcel.getWeight()));
-        parcel.setDimensions(getDeliveryOptionDescription(parcel.getDimensions()));
+        parcel.setWeight(getDeliveryOptionDescription(parcelDTO.weight()));
+        parcel.setDimensions(getDeliveryOptionDescription(parcelDTO.dimensions()));
         parcel.setContents(parcelDTO.contents());
         parcel.setTrackingNumber(UUID.randomUUID().toString());
         parcel.setStatus(ParcelStatus.WAITING_FOR_PAYMENT);

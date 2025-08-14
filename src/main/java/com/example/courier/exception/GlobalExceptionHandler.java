@@ -16,10 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -124,6 +121,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseDTO> handleNumberFormatException(NumberFormatException ex) {
         logger.error("Number format error");
         ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
+        System.out.println(Arrays.toString(ex.getStackTrace()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
     }
 
