@@ -34,6 +34,10 @@ public abstract class PaymentMethod implements Serializable {
         return this instanceof CreditCard;
     }
 
+    public boolean isPayPal() {
+        return this instanceof PayPal;
+    }
+
     public Long getId() {
         return id;
     }

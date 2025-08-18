@@ -2,7 +2,8 @@ package com.example.courier.controller;
 
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
-import com.example.courier.service.payment.PaymentService;
+import com.example.courier.dto.response.payment.PaymentResultResponse;
+import com.example.courier.payment.PaymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,24 +26,13 @@ public class PaymentController {
 
     @PostMapping("/pay/{orderId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> makePayment(@PathVariable Long orderId, @RequestBody PaymentRequestDTO paymentRequestDTO, Principal principal) {
-        try {
-            return paymentService.processPayment(paymentRequestDTO, orderId, principal);
-        } catch (RuntimeException e) {
-            log.error("Unexpected error during payment: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error durin payent");
-        }
-    }
-
-    @PostMapping("/processPayment")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> processPayment(@RequestBody PaymentRequestDTO paymentRequestDTO) {
-        try {
-          //  paymentService.processPayment(paymentDTO);
-            return ResponseEntity.ok("Payment processed successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Problem occurred during payment processing");
-        }
+    public ResponseEntity<PaymentResultResponse> makePayment(@PathVariable Long orderId, @RequestBody PaymentRequestDTO paymentRequestDTO) {
+        PaymentResultResponse response = paymentService.processPayment(paymentRequestDTO, orderId);
+        return ResponseEntity.status(
+                    response.status().equals("success")
+                        ? HttpStatus.OK
+                        : HttpStatus.BAD_REQUEST)
+                .body(response);
     }
 
     @GetMapping("/getPaymentDetails/{orderId}")

@@ -1,26 +1,27 @@
 package com.example.courier.payment.handler;
 
-import com.example.courier.common.PaymentStatus;
-import com.example.courier.domain.CreditCard;
-import com.example.courier.domain.Payment;
-import com.example.courier.domain.User;
+import com.example.courier.domain.*;
 import com.example.courier.dto.CreditCardDTO;
+import com.example.courier.dto.PayPalDTO;
+import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.dto.request.PaymentRequestDTO;
-import com.example.courier.exception.PaymentFailedException;
-import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.service.payment.CreditCardService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.courier.dto.response.payment.PaymentResultResponse;
+import com.example.courier.exception.PaymentMethodNotFoundException;
+import com.example.courier.payment.processor.PaymentProcessorRegistry;
+import com.example.courier.payment.method.CreditCardService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NewPaymentMethodHandler implements PaymentHandler {
 
-    @Autowired
-    private CreditCardService creditCardService;
-    @Autowired
-    private PaymentMethodRepository paymentMethodRepository;
+    private final CreditCardService creditCardService;
+    private final PaymentProcessorRegistry processorRegistry;
+
+    public NewPaymentMethodHandler(PaymentProcessorRegistry processorRegistry,
+                                   CreditCardService creditCardService) {
+        this.processorRegistry = processorRegistry;
+        this.creditCardService = creditCardService;
+    }
 
     @Override
     public boolean isSupported(PaymentRequestDTO paymentRequestDTO) {
@@ -28,15 +29,29 @@ public class NewPaymentMethodHandler implements PaymentHandler {
     }
 
     @Override
-    public ResponseEntity<String> handle(PaymentRequestDTO paymentRequestDTO, Payment payment) {
+    public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO) {
+        PaymentMethodDTO paymentMethodDTO = paymentRequestDTO.newPaymentMethod();
+        PaymentMethod paymentMethod = switch (paymentMethodDTO) {
+            case CreditCardDTO ccDTO -> creditCardService.setupCreditCard(ccDTO);
+            case PayPalDTO ppDTO -> throw new UnsupportedOperationException("Paypal not supported yet");
+            default -> throw new IllegalArgumentException("Unknown payment method: " + paymentMethodDTO.getClass());
+        };
+
+        return processorRegistry.getProcessor(paymentMethod)
+                .process(paymentMethod, paymentRequestDTO);
+
+    }
+
+ /*  // @Override
+    public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO, Payment payment) {
         User user = payment.getOrder().getUser();
         CreditCardDTO creditCardDTO = (CreditCardDTO) paymentRequestDTO.newPaymentMethod();
         CreditCard card = creditCardService.setupCreditCard(creditCardDTO, user);
 
-        ResponseEntity<String> responseEntity = creditCardService.paymentTest(card, creditCardDTO.cvc());
-        if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+        PaymentResultResponse response = creditCardService.paymentTest(card, creditCardDTO.cvc());
+        if (!response.status().equals("success")) {
             payment.setStatus(PaymentStatus.FAILED);
-            throw new PaymentFailedException(responseEntity.getBody());
+            throw new PaymentFailedException(response.message());
         }
 
         if (!card.isSaved()) {
@@ -46,6 +61,6 @@ public class NewPaymentMethodHandler implements PaymentHandler {
         }
 
         payment.setPaymentMethod(card);
-        return ResponseEntity.ok("Payment done successfully");
-    }
+        return new PaymentResultResponse("success", "Payment done successfully", null, null);
+    }*/
 }

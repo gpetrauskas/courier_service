@@ -9,8 +9,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = CreditCardDTO.class, name = "creditCard")
+        @JsonSubTypes.Type(value = CreditCardDTO.class, name = "creditCard"),
+        @JsonSubTypes.Type(value = PayPalDTO.class, name = "payPal")
 })
-public interface PaymentMethodDTO {
+public sealed interface PaymentMethodDTO permits CreditCardDTO, PayPalDTO {
 
 }

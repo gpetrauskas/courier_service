@@ -2,9 +2,9 @@ package com.example.courier.payment.handler;
 
 import com.example.courier.domain.Payment;
 import com.example.courier.dto.request.PaymentRequestDTO;
-import org.springframework.http.ResponseEntity;
+import com.example.courier.dto.response.payment.PaymentResultResponse;
 
 public interface PaymentHandler {
     boolean isSupported(PaymentRequestDTO paymentRequestDTO);
-    ResponseEntity<String> handle(PaymentRequestDTO paymentRequestDTO, Payment payment);
+    PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO);
 }

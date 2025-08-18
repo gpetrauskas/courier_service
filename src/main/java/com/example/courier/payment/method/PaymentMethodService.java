@@ -1,4 +1,4 @@
-package com.example.courier.service.payment;
+package com.example.courier.payment.method;
 
 import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.PaymentMethod;
@@ -7,8 +7,6 @@ import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.PaymentMethodRepository;
-import com.example.courier.service.person.PersonService;
-import com.example.courier.service.security.CurrentPersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,17 +20,11 @@ public class PaymentMethodService {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentMethodService.class);
     private final PaymentMethodRepository repository;
-    private final CreditCardService creditCardService;
-    private final PersonService personService;
-    private final CurrentPersonService currentPersonService;
 
-    public PaymentMethodService(PaymentMethodRepository repository, CreditCardService creditCardService,
-                                PersonService personService, CurrentPersonService currentPersonService) {
+    public PaymentMethodService(PaymentMethodRepository repository) {
         this.repository = repository;
-        this.creditCardService = creditCardService;
-        this.personService = personService;
-        this.currentPersonService = currentPersonService;
     }
+/*
 
     @Transactional
     public void addPaymentMethod(PaymentMethodDTO paymentMethodDTO) {
@@ -42,6 +34,7 @@ public class PaymentMethodService {
         PaymentMethod paymentMethod = createPaymentMethod(paymentMethodDTO, user);
         savePaymentMethod(paymentMethod);
     }
+*/
 
     @Transactional(readOnly = true)
     public List<PaymentMethodDTO> getSavedPaymentMethods(Long userId) {
@@ -52,12 +45,12 @@ public class PaymentMethodService {
                 .toList();
     }
 
-    private PaymentMethod createPaymentMethod(PaymentMethodDTO paymentMethodDTO, User user) {
+/*    private PaymentMethod createPaymentMethod(PaymentMethodDTO paymentMethodDTO, User user) {
         if (paymentMethodDTO instanceof CreditCardDTO) {
             return creditCardService.setupCreditCard((CreditCardDTO) paymentMethodDTO, user);
         }
         throw new IllegalArgumentException("Not known method type");
-    }
+    }*/
 
     @Transactional(readOnly = true)
     public Optional<PaymentMethodDTO> getSavedPaymentMethod(Long id) {

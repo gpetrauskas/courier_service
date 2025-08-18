@@ -5,7 +5,7 @@ import com.example.courier.domain.User;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.repository.PaymentMethodRepository;
 import com.example.courier.repository.UserRepository;
-import com.example.courier.service.payment.PaymentMethodService;
+import com.example.courier.payment.method.PaymentMethodService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +34,13 @@ public class PaymentMethodController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/add")
+/*    @PostMapping("/add")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addPaymentMethod(@RequestBody PaymentMethodDTO paymentMethodDTO) {
         paymentMethodService.addPaymentMethod(paymentMethodDTO);
 
         return ResponseEntity.ok("Payment method added successfully.");
-    }
+    }*/
 
     @GetMapping("/getSavedPaymentMethods")
     @PreAuthorize("isAuthenticated()")

@@ -1,5 +1,7 @@
 package com.example.courier.domain;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.PaymentStatus;
 import jakarta.persistence.*;
 
@@ -76,5 +78,11 @@ public class Payment implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void markAsPaid() {
+        this.order.setStatus(OrderStatus.CONFIRMED);
+        this.order.getParcelDetails().setStatus(ParcelStatus.PICKING_UP);
+        setStatus(PaymentStatus.PAID);
     }
 }
