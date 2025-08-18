@@ -98,7 +98,7 @@ public class OrderCommandServiceImpl implements OrderCommandService {
     @Override
     public void cancelOrder(Long orderId) {
         Order order = queryService.fetchById(orderId);
-        Payment payment = paymentService.getPaymentByOrderId(order.getId());
+        Payment payment = paymentService.getPaymentByOrderIdAndUserId(order.getId());
 
         checkIfOrderValidToCancel(order);
         handleOrderCancel(order, payment);

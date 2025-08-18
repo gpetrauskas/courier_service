@@ -88,7 +88,7 @@ public class CancelOrderTest {
             Payment payment = createTestPayment(PaymentStatus.NOT_PAID, order);
 
             when(orderRepository.findByIdAndUserId(order.getId(), testUserId)).thenReturn(Optional.of(order));
-            when(paymentService.getPaymentByOrderId(order.getId())).thenReturn(payment);
+            when(paymentService.getPaymentByOrderIdAndUserId(order.getId())).thenReturn(payment);
 
             orderService.cancelOrder(order.getId());
 
@@ -112,7 +112,7 @@ public class CancelOrderTest {
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessage("Order not found or not owned by the user.");
 
-            verify(paymentService, never()).getPaymentByOrderId(any());
+            verify(paymentService, never()).getPaymentByOrderIdAndUserId(any());
         }
 
         @Test
@@ -122,7 +122,7 @@ public class CancelOrderTest {
             Order order = createTestOrder(OrderStatus.PENDING, parcel);
 
             when(orderRepository.findByIdAndUserId(order.getId(), testUserId)).thenReturn(Optional.of(order));
-            when(paymentService.getPaymentByOrderId(order.getId())).thenThrow(new ResourceNotFoundException("Payment not found"));
+            when(paymentService.getPaymentByOrderIdAndUserId(order.getId())).thenThrow(new ResourceNotFoundException("Payment not found"));
 
             assertThatThrownBy(() -> orderService.cancelOrder(order.getId()))
                     .isInstanceOf(ResourceNotFoundException.class)
@@ -140,7 +140,7 @@ public class CancelOrderTest {
 
 
             when(orderRepository.findByIdAndUserId(order.getId(), testUserId)).thenReturn(Optional.of(order));
-            when(paymentService.getPaymentByOrderId(order.getId())).thenReturn(payment);
+            when(paymentService.getPaymentByOrderIdAndUserId(order.getId())).thenReturn(payment);
 
             assertThatThrownBy(() -> orderService.cancelOrder(order.getId()))
                     .isInstanceOf(OrderCancellationException.class)
@@ -157,7 +157,7 @@ public class CancelOrderTest {
             Payment payment = createTestPayment(PaymentStatus.CANCELED, order);
 
             when(orderRepository.findByIdAndUserId(order.getId(), testUserId)).thenReturn(Optional.of(order));
-            when(paymentService.getPaymentByOrderId(order.getId())).thenReturn(payment);
+            when(paymentService.getPaymentByOrderIdAndUserId(order.getId())).thenReturn(payment);
 
             assertThatThrownBy(() -> orderService.cancelOrder(order.getId()))
                     .isInstanceOf(OrderCancellationException.class)

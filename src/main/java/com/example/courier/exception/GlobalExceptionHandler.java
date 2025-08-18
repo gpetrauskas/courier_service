@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -36,93 +35,79 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ApiResponseDTO> handleValidationException(ValidationException ex) {
         logger.warn("Validation error: {}", ex.getMessage(), ex);
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponseDTO> handleAccessDeniedException(AccessDeniedException ex) {
         logger.warn("Access denied: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, "error");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", "Invalid format error");
-        logger.error("Error: {}", apiResponseDTO.message());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        logger.error("Error: {}", ex.getMessage());
+        return errorResponse("Invalid format error", HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
         logger.error("Invalid argument: {}", ex.getMessage());
-        ApiResponseDTO errorResponse = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler({UserNotFoundException.class, ResourceNotFoundException.class})
     public ResponseEntity<ApiResponseDTO> handleNotFoundException(RuntimeException ex) {
         logger.error("Resource not found: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, "error");
     }
 
     @ExceptionHandler({UnauthorizedPaymentMethodException.class, UnauthorizedAccessException.class})
     public ResponseEntity<ApiResponseDTO> handleUnauthorizedExceptions(RuntimeException ex) {
         logger.error("Unauthorized access: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, "error");
     }
 
     @ExceptionHandler(PaymentAlreadyMadeException.class)
     public ResponseEntity<ApiResponseDTO> handlePaymentAlreadyMadeException(PaymentAlreadyMadeException ex) {
         logger.error("Payment error: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(OrderCancellationException.class)
     public ResponseEntity<ApiResponseDTO> handleOrderCancellationException(OrderCancellationException ex) {
         logger.error("Order cancellation error: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponseDTO> handleRuntimeException(RuntimeException ex) {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", "An unexpected error occurred. Please try again later.");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponseDTO);
+        return errorResponse("Unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR, "error");
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDTO> handleGenericException(Exception ex) {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", "Unexpected error occurred.");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponseDTO);
+        return errorResponse("Unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR, "error");
     }
 
     @ExceptionHandler(DeliveryOptionNotFoundException.class)
     public ResponseEntity<ApiResponseDTO> handleDeliveryOptionNotFoundException(DeliveryOptionNotFoundException ex) {
         logger.error("Delivery Option error: {}", ex.getMessage(), ex);
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, "error");
     }
 
     @ExceptionHandler(TaskNotCancelableException.class)
     public ResponseEntity<ApiResponseDTO> handleTaskNotCancelableException(TaskNotCancelableException ex) {
         logger.error("Task cancellation error: {}", ex.getMessage());
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(NumberFormatException.class)
     public ResponseEntity<ApiResponseDTO> handleNumberFormatException(NumberFormatException ex) {
         logger.error("Number format error");
-        ApiResponseDTO apiResponseDTO = new ApiResponseDTO("error", ex.getMessage());
-        System.out.println(Arrays.toString(ex.getStackTrace()));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(NoRecipientFoundException.class)
@@ -138,7 +123,7 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
 
         logger.error("Validation error: {}", errorMessage);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponseDTO("error", errorMessage));
+        return errorResponse(errorMessage, HttpStatus.BAD_REQUEST, "error");
     }
 
     @ExceptionHandler(CompositeValidationException.class)
@@ -148,19 +133,30 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AddressNotFoundException.class)
     public ResponseEntity<ApiResponseDTO> handleAddressNotFound(AddressNotFoundException ex) {
-        ApiResponseDTO responseDTO = new ApiResponseDTO("address_error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, "address_error");
     }
 
     @ExceptionHandler(UserAddressMismatchException.class)
     public ResponseEntity<ApiResponseDTO> handleUserAddressMismatch(UserAddressMismatchException ex) {
-        ApiResponseDTO responseDTO = new ApiResponseDTO("user_address_mismatch", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, "user_address_mismatch");
     }
 
     @ExceptionHandler(StrategyNotFoundException.class)
     public ResponseEntity<ApiResponseDTO> handleStrategyNotFound(StrategyNotFoundException ex) {
-        ApiResponseDTO responseDTO = new ApiResponseDTO("strategy_error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+        return errorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, "strategy_error");
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<ApiResponseDTO> handlePaymentFailed(PaymentFailedException ex) {
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
+    }
+
+    @ExceptionHandler(PaymentHandlerNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO> handlePaymentHandlerNotFound(PaymentHandlerNotFoundException ex) {
+        return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
+    }
+
+    private ResponseEntity<ApiResponseDTO> errorResponse(String message, HttpStatus status, String messageStatus) {
+        return ResponseEntity.status(status).body(new ApiResponseDTO(messageStatus, message));
     }
 }
