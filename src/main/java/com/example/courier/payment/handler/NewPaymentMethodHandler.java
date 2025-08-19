@@ -6,8 +6,8 @@ import com.example.courier.dto.PayPalDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
-import com.example.courier.exception.PaymentMethodNotFoundException;
 import com.example.courier.payment.processor.PaymentProcessorRegistry;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.payment.method.CreditCardService;
 import org.springframework.stereotype.Component;
 
@@ -23,11 +23,33 @@ public class NewPaymentMethodHandler implements PaymentHandler {
         this.creditCardService = creditCardService;
     }
 
+    /**
+     * Determines if this handler supports the given request by checking
+     * if newPaymentMethod is not null
+     *
+     * @param paymentRequestDTO requested payment method details
+     * @return true if newPaymentMethod is not null; false if its null
+     */
     @Override
     public boolean isSupported(PaymentRequestDTO paymentRequestDTO) {
         return paymentRequestDTO.newPaymentMethod() != null;
     }
 
+    /**
+     * Handles a payment request using newly provided payment method
+     *
+     * It supports different payment method types through pattern matching:
+     * CreditCard: sets up new credit card payment method via creditCardService
+     * PayPal:
+     *
+     * After payment method setup, delegates processing to the appropriate processor from the registry
+     *
+     * @param paymentRequestDTO the payment request containing new payment method details
+     * @return PaymentResultResponse the result of payment processing operation
+     * @throws UnsupportedOperationException if paypal method is requested (not implemented yet)
+     * @throws IllegalArgumentException if unknown payment method type is provided
+     * @throws ResourceNotFoundException if not matching processor is founded
+     * */
     @Override
     public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO) {
         PaymentMethodDTO paymentMethodDTO = paymentRequestDTO.newPaymentMethod();
@@ -39,28 +61,5 @@ public class NewPaymentMethodHandler implements PaymentHandler {
 
         return processorRegistry.getProcessor(paymentMethod)
                 .process(paymentMethod, paymentRequestDTO);
-
     }
-
- /*  // @Override
-    public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO, Payment payment) {
-        User user = payment.getOrder().getUser();
-        CreditCardDTO creditCardDTO = (CreditCardDTO) paymentRequestDTO.newPaymentMethod();
-        CreditCard card = creditCardService.setupCreditCard(creditCardDTO, user);
-
-        PaymentResultResponse response = creditCardService.paymentTest(card, creditCardDTO.cvc());
-        if (!response.status().equals("success")) {
-            payment.setStatus(PaymentStatus.FAILED);
-            throw new PaymentFailedException(response.message());
-        }
-
-        if (!card.isSaved()) {
-            paymentMethodRepository.saveAndFlush(creditCardService.dontSaveCreditCard(card));
-        } else {
-            paymentMethodRepository.saveAndFlush(card);
-        }
-
-        payment.setPaymentMethod(card);
-        return new PaymentResultResponse("success", "Payment done successfully", null, null);
-    }*/
 }
