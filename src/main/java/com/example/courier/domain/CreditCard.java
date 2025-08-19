@@ -1,6 +1,5 @@
 package com.example.courier.domain;
 
-import com.example.courier.dto.mapper.MaskableCard;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -10,10 +9,13 @@ import java.io.Serializable;
 
 @Entity
 @DiscriminatorValue("CREDIT_CARD")
-public class CreditCard extends PaymentMethod implements Serializable, MaskableCard {
+public class CreditCard extends PaymentMethod implements Serializable {
+
+    @Column
+    private String token;
 
     @Column(nullable = false)
-    private String cardNumber;
+    private String last4;
 
     @Column(nullable = false)
     private String expiryDate;
@@ -24,12 +26,12 @@ public class CreditCard extends PaymentMethod implements Serializable, MaskableC
     @Transient
     private String cvc;
 
-    public String getCardNumber() {
-        return cardNumber;
+    public String getLast4() {
+        return last4;
     }
 
-    public void setCardNumber(String cardNumber) {
-        this.cardNumber = cardNumber;
+    public void setLast4(String last4) {
+        this.last4 = last4;
     }
 
     public String getExpiryDate() {
@@ -48,8 +50,11 @@ public class CreditCard extends PaymentMethod implements Serializable, MaskableC
         this.cardHolderName = cardHolderName;
     }
 
-    @Override
-    public String maskCardNumber() {
-        return cardNumber.substring(0, 4) + " **** **** " + cardNumber.substring(cardNumber.length() - 4);
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
