@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Service for managing payments, including creation, updates and processing
+ */
 @Service
 public class PaymentService {
 
@@ -42,8 +45,21 @@ public class PaymentService {
         this.attemptService = attemptService;
     }
 
-    public Map<Long, Payment> getPaymentsForOrders(List<Long> ordersId) {
-        List<Payment> payments = paymentRepository.findAllByOrderIdIn(ordersId);
+    /**
+     * Retrieve all payments associated with  the given list of orderIds
+     *
+     * Calls repository for the payments matching the provided order ids.
+     * If no payment found, a {@link ResourceNotFoundException} is thrown.
+     * On success, the result is returned as a Map where:
+     * Key = order Id,
+     * value = corresponding {@link Payment}
+     *
+     * @param ordersIds the list of the order ids to fetch payments for
+     * @return a map of order Ids to their corresponding payments
+     * @throws ResourceNotFoundException if no payment is found for the given order Ids
+     * */
+    public Map<Long, Payment> getPaymentsForOrders(List<Long> ordersIds) {
+        List<Payment> payments = paymentRepository.findAllByOrderIdIn(ordersIds);
 
         if (payments.isEmpty()) {
             throw new ResourceNotFoundException("No payments found for the given order");
@@ -58,16 +74,15 @@ public class PaymentService {
     /**
      * Processes payment for the given order
      *
-     * calls getValidatedPayment() method to fetch users Payment by order ID
-     * Call PaymentAttemptService to create and return PaymentAttempt object
-     * Calls processPaymentHandler() method that delegate payment processing to appropriate handler
-     * On success: call PaymentAttemptService to update paymentAttempt
-     * and call handlePaymentSuccess() method to update and save payment and order statuses
-     * On failure: update paymentAttempt and rethrow exception
+     * Validates and fetches the payment for the order
+     * Creates a {@link PaymentAttempt} object
+     * Delegate to appropriate {@link PaymentHandler} for processing
+     * On success: update attempt status and order/payment state.
+     * On failure: update payment attempt and rethrow exception
      *
-     * @param paymentRequestDTO the incoming payment request data
+     * @param paymentRequestDTO the incoming {@link PaymentRequestDTO} data
      * @param orderId the ID of the order to process payment for
-     * @return PaymentResultResponse a result of the payment processing response
+     * @return {@link PaymentResultResponse} a result of the payment processing response
      * @throws PaymentFailedException if the payment fails
      */
     @Transactional
@@ -88,14 +103,14 @@ public class PaymentService {
         }
     }
 
-    /** Creates and persists payment for the given order
+    /** Creates and persists {@link Payment} for the given {@link Order}
      *
      * creates new payment entity for a specified order with the given amount
-     * set initial status NOT_PAID and persists it to database
+     * set initial status {@code NOT_PAID} and persists it to database
      *
-     * @param order the Order entity for which payment is created
+     * @param order the {@link Order} entity for which payment is created
      * @param amount amount of the payment
-     * @throws RuntimeException if creating payment fails
+     * @throws PaymentCreationException if creating payment fails
      */
     public void createPayment(Order order, BigDecimal amount) {
         try {
@@ -106,15 +121,15 @@ public class PaymentService {
 
             savePayment(payment);
             log.info("Payment id {} created for order with id {}", payment.getId(), order.getId());
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Payment creation failure: " + e.getMessage());
+        } catch (PaymentCreationException e) {
+            throw new PaymentCreationException("Payment creation failure: " + e.getMessage());
         }
     }
 
     /**
-     * Persist given payment entity
+     * Persist given {@link Payment} entity
      *
-     * @param payment the payment to save
+     * @param payment the {@link Payment} to save
      */
     @Transactional
     public void savePayment(Payment payment) {
@@ -122,12 +137,13 @@ public class PaymentService {
     }
 
     /**
-    * Set the current user ID from the security context
-    * fetch and a return payment entity by orderId and currentUserId
-    *
-    * @param orderId the ID of the order
-    * @return payment the payment entity
-    * @throws  ResourceNotFoundException - throws if payment is not found by orderId and currentUserId*/
+     * Set the current user ID from the security context
+     * fetch and a return {@link Payment} entity by orderId and currentUserId
+     *
+     * @param orderId the ID of the order
+     * @return payment the {@link Payment} entity
+     * @throws ResourceNotFoundException throws if payment is not found by orderId and currentUserId
+     */
     public Payment getPaymentByOrderIdAndUserId(Long orderId) {
         Long currentUserId = currentPersonService.getCurrentPersonId();
         return paymentRepository.findByOrderIdAndUserId(orderId, currentUserId)
@@ -138,7 +154,7 @@ public class PaymentService {
      * Retrieves the payment details for the given orderId
      *
      * @param orderId the ID of the order
-     * @return payment details as a DTO
+     * @return payment details as a {@link PaymentDetailsDTO}
      */
     public PaymentDetailsDTO getPaymentDetails(Long orderId) {
         Payment payment = getPaymentByOrderIdAndUserId(orderId);
@@ -149,10 +165,10 @@ public class PaymentService {
      * Updates payment section with provided data
      *
      * Validate the requested status
-     * fetch payment by ID and apply updates from the DTO by using paymentMapper
-     * and persists the changes
+     * fetch {@link Payment} by ID and apply updates from the {@link PaymentSectionUpdateRequest}
+     * by using {@link PaymentMapper} and persists the changes
      *
-     * @param updateRequest  the incoming payment update data
+     * @param updateRequest  the incoming {@link PaymentSectionUpdateRequest} data
      * @throws IllegalArgumentException if the status is invalid
      */
     public void paymentSectionUpdate(PaymentSectionUpdateRequest updateRequest) {
@@ -163,13 +179,13 @@ public class PaymentService {
     }
 
     /**
-     * Retrieves a list of payments by list of IDS
+     * Retrieves a list of {@link Payment} with a given list of order IDS
      *
-     * @param ids the list of payment ids to be fetched
-     * @return payments the list of fetched payment entities
+     * @param orderIds the list of order ids
+     * @return payments the list of fetched {@link Payment} entities
      */
-    public List<Payment> findAllByIds(List<Long> ids) {
-        return paymentRepository.findAllByOrderIdIn(ids);
+    public List<Payment> findAllByOrderIds(List<Long> orderIds) {
+        return paymentRepository.findAllByOrderIdIn(orderIds);
     }
 
     /*
@@ -177,13 +193,13 @@ public class PaymentService {
     */
 
     /**
-     * Delegates the payment request to the first supported handler
+     * Delegates the {@link PaymentRequestDTO} to the first supported {@link PaymentHandler}
      * Iterates through the available implementations to find one that supports the given paymentRequestDTO
-     * once founded it delegates the handling of request to that handler.
+     * once found, it delegates the handling of request to that handler.
      * If no supported handler found an exception is thrown
      *
-     * @param paymentRequestDTO payment request to be processed
-     * @return the result of processed payment
+     * @param paymentRequestDTO the {@link PaymentRequestDTO} to be processed
+     * @return {@link PaymentResultResponse} the result of processed payment
      * @throws PaymentHandlerNotFoundException if no handler supports the given request
      */
     private PaymentResultResponse processPaymentHandler(PaymentRequestDTO paymentRequestDTO) {
@@ -197,7 +213,7 @@ public class PaymentService {
     /**
      * Find a payment by its ID or throw an exception if not found
      *
-     * @param id of the payment to retrieve
+     * @param id of the {@link Payment} to retrieve
      * @return payment entity
      * @throws ResourceNotFoundException throws if payment not found
      */
@@ -207,8 +223,9 @@ public class PaymentService {
     }
 
     /**
-     * Handles a successful payment by updating the payment, order and parcel statuses,
-     * and then persists the updated payment entity
+     * Handles a successful payment by updating the {@link Payment},
+     * {@link Order} and {@link Parcel} statuses.
+     * Persists the updated {@link Payment} entity
      *
      * @param payment entity to process
      */
@@ -224,9 +241,9 @@ public class PaymentService {
     }
 
     /**
-     * Validates the payment state
+     * Validates the {@link Payment} state
      * ensures that the payment has not been already paid or canceled
-     * and that related order and parcel details are present
+     * and that related {@link Order} and {@link Parcel} details are present
      *
      * @param payment entity to validate
      * @throws ValidationException if the payment status is not NOT_PAID
@@ -245,11 +262,11 @@ public class PaymentService {
     }
 
     /**
-     * Finds and validates a payment associated with given orderId
+     * Finds and validates a {@link Payment} associated with given orderId
      * Ensures that the payment is in valid state before returning it
      *
      * @param orderId the ID of the order linked to the payment
-     * @return payment the validated entity
+     * @return payment the validated {@link Payment} entity
      * @throws ValidationException if the payment status is invalid
      * @throws IllegalStateException if the order or parcel details are missing
      */

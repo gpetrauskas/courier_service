@@ -27,7 +27,7 @@ public class NewPaymentMethodHandler implements PaymentHandler {
      * Determines if this handler supports the given request by checking
      * if newPaymentMethod is not null
      *
-     * @param paymentRequestDTO requested payment method details
+     * @param paymentRequestDTO requested {@link PaymentRequestDTO} details
      * @return true if newPaymentMethod is not null; false if its null
      */
     @Override
@@ -39,12 +39,12 @@ public class NewPaymentMethodHandler implements PaymentHandler {
      * Handles a payment request using newly provided payment method
      *
      * It supports different payment method types through pattern matching:
-     * CreditCard: sets up new credit card payment method via creditCardService
+     * CreditCard: sets up new {@link CreditCard} payment method via creditCardService
      * PayPal:
      *
      * After payment method setup, delegates processing to the appropriate processor from the registry
      *
-     * @param paymentRequestDTO the payment request containing new payment method details
+     * @param paymentRequestDTO the {@link PaymentRequestDTO} containing new payment method details
      * @return PaymentResultResponse the result of payment processing operation
      * @throws UnsupportedOperationException if paypal method is requested (not implemented yet)
      * @throws IllegalArgumentException if unknown payment method type is provided

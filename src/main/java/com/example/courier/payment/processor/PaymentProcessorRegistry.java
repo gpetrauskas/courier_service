@@ -6,6 +6,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Registry that resolves the correct {@link PaymentProcessor}
+ * implementation for a given {@link PaymentMethod}
+ * */
 @Component
 public class PaymentProcessorRegistry {
 
@@ -23,7 +27,7 @@ public class PaymentProcessorRegistry {
      *
      * @param method the payment method to find a processor for
      * @return the supporting PaymentProcessor implementation
-     * @throws ResourceNotFoundException if no processor is found that supports given payment method type
+     * @throws ResourceNotFoundException if no processor supports the method
      */
     public PaymentProcessor getProcessor(PaymentMethod method) {
         return processors.stream()

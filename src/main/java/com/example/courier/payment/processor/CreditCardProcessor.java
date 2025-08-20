@@ -9,6 +9,9 @@ import com.example.courier.payment.method.CreditCardService;
 import com.example.courier.service.permission.PermissionService;
 import org.springframework.stereotype.Component;
 
+/**
+ * Payment processor for handling credit cards
+ */
 @Component
 public class CreditCardProcessor implements PaymentProcessor {
 
@@ -21,10 +24,8 @@ public class CreditCardProcessor implements PaymentProcessor {
     }
 
     /**
-     * Determines if this processor supports given payment method type
+     * Supports only {@link CreditCard} payment methods
      *
-     * This processor specifically supports CreditCard type method
-     * Returns true only if payment method is instance of CreditCard
      * @param paymentMethod the method to check for compatibility
      * @return true if payment method is instance of CreditCard, false otherwise
      */
@@ -39,9 +40,9 @@ public class CreditCardProcessor implements PaymentProcessor {
      * Cast generic PaymentMethod to CreditCard subtype
      * processor already knows it support this type (checked in supports() method)
      * Validates credit card ownership via permission service
-     * Process the payment with security code (CVC) validation
+     * Process the payment
      *
-     * @param paymentMethod the payment method to process
+     * @param paymentMethod the payment method to process. must be of type {@link CreditCard}
      * @param paymentRequestDTO payment details containing transaction details and cvc
      * @return PaymentResultResponse the result of the payment processing operation
      * @throws UnauthorizedAccessException if user has no access to the credit card
@@ -49,7 +50,7 @@ public class CreditCardProcessor implements PaymentProcessor {
     @Override
     public PaymentResultResponse process(PaymentMethod paymentMethod, PaymentRequestDTO paymentRequestDTO) {
         CreditCard cc = (CreditCard) paymentMethod;
-        if (permissionService.hasPaymentMethodAccess(paymentMethod)) {
+        if (!permissionService.hasPaymentMethodAccess(paymentMethod)) {
             throw new UnauthorizedAccessException("Credit card does not belong to current user");
         }
         return service.paymentTest(cc, paymentRequestDTO.cvc());
