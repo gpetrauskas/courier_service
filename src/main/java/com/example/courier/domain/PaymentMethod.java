@@ -49,4 +49,6 @@ public abstract class PaymentMethod implements Serializable {
     public void setSaved(boolean saved) {
         this.saved = saved;
     }
+
+    public abstract void softDelete();
 }

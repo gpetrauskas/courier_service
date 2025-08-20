@@ -57,4 +57,10 @@ public class CreditCard extends PaymentMethod implements Serializable {
     public void setToken(String token) {
         this.token = token;
     }
+
+    @Override
+    public void softDelete() {
+        setSaved(false);
+        this.token = null;
+    }
 }

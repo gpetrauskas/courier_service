@@ -20,4 +20,9 @@ public class PayPal extends PaymentMethod {
     public void setPpEmail(@Nullable String ppEmail) {
         this.ppEmail = ppEmail;
     }
+
+    @Override
+    public void softDelete() {
+        setSaved(false);
+    }
 }
