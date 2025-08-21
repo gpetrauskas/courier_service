@@ -8,5 +8,5 @@ import com.example.courier.domain.Ticket;
 public interface PermissionService {
     boolean hasTicketAccess(Person person, Ticket ticket);
     boolean hasAddressAccess(Person person, Address address);
-    boolean hasPaymentMethodAccess(Person person, PaymentMethod paymentMethod);
+    boolean hasPaymentMethodAccess(PaymentMethod paymentMethod);
 }

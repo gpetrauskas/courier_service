@@ -156,6 +156,11 @@ public class GlobalExceptionHandler {
         return errorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, "error");
     }
 
+    @ExceptionHandler(PaymentCreationException.class)
+    public ResponseEntity<ApiResponseDTO> handlePaymentCreationException(PaymentCreationException ex) {
+        return errorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "error");
+    }
+
     private ResponseEntity<ApiResponseDTO> errorResponse(String message, HttpStatus status, String messageStatus) {
         return ResponseEntity.status(status).body(new ApiResponseDTO(messageStatus, message));
     }

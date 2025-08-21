@@ -11,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
-
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
@@ -37,13 +35,7 @@ public class PaymentController {
 
     @GetMapping("/getPaymentDetails/{orderId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getPaymentDetails(@PathVariable Long orderId, Principal principal) {
-        try {
-            PaymentDetailsDTO paymentDetailsDTO = paymentService.getPaymentDetails(orderId);
-            return ResponseEntity.ok(paymentDetailsDTO);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error occurred finding payment.");
-        }
+    public ResponseEntity<PaymentDetailsDTO> getPaymentDetails(@PathVariable Long orderId) {
+            return ResponseEntity.ok(paymentService.getPaymentDetails(orderId));
     }
 }

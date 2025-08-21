@@ -15,7 +15,7 @@ public enum PaymentStatus {
             .collect(Collectors.toSet());
 
     public static void isValidStatus(String status) {
-        if (status != null && !STATUS_NAMES.contains(status)) {
+        if (status == null || !STATUS_NAMES.contains(status)) {
             throw new IllegalArgumentException("Invalid payment status");
         }
     }
