@@ -9,32 +9,37 @@ import java.util.List;
 /**
  * Registry that resolves the correct {@link PaymentProcessor}
  * implementation for a given {@link PaymentMethod}
+ *
+ * uses {@code supports()} method of each processor to determine which
+ * implementation can handle the specific method at runtime
  * */
 @Component
 public class PaymentProcessorRegistry {
 
-    private final List<PaymentProcessor> processors;
+    private final List<PaymentProcessor<? extends PaymentMethod>> processors;
 
-    public PaymentProcessorRegistry(List<PaymentProcessor> processors) {
+    public PaymentProcessorRegistry(List<PaymentProcessor<? extends PaymentMethod>> processors) {
         this.processors = processors;
     }
 
     /**
-     * Finds the appropriate processor for the given payment method
+     * Finds the appropriate processor that can handle provided payment method.
      *
-     * Iterates through all available processors and return the first one that
-     * supports the specified payment method type
+     * This method iterates through all registered processors and return the first one that
+     * supports the specified payment method type.
+     *
+     * The generic type parameter ensures that the returned processor is strongly typed
+     * for the given {@link PaymentMethod} subtype.
      *
      * @param method the payment method to find a processor for
      * @return the supporting PaymentProcessor implementation
      * @throws ResourceNotFoundException if no processor supports the method
      */
-    public PaymentProcessor getProcessor(PaymentMethod method) {
-        return processors.stream()
-                .filter(m -> m.supports(method))
+    @SuppressWarnings("unchecked")
+    public <T extends PaymentMethod> PaymentProcessor<T> getProcessor(T method) {
+        return (PaymentProcessor<T>) processors.stream()
+                .filter(p -> p.supports(method))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No processor found for method type: " + method.getClass().getSimpleName())
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("No processor found"));
     }
 }

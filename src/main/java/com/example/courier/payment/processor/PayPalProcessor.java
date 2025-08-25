@@ -7,17 +7,17 @@ import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
-public class PayPalProcessor implements PaymentProcessor {
+public class PayPalProcessor implements PaymentProcessor<PayPal> {
     @Override
     public boolean supports(PaymentMethod paymentMethod) {
        return paymentMethod instanceof PayPal;
     }
 
     @Override
-    public PaymentResultResponse process(PaymentMethod paymentMethod, PaymentRequestDTO paymentRequestDTO) {
-        PayPal payPal = (PayPal) paymentMethod;
-
+    public PaymentResultResponse process(PayPal payPal, PaymentRequestDTO paymentRequestDTO, BigDecimal amount) {
         return null;
     }
 }

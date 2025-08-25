@@ -1,15 +1,31 @@
 package com.example.courier.payment.handler;
 
 import com.example.courier.domain.PaymentMethod;
+import com.example.courier.domain.User;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
 import com.example.courier.exception.UnauthorizedAccessException;
+import com.example.courier.payment.processor.PaymentProcessor;
 import com.example.courier.payment.processor.PaymentProcessorRegistry;
 import com.example.courier.payment.method.PaymentMethodService;
 import com.example.courier.service.permission.PermissionService;
 import com.example.courier.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
+/**
+ * Handles payment requests that reference an already saved {@link PaymentMethod}
+ * (e.g. user selects a stored card).
+ *
+ * <p>Flow:
+ * <ol>
+ *   <li>Check if {@code paymentMethodId} is present in the request</li>
+ *   <li>Fetch the payment method from persistence via {@link PaymentMethodService}</li>
+ *   <li>Validate the current user's access rights via {@link PermissionService}</li>
+ *   <li>Delegate charging to the correct {@link PaymentProcessor} from the registry</li>
+ * </ol>
+ */
 @Component
 public class ExistingPaymentMethodHandler implements PaymentHandler {
 
@@ -44,12 +60,14 @@ public class ExistingPaymentMethodHandler implements PaymentHandler {
      * Uses processorRegistry to find right processor and delegate paymentMethod to it
      *
      * @param paymentRequestDTO the {@link PaymentRequestDTO} containing payment method ID and payment details
+     * @param user the current user entity
+     * @param amount the amount to pay
      * @return PaymentResultResponse the result of payment processing
      * @throws ResourceNotFoundException if payment with given id not exists or processor was not found
      * @throws UnauthorizedAccessException if current user has no access to fetched payment
      */
     @Override
-    public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO) {
+    public PaymentResultResponse handle(PaymentRequestDTO paymentRequestDTO, User user, BigDecimal amount) {
         PaymentMethod paymentMethod = paymentMethodService.fetchPaymentMethodById(paymentRequestDTO.paymentMethodId());
         if (!permissionService.hasPaymentMethodAccess(paymentMethod)) {
             throw new UnauthorizedAccessException("Payment method does not belong to current user");
@@ -57,6 +75,6 @@ public class ExistingPaymentMethodHandler implements PaymentHandler {
 
         return processorRegistry
                 .getProcessor(paymentMethod)
-                .process(paymentMethod, paymentRequestDTO);
+                .process(paymentMethod, paymentRequestDTO, amount);
     }
 }

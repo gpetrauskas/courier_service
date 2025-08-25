@@ -91,7 +91,7 @@ public class PaymentService {
         PaymentAttempt paymentAttempt = attemptService.createAttempt(payment);
 
         try {
-            PaymentResultResponse response = processPaymentHandler(paymentRequestDTO);
+            PaymentResultResponse response = processPaymentHandler(paymentRequestDTO, payment.getOrder().getUser(), payment.getAmount());
 
             attemptService.updateAttempt(paymentAttempt, PaymentAttemptStatus.SUCCESS, response.provider(), response.transactionId(), "");
             handlePaymentSuccess(payment);
@@ -202,12 +202,12 @@ public class PaymentService {
      * @return {@link PaymentResultResponse} the result of processed payment
      * @throws PaymentHandlerNotFoundException if no handler supports the given request
      */
-    private PaymentResultResponse processPaymentHandler(PaymentRequestDTO paymentRequestDTO) {
+    private PaymentResultResponse processPaymentHandler(PaymentRequestDTO paymentRequestDTO, User user, BigDecimal amount) {
         return paymentHandlers.stream()
                 .filter(h -> h.isSupported(paymentRequestDTO))
                 .findFirst()
                 .orElseThrow(() -> new PaymentHandlerNotFoundException("No handler found"))
-                .handle(paymentRequestDTO);
+                .handle(paymentRequestDTO, user, amount);
     }
 
     /**

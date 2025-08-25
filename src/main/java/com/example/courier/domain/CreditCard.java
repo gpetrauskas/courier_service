@@ -26,6 +26,9 @@ public class CreditCard extends PaymentMethod implements Serializable {
     @Transient
     private String cvc;
 
+    @Transient
+    private String cardNumber;
+
     public String getLast4() {
         return last4;
     }
@@ -62,5 +65,21 @@ public class CreditCard extends PaymentMethod implements Serializable {
     public void softDelete() {
         setSaved(false);
         this.token = null;
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public String maskToken() {
+        if (token == null) {
+            return null;
+        }
+
+        return "******" + token.substring(10 - 4);
     }
 }
