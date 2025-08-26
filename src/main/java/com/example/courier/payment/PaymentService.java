@@ -93,12 +93,12 @@ public class PaymentService {
         try {
             PaymentResultResponse response = processPaymentHandler(paymentRequestDTO, payment.getOrder().getUser(), payment.getAmount());
 
-            attemptService.updateAttempt(paymentAttempt, PaymentAttemptStatus.SUCCESS, response.provider(), response.transactionId(), "");
+            attemptService.updateAttempt(paymentAttempt, PaymentAttemptStatus.SUCCESS, response.provider(), response.transactionId(), null);
             handlePaymentSuccess(payment);
 
             return response;
         } catch (PaymentFailedException e) {
-            attemptService.updateAttempt(paymentAttempt, PaymentAttemptStatus.FAILED, e.getType(), "", e.getMessage());
+            attemptService.updateAttempt(paymentAttempt, PaymentAttemptStatus.FAILED, e.getType(), null, e.getMessage());
             throw e;
         }
     }

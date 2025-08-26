@@ -70,7 +70,6 @@ public class PaymentMethodService {
                     card.getLast4(),
                     card.getExpiryDate(),
                     card.getCardHolderName(),
-                    "",
                     card.isSaved());
         }
         throw new IllegalArgumentException("Unknown payment method type.");

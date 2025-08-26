@@ -23,7 +23,6 @@ import java.math.BigDecimal;
  */
 @Component
 public class CreditCardProcessor implements PaymentProcessor<CreditCard> {
-
     private final CreditCardService service;
     private final PermissionService permissionService;
 
@@ -62,6 +61,6 @@ public class CreditCardProcessor implements PaymentProcessor<CreditCard> {
         if (!permissionService.hasPaymentMethodAccess(card)) {
             throw new UnauthorizedAccessException("Credit card does not belong to current user");
         }
-        return service.chargeNow(card, paymentRequestDTO.cvc(), amount);
+        return service.chargeSavedCard(card, paymentRequestDTO.cvc(), amount);
     }
 }

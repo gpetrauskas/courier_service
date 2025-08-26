@@ -1,11 +1,12 @@
 package com.example.courier.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record CreditCardDTO(
         Long id,
-        String cardNumber,
-        String expiryDate,
-        String cardHolderName,
-        String cvc,
+        @NotBlank String cardNumber,
+        @NotBlank String expiryDate,
+        @NotBlank String cardHolderName,
         boolean saveCard
 ) implements PaymentMethodDTO {
 }

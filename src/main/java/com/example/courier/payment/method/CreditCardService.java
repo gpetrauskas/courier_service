@@ -5,6 +5,7 @@ import com.example.courier.common.ProviderType;
 import com.example.courier.domain.CreditCard;
 import com.example.courier.domain.User;
 import com.example.courier.dto.CreditCardDTO;
+import com.example.courier.dto.OneTimeCard;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
 import com.example.courier.exception.PaymentFailedException;
 import org.slf4j.Logger;
@@ -21,7 +22,16 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * Service for managing credit card setup and payment operations
+ * Service for managing credit card setup and simulated payment operations.
+ *
+ * <p>This service provides functionality for:
+ * <ul>
+ *     <li>Setting up and saving a new credit card</li>
+ *     <li>Charging saved cards and one-time cards</li>
+ * </ul>
+ *
+ * <p>For simulation, certain card numbers, expiration dates,
+ * and CVC suffixes trigger test failures.</p>
  */
 @Service
 public class CreditCardService {
@@ -38,11 +48,12 @@ public class CreditCardService {
     /**
      * Sets up and persists a new {@link CreditCard}
      *
-     * Validates credit card with mock provider, tokenize card if
-     * 'saveCard' is true.
-     * Throws on cardholder name and current users name mismatch.
-     * On success, creates and stores the card.
-     * Returns the saved entity
+     * <p>Performs validation with a mock provider:
+     * <ul>
+     *     <li>Fails if cardholder name does not match users name</li>
+     *     <li>Fails if details are missing or card is expired</li>
+     *     <li>Fails on specific hardcoded card/CVC values</li>
+     * </ul>
      *
      * @param creditCardDTO {@link CreditCardDTO} details from request
      * @param cvc card security code
@@ -67,29 +78,40 @@ public class CreditCardService {
     }
 
     /**
-     * Simulates charging a {@link CreditCard}
+     * Simulates charging a {@link CreditCard}.
      *
-     * checks specific hardcoded cvc and card number endings, card expiry to simulate failures
-     * returns {@link PaymentResultResponse} or throws failure depending on test rule
+     * Checks specific hardcoded cvc and card number endings, card expiry to simulate failures
+     * returns {@link PaymentResultResponse} or throws failure depending on test rule.
      *
      * @param card credit card used
      * @param cvc security code
      * @param amount payment amount
-     * @return result of simulated payment
+     * @return {@link PaymentResultResponse} result of simulated payment
      * @throws PaymentFailedException on validation failure
      */
-    public PaymentResultResponse chargeNow(CreditCard card, String cvc, BigDecimal amount) {
-        Objects.requireNonNull(card, "Card cannot be null");
+    public PaymentResultResponse chargeSavedCard(CreditCard card, String cvc, BigDecimal amount) {
+        validateCvc(cvc);
+        simulateCharge(card, amount);
 
-        if (cvc.endsWith(TEST_REJECT_CVC_SUFFIX)) {
-            fail("REJECTED");
-        }
-
-        simulateCharge(card, cvc, amount);
         logger.info("Payment test approved for card ending: {}", card.getLast4());
+        return success("APPROVED", generateTxId());
+    }
 
-        String txId = "txId_" + UUID.randomUUID();
-        return success("APPROVED", txId);
+    /**
+     * Simulates charging a one-time card.
+     *
+     * @param card   one-time card details
+     * @param cvc    security code
+     * @param amount payment amount
+     * @return {@link PaymentResultResponse} representing success
+     * @throws PaymentFailedException if validation fails
+     */
+    public PaymentResultResponse chargeOneTimeCard(OneTimeCard card, String cvc, BigDecimal amount) {
+        validateCvc(cvc);
+        simulateCharge(card, amount);
+
+        logger.info("Payment test approved for card ending: {}", card.getLast4());
+        return success("APPROVED", generateTxId());
     }
 
     /*
@@ -97,17 +119,37 @@ public class CreditCardService {
     */
 
     /**
-     * Simulates logging the charge
+     * Validates the CVC code.
+     * <p>Fails if CVC ends with {@value #TEST_REJECT_CVC_SUFFIX}.</p>
+     *
+     * @param cvc provided CVC code
+     * @throws PaymentFailedException if validation fails
      */
-    private void simulateCharge(CreditCard card, String cvc, BigDecimal amount) {
-        if (card.getToken() != null && !card.getToken().isBlank()) {
-            logger.info("Charging {}€ by saved card token {} (last4 {})", amount, card.maskToken(), card.getLast4());
-        } else if (card.getCardNumber() != null) {
-            logger.info("Charging {}€ by one-time card ending {}", amount, card.getLast4());
-        } else {
-            logger.info("No token or card number available for payment");
+    private void validateCvc(String cvc) {
+        if (cvc.endsWith(TEST_REJECT_CVC_SUFFIX)) {
+            fail("REJECTED");
         }
     }
+
+    /**
+     * Simulates provider generated txId on successful card validation
+     */
+    private String generateTxId() {
+        return "txId_" + UUID.randomUUID();
+    }
+
+    /**
+     * Logs simulation of charging a one-time card.
+     */
+    private void simulateCharge(OneTimeCard card, BigDecimal amount) {
+        logger.info("Charging {}€ with saved card ending {}", amount, card.getLast4());
+    }
+
+    /**
+     * Logs simulation of charging a saved card.
+     */
+    private void simulateCharge(CreditCard card, BigDecimal amount) {
+        logger.info("Charging {}€ with one-time card ending {}", amount, card.getLast4());    }
 
     /**
      * Creates card entity
@@ -128,12 +170,7 @@ public class CreditCardService {
         card.setExpiryDate(creditCardDTO.expiryDate());
         card.setCardHolderName(creditCardDTO.cardHolderName());
         card.setSaved(creditCardDTO.saveCard());
-
-        if (token != null) {
-            card.setToken(token);
-        } else {
-            card.setCardNumber(creditCardDTO.cardNumber());
-        }
+        card.setToken(token);
 
         logger.debug("New credit card created: {}", card);
         return card;
@@ -169,7 +206,7 @@ public class CreditCardService {
         if (cvc.endsWith(TEST_REJECT_CVC_SUFFIX)) fail("REJECTED");
 
         logger.debug("Validation passed for card ending: {}", last4Digits(creditCardDTO.cardNumber()));
-        return creditCardDTO.saveCard() ? requestTokenFromProvider(creditCardDTO) : null;
+        return requestTokenFromProvider(creditCardDTO);
     }
 
     /**
