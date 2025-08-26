@@ -44,14 +44,15 @@ public class ExistingPaymentMethodHandler implements PaymentHandler {
 
     /**
      * Determines if this handler supports the given request by checking
-     * if payment method ID is given
+     * if payment method ID is given and paymentMethodDTO is null
      *
-     * @param paymentRequestDTO incoming {@link PaymentRequestDTO} containing payment method details
-     * @return true if paymentMethodId is not null, false if its null.
+     * @param requestDTO incoming {@link PaymentRequestDTO} containing payment method details
+     * @return true if an existing payment method ID is provided and no new payment method is set;
+     * false otherwise
      */
     @Override
-    public boolean isSupported(PaymentRequestDTO paymentRequestDTO) {
-        return paymentRequestDTO.paymentMethodId() != null;
+    public boolean isSupported(PaymentRequestDTO requestDTO) {
+        return requestDTO.paymentMethodId() != null && requestDTO.newPaymentMethod() == null;
     }
 
     /**
