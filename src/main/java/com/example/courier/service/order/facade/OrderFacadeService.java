@@ -2,6 +2,7 @@ package com.example.courier.service.order;
 
 import com.example.courier.dto.request.order.*;
 import com.example.courier.service.address.AddressService;
+import com.example.courier.service.order.command.OrderCommandService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.payment.PaymentService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,14 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class OrderFacadeService {
 
-    private final OrderService orderService;
+    private final OrderCommandService orderCommandService;
     private final ParcelService parcelService;
     private final AddressService addressService;
     private final PaymentService paymentService;
 
-    public OrderFacadeService(OrderService orderService, ParcelService parcelService,
+    public OrderFacadeService(OrderCommandService orderCommandService, ParcelService parcelService,
                               AddressService addressService, PaymentService paymentService) {
-        this.orderService = orderService;
+        this.orderCommandService = orderCommandService;
         this.parcelService = parcelService;
         this.addressService = addressService;
         this.paymentService = paymentService;
@@ -30,7 +31,7 @@ public class OrderFacadeService {
         switch (updatedData.sectionToEdit()) {
             case "orderSection" -> {
                 if (updatedData instanceof OrderSectionUpdateRequest orderSectionUpdateRequest) {
-                    orderService.orderSectionUpdate(orderSectionUpdateRequest);
+                    orderCommandService.updateOrderSection(orderSectionUpdateRequest);
                 }
             }
             case "parcelSection" -> {
