@@ -1,10 +1,7 @@
 package com.example.courier.payment.paymentservicetest;
 
 import com.example.courier.common.*;
-import com.example.courier.domain.Order;
-import com.example.courier.domain.Parcel;
-import com.example.courier.domain.Payment;
-import com.example.courier.domain.PaymentAttempt;
+import com.example.courier.domain.*;
 import com.example.courier.dto.CreditCardDTO;
 import com.example.courier.dto.PaymentMethodDTO;
 import com.example.courier.dto.request.PaymentRequestDTO;
@@ -55,13 +52,24 @@ public class ProcessPaymentTest {
     private Payment payment;
     private PaymentRequestDTO paymentRequestDTO;
     private PaymentAttempt paymentAttempt;
+    private BigDecimal amount;
+    private User user;
 
     @BeforeEach
     void setup() {
+        user = new User();
+        amount = BigDecimal.valueOf(20);
         payment = createMockPayment();
         paymentAttempt = createPaymentAttempt();
-        PaymentMethodDTO methodDTO = new CreditCardDTO(null, "1111222233334444", "01/27", "Frodo Baggins", null, false);
+        PaymentMethodDTO methodDTO = new CreditCardDTO(null, "1111222233334444", "01/27", "Frodo Baggins", false);
         paymentRequestDTO = new PaymentRequestDTO(99L, methodDTO, "321");
+
+        Order order = new Order();
+        Parcel parcel = new Parcel();
+        order.setParcelDetails(parcel);
+        order.setUser(user);
+        payment.setOrder(order);
+        payment.setAmount(amount);
     }
 
     @Test
@@ -69,12 +77,12 @@ public class ProcessPaymentTest {
         PaymentHandler handler = setupCommonHappyPath();
         PaymentResultResponse resultResponse = new PaymentResultResponse("success", "APPROVED", ProviderType.CREDIT_CARD, "txid_123");
 
-        when(handler.handle(paymentRequestDTO)).thenReturn(resultResponse);
+        when(handler.handle(paymentRequestDTO, user, amount)).thenReturn(resultResponse);
 
         var response = service.processPayment(paymentRequestDTO, ORDER_ID);
 
         assertEquals("success", response.status());
-        verify(paymentAttemptService).updateAttempt(paymentAttempt, PaymentAttemptStatus.SUCCESS, ProviderType.CREDIT_CARD,"txid_123", "");
+        verify(paymentAttemptService).updateAttempt(paymentAttempt, PaymentAttemptStatus.SUCCESS, ProviderType.CREDIT_CARD,"txid_123", null);
     }
 
     @Test
@@ -83,12 +91,12 @@ public class ProcessPaymentTest {
 
         when(paymentAttemptService.createAttempt(payment)).thenReturn(paymentAttempt);
         when(handler.isSupported(paymentRequestDTO)).thenReturn(true);
-        when(handler.handle(paymentRequestDTO)).thenThrow(new PaymentFailedException(
+        when(handler.handle(paymentRequestDTO, user, amount)).thenThrow(new PaymentFailedException(
                 "fail", ProviderType.CREDIT_CARD, PaymentAttemptStatus.FAILED, ""));
 
         assertThrows(PaymentFailedException.class, () -> service.processPayment(paymentRequestDTO, ORDER_ID));
 
-        verify(paymentAttemptService).updateAttempt(paymentAttempt, PaymentAttemptStatus.FAILED, ProviderType.CREDIT_CARD, "", "fail");
+        verify(paymentAttemptService).updateAttempt(paymentAttempt, PaymentAttemptStatus.FAILED, ProviderType.CREDIT_CARD, null, "fail");
     }
 
     @Test

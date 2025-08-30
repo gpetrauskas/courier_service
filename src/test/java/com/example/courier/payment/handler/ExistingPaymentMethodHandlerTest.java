@@ -2,24 +2,27 @@ package com.example.courier.payment.handler;
 
 import com.example.courier.common.ProviderType;
 import com.example.courier.domain.CreditCard;
-import com.example.courier.domain.PaymentMethod;
+import com.example.courier.domain.User;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
 import com.example.courier.exception.UnauthorizedAccessException;
 import com.example.courier.payment.method.PaymentMethodService;
 import com.example.courier.payment.processor.PaymentProcessor;
 import com.example.courier.payment.processor.PaymentProcessorRegistry;
-import com.example.courier.payment.processor.PaymentProcessorRegistryTest;
 import com.example.courier.service.permission.PermissionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class ExistingPaymentMethodHandlerTest {
 
@@ -32,6 +35,14 @@ public class ExistingPaymentMethodHandlerTest {
 
     @InjectMocks
     ExistingPaymentMethodHandler existingPaymentMethodHandler;
+
+    private final BigDecimal amount = BigDecimal.valueOf(20);
+    private User user;
+
+    @BeforeEach
+    void setup() {
+        user = new User();
+    }
 
     @Test
     void isSupported_shouldReturnTrue_whenMethodIsSupported() {
@@ -54,23 +65,23 @@ public class ExistingPaymentMethodHandlerTest {
     @Test
     void handle_shouldSuccessfullyHandleAndReturnPaymentResultResponse() {
         PaymentRequestDTO requestDTO = createPaymentRequestDTO(99L);
-        PaymentMethod savedMethod = new CreditCard();
+        CreditCard savedMethod = new CreditCard();
         PaymentResultResponse expectedResponse = new PaymentResultResponse("success", "APPROVED", ProviderType.CREDIT_CARD, "txId_123");
-        PaymentProcessor mockProcessor = mock(PaymentProcessor.class);
+        PaymentProcessor<CreditCard> mockProcessor = mock(PaymentProcessor.class);
 
         when(paymentMethodService.fetchPaymentMethodById(requestDTO.paymentMethodId())).
                 thenReturn(savedMethod);
         when(permissionService.hasPaymentMethodAccess(savedMethod)).thenReturn(true);
         when(processorRegistry.getProcessor(savedMethod)).thenReturn(mockProcessor);
-        when(mockProcessor.process(savedMethod, requestDTO)).thenReturn(expectedResponse);
+        when(mockProcessor.process(savedMethod, requestDTO, amount)).thenReturn(expectedResponse);
 
-        var response = existingPaymentMethodHandler.handle(requestDTO);
+        var response = existingPaymentMethodHandler.handle(requestDTO, user, amount);
 
         assertEquals(expectedResponse, response);
         verify(paymentMethodService).fetchPaymentMethodById(99L);
         verify(permissionService).hasPaymentMethodAccess(savedMethod);
         verify(processorRegistry).getProcessor(savedMethod);
-        verify(mockProcessor).process(savedMethod, requestDTO);
+        verify(mockProcessor).process(savedMethod, requestDTO, amount);
     }
 
     @Test
@@ -78,7 +89,8 @@ public class ExistingPaymentMethodHandlerTest {
         PaymentRequestDTO requestDTO = createPaymentRequestDTO(99L);
         when(paymentMethodService.fetchPaymentMethodById(99L)).thenReturn(null);
 
-        assertThrows(UnauthorizedAccessException.class, () -> existingPaymentMethodHandler.handle(requestDTO));
+        assertThrows(UnauthorizedAccessException.class,
+                () -> existingPaymentMethodHandler.handle(requestDTO, user, amount));
     }
 
     private PaymentRequestDTO createPaymentRequestDTO(Long id) {

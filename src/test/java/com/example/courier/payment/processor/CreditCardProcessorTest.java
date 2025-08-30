@@ -16,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,6 +54,7 @@ public class CreditCardProcessorTest {
     @Test
     void processShouldSuccessfullyPassAndReturnResponse_whenRequestIsValid() {
         PaymentRequestDTO requestDTO = new PaymentRequestDTO(null, mock(CreditCardDTO.class), "321");
+        BigDecimal amount = new BigDecimal(20);
 
         CreditCard cc = new CreditCard();
         cc.setSaved(true);
@@ -62,12 +65,10 @@ public class CreditCardProcessorTest {
         PaymentResultResponse expectedResponse = new PaymentResultResponse("success", "APPROVED", ProviderType.CREDIT_CARD, "txId_123");
 
         when(permissionService.hasPaymentMethodAccess(cc)).thenReturn(true);
+        when(creditCardService.chargeSavedCard(cc, requestDTO.cvc(), amount)).thenReturn(expectedResponse);
 
-        var response = creditCardService.chargeNow(cc, requestDTO.cvc());
+        var response = creditCardProcessor.process(cc, requestDTO, amount);
 
         assertEquals(expectedResponse, response);
-
-
-
     }
 }
