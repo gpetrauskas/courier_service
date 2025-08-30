@@ -1,8 +1,9 @@
-package com.example.courier.service.order;
+package com.example.courier.service.order.facade;
 
 import com.example.courier.dto.request.order.*;
 import com.example.courier.service.address.AddressService;
 import com.example.courier.service.order.command.OrderCommandService;
+import com.example.courier.service.order.handler.OrderUpdateHandler;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.payment.PaymentService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class OrderFacadeService {
+public class OrderFacadeService implements OrderUpdateHandler {
 
     private final OrderCommandService orderCommandService;
     private final ParcelService parcelService;
@@ -28,28 +29,26 @@ public class OrderFacadeService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void updateSection(BaseOrderUpdateRequest updatedData) {
-        switch (updatedData.sectionToEdit()) {
-            case "orderSection" -> {
-                if (updatedData instanceof OrderSectionUpdateRequest orderSectionUpdateRequest) {
-                    orderCommandService.updateOrderSection(orderSectionUpdateRequest);
-                }
-            }
-            case "parcelSection" -> {
-                if (updatedData instanceof ParcelSectionUpdateRequest parcelSectionUpdateRequest) {
-                    parcelService.parcelSectionUpdate(parcelSectionUpdateRequest);
-                }
-            }
-            case "paymentSection" -> {
-                if (updatedData instanceof PaymentSectionUpdateRequest paymentSectionUpdateRequest) {
-                    paymentService.paymentSectionUpdate(paymentSectionUpdateRequest);
-                }
-            }
-            case "addressSection" -> {
-                if (updatedData instanceof AddressSectionUpdateRequest addressSectionUpdateRequest) {
-                    addressService.addressSectionUpdate(addressSectionUpdateRequest);
-                }
-            }
-        }
+        updatedData.applyUpdate(this);
+    }
 
+    @Override
+    public void handle(OrderSectionUpdateRequest request) {
+        orderCommandService.updateOrderSection(request);
+    }
+
+    @Override
+    public void handle(ParcelSectionUpdateRequest request) {
+        parcelService.parcelSectionUpdate(request);
+    }
+
+    @Override
+    public void handle(AddressSectionUpdateRequest request) {
+        addressService.addressSectionUpdate(request);
+    }
+
+    @Override
+    public void handle(PaymentSectionUpdateRequest request) {
+        paymentService.paymentSectionUpdate(request);
     }
 }

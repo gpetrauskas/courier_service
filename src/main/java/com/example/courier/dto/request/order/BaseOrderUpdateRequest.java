@@ -1,5 +1,6 @@
 package com.example.courier.dto.request.order;
 
+import com.example.courier.service.order.handler.OrderUpdateHandler;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -14,5 +15,5 @@ public sealed interface BaseOrderUpdateRequest permits AddressSectionUpdateReque
         ParcelSectionUpdateRequest, PaymentSectionUpdateRequest {
     Long id();
     String sectionToEdit();
-
+    void applyUpdate(OrderUpdateHandler handler);
 }

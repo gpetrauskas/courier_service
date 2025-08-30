@@ -5,9 +5,10 @@ import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.request.order.BaseOrderUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
-import com.example.courier.service.order.OrderFacadeService;
-import com.example.courier.service.order.OrderService;
+import com.example.courier.service.order.facade.OrderFacadeService;
 import com.example.courier.service.TrackingService;
+import com.example.courier.service.order.command.OrderCommandService;
+import com.example.courier.service.order.query.OrderQueryService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
-    private final OrderService orderService;
+    private final OrderCommandService commandService;
+    private final OrderQueryService queryService;
     private final TrackingService trackingService;
     private final OrderFacadeService orderFacadeService;
 
-    public OrderController(OrderService orderService, TrackingService trackingService, OrderFacadeService orderFacadeService) {
-        this.orderService = orderService;
+    public OrderController(OrderCommandService commandService, OrderQueryService queryService,
+                           TrackingService trackingService, OrderFacadeService orderFacadeService) {
+        this.commandService = commandService;
+        this.queryService = queryService;
         this.trackingService = trackingService;
         this.orderFacadeService = orderFacadeService;
     }
@@ -46,7 +50,7 @@ public class OrderController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long id
     ) {
-        return ResponseEntity.ok(orderService.getDetailedOrdersForAdmin(page, size, status, id));
+        return ResponseEntity.ok(queryService.getDetailedOrdersForAdmin(page, size, status, id));
     }
 
     @GetMapping("/getOrdersForTaskAssignment")
@@ -56,38 +60,38 @@ public class OrderController {
             @RequestParam (defaultValue = "10") int size,
             @RequestParam String taskType
     ) {
-        return ResponseEntity.ok(orderService.getOrdersForTaskAssignment(page, size, taskType));
+        return ResponseEntity.ok(queryService.getOrdersForTaskAssignment(page, size, taskType));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AdminOrderResponseDTO> getOrderById(@PathVariable Long id) {
-       return ResponseEntity.ok(orderService.getAdminOrderById(id));
+       return ResponseEntity.ok(queryService.getAdminOrderById(id));
     }
 
     @GetMapping(value = "/getUserOrders", params = { "page", "size" })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PaginatedResponseDTO<OrderDTO>> getUserOrders(
             @RequestParam("page") int page, @RequestParam("size") int size) {
-        return ResponseEntity.ok(orderService.findUserOrders(page, size));
+        return ResponseEntity.ok(queryService.findUserOrders(page, size));
     }
 
     @GetMapping("/getUserOrderById/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDTO> getSelfOrderById(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.findSelfOrderById(orderId));
+        return ResponseEntity.ok(queryService.findSelfOrderById(orderId));
     }
 
     @PostMapping("/placeOrder")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO) {
-        return ResponseEntity.ok(orderService.placeOrder(orderDTO));
+        return ResponseEntity.ok(commandService.placeOrder(orderDTO));
     }
 
     @PostMapping("/cancelOrder/{orderId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) {
-        orderService.cancelOrder(orderId);
+        commandService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
 
