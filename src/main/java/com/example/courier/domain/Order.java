@@ -2,9 +2,10 @@ package com.example.courier.domain;
 
 
 import com.example.courier.common.OrderStatus;
+import com.example.courier.exception.OrderCancellationException;
 import jakarta.persistence.*;
+import jakarta.validation.ValidationException;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,8 +32,12 @@ public class Order {
     @JoinColumn(name = "parcel_id", referencedColumnName = "id")
     private Parcel parcelDetails;
 
-    @Column(nullable = false)
-    private String deliveryMethod;
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
+
+    @ManyToOne
+    @JoinColumn(name = "preference_id", nullable = false)
+    private DeliveryMethod preference;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,14 +49,39 @@ public class Order {
 
     public Order() {}
 
-    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress, Parcel parcelDetails, String deliveryMethod, OrderStatus status, LocalDateTime createDate) {
+    public Order(User user, OrderAddress senderAddress, OrderAddress recipientAddress,
+                 Parcel parcelDetails, DeliveryMethod preference, OrderStatus status, LocalDateTime createDate) {
         this.user = user;
         this.senderAddress = senderAddress;
         this.recipientAddress = recipientAddress;
         this.parcelDetails = parcelDetails;
-        this.deliveryMethod = deliveryMethod;
+        this.preference = preference;
         this.status = status;
         this.createDate = createDate;
+    }
+
+    public void cancel() {
+        if (status != OrderStatus.PENDING) {
+            throw new OrderCancellationException("Order already canceled or confirmed");
+        }
+
+        this.status = OrderStatus.CANCELED;
+        parcelDetails.cancel();
+        payment.cancel();
+    }
+
+    public void validateUpdatable(OrderStatus newStatus, String newPreference) {
+        if (newStatus != null) {
+            OrderStatus.isValidStatus(newStatus.name());
+
+            if (newStatus == this.status) {
+                throw new ValidationException("Order status is already set to: " + newStatus);
+            }
+        }
+
+        if (newPreference != null && Long.parseLong(newPreference) == this.preference.getId()) {
+            throw new ValidationException("Delivery preference is already set to: " + newPreference);
+        }
     }
 
     public User getUser() {
@@ -86,12 +116,12 @@ public class Order {
         this.parcelDetails = parcelDetails;
     }
 
-    public String getDeliveryMethod() {
-        return deliveryMethod;
+    public DeliveryMethod getPreference() {
+        return preference;
     }
 
-    public void setDeliveryMethod(String deliveryMethod) {
-        this.deliveryMethod = deliveryMethod;
+    public void setPreference(DeliveryMethod preference) {
+        this.preference = preference;
     }
 
     public OrderStatus getStatus() {
@@ -116,5 +146,13 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
     }
 }

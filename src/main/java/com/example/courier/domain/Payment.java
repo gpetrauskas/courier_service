@@ -80,6 +80,10 @@ public class Payment implements Serializable {
         this.id = id;
     }
 
+    public void cancel() {
+        this.status = PaymentStatus.CANCELED;
+    }
+
     public void markAsPaid() {
         this.order.setStatus(OrderStatus.CONFIRMED);
         this.order.getParcelDetails().setStatus(ParcelStatus.PICKING_UP);

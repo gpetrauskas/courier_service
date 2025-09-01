@@ -12,11 +12,13 @@ public class Parcel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String weight;
+    @ManyToOne
+    @JoinColumn(name = "weight_id", nullable = false)
+    private DeliveryMethod weight;
 
-    @Column(nullable = false)
-    private String dimensions;
+    @ManyToOne
+    @JoinColumn(name = "dimensions_id", nullable = false)
+    private DeliveryMethod dimensions;
 
     @Column(nullable = false)
     private String contents;
@@ -34,7 +36,7 @@ public class Parcel {
 
     public Parcel() {}
 
-    public Parcel(String weight, String dimensions, String contents, String trackingNumber, ParcelStatus status) {
+    public Parcel(DeliveryMethod weight, DeliveryMethod dimensions, String contents, String trackingNumber, ParcelStatus status) {
         this.weight = weight;
         this.dimensions = dimensions;
         this.contents = contents;
@@ -42,19 +44,23 @@ public class Parcel {
         this.status = status;
     }
 
-    public String getWeight() {
+    public void cancel() {
+        this.status = ParcelStatus.CANCELED;
+    }
+
+    public DeliveryMethod getWeight() {
         return weight;
     }
 
-    public void setWeight(String weight) {
+    public void setWeight(DeliveryMethod weight) {
         this.weight = weight;
     }
 
-    public String getDimensions() {
+    public DeliveryMethod getDimensions() {
         return dimensions;
     }
 
-    public void setDimensions(String dimensions) {
+    public void setDimensions(DeliveryMethod dimensions) {
         this.dimensions = dimensions;
     }
 
