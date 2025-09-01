@@ -1,6 +1,8 @@
 package com.example.courier.service.deliveryoption;
 
 import com.example.courier.common.DeliveryGroup;
+import com.example.courier.domain.DeliveryMethod;
+import com.example.courier.domain.Order;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import com.example.courier.dto.request.deliverymethod.UpdateDeliveryMethodDTO;
@@ -19,7 +21,8 @@ public interface DeliveryMethodService {
     void addNewDeliveryOption(CreateDeliveryMethodDTO dto);
     void deleteDeliveryOption(Long id);
     DeliveryMethodDTO getById(Long id);
-    BigDecimal calculateShippingCost(OrderDTO orderDTO);
+    BigDecimal calculateShippingCost(Order order);
     String getDescriptionById(Long id);
+    DeliveryMethod getDeliveryOptionById(Long id);
     Set<String> getDeliveryPreferences();
 }

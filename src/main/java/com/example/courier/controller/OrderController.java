@@ -84,7 +84,7 @@ public class OrderController {
 
     @PostMapping("/placeOrder")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<?> addOrder(@RequestBody @Valid OrderDTO orderDTO) {
         return ResponseEntity.ok(commandService.placeOrder(orderDTO));
     }
 

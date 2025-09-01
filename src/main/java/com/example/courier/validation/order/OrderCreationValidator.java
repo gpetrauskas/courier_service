@@ -22,7 +22,7 @@ public class OrderCreationValidator {
         if (orderDTO.recipientAddress() == null) {
             throw new IllegalArgumentException("Recipient address cannot be null");
         }
-        if (orderDTO.deliveryMethod() == null) {
+        if (orderDTO.preference() == null) {
             throw new IllegalArgumentException("Delivery method cannot be null");
         }
 

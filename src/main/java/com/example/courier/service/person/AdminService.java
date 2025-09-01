@@ -6,7 +6,6 @@ import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +61,7 @@ public class AdminService {
             report.append(order.getUser().getId()).append("\t");
             report.append(order.getSenderAddress()).append("\t");
             report.append(order.getRecipientAddress()).append("\t");
-            report.append(order.getDeliveryMethod()).append("\t");
+            report.append(order.getPreference()).append("\t");
             report.append(order.getStatus()).append("\t");
             report.append(order.getCreateDate()).append("\t");
             report.append(parcelDetails.getId()).append("\t");

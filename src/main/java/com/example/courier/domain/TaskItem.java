@@ -134,7 +134,7 @@ public class TaskItem {
         taskItem.status = parcel.getStatus();
         taskItem.senderAddress = order.getSenderAddress();
         taskItem.recipientAddress = order.getRecipientAddress();
-        taskItem.deliveryPreference = order.getDeliveryMethod();
+        taskItem.deliveryPreference = order.getPreference().getDescription();
         taskItem.task = task;
         parcel.assign();
 

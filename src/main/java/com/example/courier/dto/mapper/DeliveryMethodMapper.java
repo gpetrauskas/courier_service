@@ -20,4 +20,8 @@ public interface DeliveryMethodMapper {
   DeliveryMethodAdminResponseDTO toAdminDeliveryOptionResponseDTO(DeliveryMethod deliveryMethod);
 
   DeliveryMethod toNewEntity(CreateDeliveryMethodDTO createDeliveryMethodDTO);
+
+  default String map(DeliveryMethod method) {
+      return method != null ? method.getDescription() : null;
+  }
 }

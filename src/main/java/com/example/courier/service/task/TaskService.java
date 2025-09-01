@@ -18,7 +18,6 @@ import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.notification.NotificationService;
 import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.notification.NotificationTarget;
-import com.example.courier.service.order.OrderService;
 import com.example.courier.service.order.query.OrderQueryService;
 import com.example.courier.service.parcel.ParcelService;
 import com.example.courier.service.person.PersonService;

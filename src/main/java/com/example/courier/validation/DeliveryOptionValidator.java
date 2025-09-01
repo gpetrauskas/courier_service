@@ -1,7 +1,5 @@
 package com.example.courier.validation;
 
-import com.example.courier.domain.Order;
-import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
@@ -16,17 +14,6 @@ public class DeliveryOptionValidator {
     private static final Pattern DESCRIPTION_PATTERN = Pattern.compile("^[a-zA-Z0-9 .,!?-]+$");
 
     public DeliveryOptionValidator() {
-    }
-
-    public void validateDeliveryPrefMethodUpdate(OrderSectionUpdateRequest updateRequest, Order existingOrder) {
-        String newPreference = updateRequest.deliveryPreferences();
-        String currentPreference = existingOrder.getDeliveryMethod();
-
-        if (newPreference.equalsIgnoreCase(currentPreference)) {
-            throw new ValidationException("Delivery preference is already set to:" + currentPreference);
-        }
-
-        //validateDeliveryPreference(newPreference);
     }
 
     public void validateDeliveryOptionForCreation(CreateDeliveryMethodDTO createDeliveryMethodDTO) {

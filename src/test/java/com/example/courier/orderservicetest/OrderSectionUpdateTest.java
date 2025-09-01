@@ -9,7 +9,6 @@ import com.example.courier.repository.OrderRepository;
 import com.example.courier.service.order.OrderService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.DeliveryOptionValidator;
-import com.example.courier.validation.adminorderupdate.OrderUpdateValidator;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +53,7 @@ public class OrderSectionUpdateTest {
     private Order createTestOrder(String deliveryMethodId, String status) {
         Order order = new Order();
         order.setId(1L);
-        order.setDeliveryMethod(deliveryMethodId);
+        order.setPreference(deliveryMethodId);
         order.setStatus(OrderStatus.valueOf(status));
 
         return order;
@@ -73,7 +72,7 @@ public class OrderSectionUpdateTest {
                 orderToUpdate.setStatus(OrderStatus.valueOf(req.status()));
             }
             if (req.deliveryPreferences() != null && !req.deliveryPreferences().isEmpty()) {
-                orderToUpdate.setDeliveryMethod(req.deliveryPreferences());
+                orderToUpdate.setPreference(req.deliveryPreferences());
             }
             return null;
         }).when(orderMapper).updateOrderSectionFromRequest(request, order);
@@ -110,7 +109,7 @@ public class OrderSectionUpdateTest {
 
             orderService.orderSectionUpdate(updateRequest);
 
-            assertEquals(updateRequest.deliveryPreferences(), order.getDeliveryMethod());
+            assertEquals(updateRequest.deliveryPreferences(), order.getPreference());
             verify(orderRepository).save(order);
         }
 
@@ -137,7 +136,7 @@ public class OrderSectionUpdateTest {
             orderService.orderSectionUpdate(updateRequest);
 
             assertEquals(OrderStatus.PENDING, order.getStatus());
-            assertEquals("111", order.getDeliveryMethod());
+            assertEquals("111", order.getPreference());
             verify(orderRepository).save(order);
         }
     }

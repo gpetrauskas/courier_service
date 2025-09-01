@@ -326,7 +326,7 @@ public class DeliveryMethodServiceTest {
 
             when(deliveryOptionRepository.findById(Long.parseLong(p.weight()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(10))));
             when(deliveryOptionRepository.findById(Long.parseLong(p.dimensions()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(30))));
-            when(deliveryOptionRepository.findById(Long.parseLong(dto.deliveryMethod()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(20))));
+            when(deliveryOptionRepository.findById(Long.parseLong(dto.preference()))).thenReturn(Optional.of(createDeliveryMethodWithPrice(BigDecimal.valueOf(20))));
 
             BigDecimal price = deliveryMethodService.calculateShippingCost(dto);
             assertEquals(BigDecimal.valueOf(60), price);

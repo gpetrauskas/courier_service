@@ -12,7 +12,7 @@ public record AdminOrderResponseDTO(
         AdminPersonResponseDTO adminPersonResponseDTO,
         AddressDTO senderAddress,
         AddressDTO recipientAddress,
-        String deliveryMethod,
+        String preference,
         ParcelDTO parcelResponseDTO,
         OrderStatus orderStatus,
         LocalDateTime createTime,

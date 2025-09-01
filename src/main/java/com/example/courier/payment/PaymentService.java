@@ -2,6 +2,7 @@ package com.example.courier.payment;
 
 import com.example.courier.common.*;
 import com.example.courier.domain.*;
+import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.request.PaymentRequestDTO;
 import com.example.courier.dto.PaymentDetailsDTO;
 import com.example.courier.dto.mapper.PaymentMapper;
@@ -9,7 +10,9 @@ import com.example.courier.dto.request.order.PaymentSectionUpdateRequest;
 import com.example.courier.dto.response.payment.PaymentResultResponse;
 import com.example.courier.exception.*;
 import com.example.courier.payment.handler.PaymentHandler;
+import com.example.courier.payment.method.PaymentMethodService;
 import com.example.courier.repository.PaymentRepository;
+import com.example.courier.service.deliveryoption.DeliveryMethodService;
 import com.example.courier.service.security.CurrentPersonService;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
@@ -34,15 +37,17 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final CurrentPersonService currentPersonService;
     private final PaymentAttemptService attemptService;
+    private final DeliveryMethodService deliveryMethodService;
 
     public PaymentService(List<PaymentHandler> paymentHandlers, PaymentRepository paymentRepository,
                           PaymentMapper paymentMapper, CurrentPersonService currentPersonService,
-                          PaymentAttemptService attemptService) {
+                          PaymentAttemptService attemptService, DeliveryMethodService deliveryMethodService) {
         this.paymentHandlers = paymentHandlers;
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
         this.currentPersonService = currentPersonService;
         this.attemptService = attemptService;
+        this.deliveryMethodService = deliveryMethodService;
     }
 
     /**
@@ -103,25 +108,29 @@ public class PaymentService {
         }
     }
 
-    /** Creates and persists {@link Payment} for the given {@link Order}
+    /** Prepares {@link Payment} for the given {@link Order} by calculating
+     * the shipping cost and attaching the payment to the order.
+     * The payment is initialized with initial status {@code NOT_PAID}
+     * and the calculated amount. Persistence is handled externally via cascading
+     * when order is saved.
      *
-     * creates new payment entity for a specified order with the given amount
-     * set initial status {@code NOT_PAID} and persists it to database
+     * <p>This method does not persist the payment directly. It assumes that the caller will persist
+     * the {@link Order} entity, which will cascade the {@link Payment}.</p>
      *
      * @param order the {@link Order} entity for which payment is created
-     * @param amount amount of the payment
      * @throws PaymentCreationException if creating payment fails
      */
-    public void createPayment(Order order, BigDecimal amount) {
+    public void createPayment(Order order) {
+        BigDecimal amount = calculateShippingCost(order);
+
         try {
             Payment payment = new Payment();
             payment.setOrder(order);
             payment.setAmount(amount);
             payment.setStatus(PaymentStatus.NOT_PAID);
 
-            savePayment(payment);
-            log.info("Payment id {} created for order with id {}", payment.getId(), order.getId());
-        } catch (PaymentCreationException e) {
+            order.setPayment(payment);
+        } catch (Exception e) {
             throw new PaymentCreationException("Payment creation failure: " + e.getMessage());
         }
     }
@@ -191,6 +200,10 @@ public class PaymentService {
     /*
     * Helper methods
     */
+
+    private BigDecimal calculateShippingCost(Order order) {
+        return deliveryMethodService.calculateShippingCost(order);
+    }
 
     /**
      * Delegates the {@link PaymentRequestDTO} to the first supported {@link PaymentHandler}

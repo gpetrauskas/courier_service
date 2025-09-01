@@ -248,7 +248,7 @@ public class PlaceOrderTest {
         void placeOrder_parcelDetailsIsNull_shouldFail() {
             OrderDTO invalidOrderWithNullParcel = new OrderDTO(
                     testOrder.getId(), testOrderDTO.senderAddress(), testOrderDTO.recipientAddress(), null,
-                    testOrderDTO.deliveryMethod(), testOrderDTO.status(), testOrderDTO.createTime()
+                    testOrderDTO.preference(), testOrderDTO.status(), testOrderDTO.createTime()
             );
 
             doThrow(new IllegalArgumentException("Parcel cannot be null"))
@@ -266,7 +266,7 @@ public class PlaceOrderTest {
         @DisplayName("address is null - should throw exception")
         void placeOrder_AddressDTOIsNull_shouldThrowException() {
             OrderDTO orderWithNullSender = new OrderDTO(1L, null,
-                    testOrderDTO.recipientAddress(), testOrderDTO.parcelDetails(), testOrderDTO.deliveryMethod(),
+                    testOrderDTO.recipientAddress(), testOrderDTO.parcelDetails(), testOrderDTO.preference(),
                     testOrderDTO.status(), testOrderDTO.createTime());
 
             doThrow(new IllegalArgumentException("Address cannot be null"))
@@ -340,14 +340,14 @@ public class PlaceOrderTest {
                     LocalDateTime.now()
             );
 
-            when(deliveryMethodService.getDescriptionById(Long.parseLong(invalidOrderDTO.deliveryMethod()))).thenThrow(new DeliveryOptionNotFoundException("Delivery method was not found"));
+            when(deliveryMethodService.getDescriptionById(Long.parseLong(invalidOrderDTO.preference()))).thenThrow(new DeliveryOptionNotFoundException("Delivery method was not found"));
 
             assertThrows(DeliveryOptionNotFoundException.class, () ->
                     orderService.placeOrder(invalidOrderDTO));
         }
 
         @Test
-        @DisplayName("deliveryMethod is text instead of id, should fail")
+        @DisplayName("preference is text instead of id, should fail")
         void placeOrder_wrongDeliveryMethodFormat_shouldFail() {
             setUpForOrderProcessing();
 

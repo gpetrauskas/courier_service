@@ -2,7 +2,7 @@ package com.example.courier.service.deliveryoption;
 
 import com.example.courier.common.DeliveryGroup;
 import com.example.courier.domain.DeliveryMethod;
-import com.example.courier.dto.OrderDTO;
+import com.example.courier.domain.Order;
 import com.example.courier.dto.mapper.DeliveryMethodMapper;
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import com.example.courier.dto.request.deliverymethod.UpdateDeliveryMethodDTO;
@@ -107,25 +107,25 @@ public class DeliveryMethodServiceImpl implements DeliveryMethodService {
     }
 
     @Transactional
-    public BigDecimal calculateShippingCost(OrderDTO orderDTO) throws DeliveryOptionNotFoundException {
+    public BigDecimal calculateShippingCost(Order order) throws DeliveryOptionNotFoundException {
         BigDecimal shippingCost = new BigDecimal(0);
 
-        BigDecimal deliveryPrice = getPriceById(orderDTO.deliveryMethod());
-        BigDecimal weightPrice = getPriceById(orderDTO.parcelDetails().weight());
-        BigDecimal sizePricing = getPriceById(orderDTO.parcelDetails().dimensions());
+        BigDecimal deliveryPrice = getPriceById(order.getPreference().getId());
+        BigDecimal weightPrice = getPriceById(order.getParcelDetails().getWeight().getId());
+        BigDecimal sizePricing = getPriceById(order.getParcelDetails().getDimensions().getId());
 
         shippingCost = shippingCost.add(deliveryPrice).add(weightPrice).add(sizePricing);
 
         return shippingCost;
     }
 
-    private BigDecimal getPriceById(String id) {
-        return deliveryOptionRepository.findById(Long.parseLong(id))
+    private BigDecimal getPriceById(Long id) {
+        return deliveryOptionRepository.findById(id)
                 .map(DeliveryMethod::getPrice)
                 .orElseThrow(() -> new DeliveryOptionNotFoundException("price by delivery options not found"));
     }
 
-    private DeliveryMethod getDeliveryOptionById(Long id) {
+    public DeliveryMethod getDeliveryOptionById(Long id) {
         return deliveryOptionRepository.findById(id).orElseThrow(() ->
                 new DeliveryOptionNotFoundException("Delivery option was not found with id " + id));
     }
@@ -136,7 +136,7 @@ public class DeliveryMethodServiceImpl implements DeliveryMethodService {
                 .orElseThrow(() -> new DeliveryOptionNotFoundException("Delivery option not found."));
     }
 
-    @Cacheable("deliveryMethod")
+    @Cacheable("preference")
     public Set<String> getDeliveryPreferences() {
         return new HashSet<>(deliveryOptionRepository.findDeliveryPreferences(DELIVERY_KEYWORD));
     }

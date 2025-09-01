@@ -2,10 +2,7 @@ package com.example.courier.dto.mapper;
 
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
-import com.example.courier.domain.Courier;
-import com.example.courier.domain.Task;
-import com.example.courier.domain.TaskItem;
-import com.example.courier.domain.OrderAddress;
+import com.example.courier.domain.*;
 import com.example.courier.dto.*;
 import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.response.task.AdminTaskDTO;
@@ -14,7 +11,8 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        uses = {DeliveryMethodMapper.class})
 public interface DeliveryTaskMapper {
 
     DeliveryTaskMapper INSTANCE = Mappers.getMapper(DeliveryTaskMapper.class);

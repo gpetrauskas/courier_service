@@ -10,6 +10,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Facade service that orchestrates updates to various sections of an order.
+ * Implements {@link OrderUpdateHandler} to delegate section specific updates to the
+ * appropriate service layer.
+ *
+ * <p>This service is secured for admin access only.</p>
+ * */
 @Service
 public class OrderFacadeService implements OrderUpdateHandler {
 
@@ -26,6 +33,12 @@ public class OrderFacadeService implements OrderUpdateHandler {
         this.paymentService = paymentService;
     }
 
+    /**
+     * Applies an update to a specific section of order.
+     * Delegates the update to the appropriate handler based on the request type.
+     *
+     * @param updatedData the update request containing section specific data.
+     * */
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void updateSection(BaseOrderUpdateRequest updatedData) {

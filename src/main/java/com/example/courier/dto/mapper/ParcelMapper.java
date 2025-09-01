@@ -1,5 +1,6 @@
 package com.example.courier.dto.mapper;
 
+import com.example.courier.domain.DeliveryMethod;
 import com.example.courier.domain.Parcel;
 import com.example.courier.dto.ParcelDTO;
 import com.example.courier.dto.request.order.ParcelSectionUpdateRequest;
@@ -8,7 +9,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        uses = {DeliveryMethodMapper.class})
 public interface ParcelMapper {
 
     @Mapping(target = "id", ignore = true)
