@@ -18,4 +18,13 @@ public enum OrderStatus {
             throw new IllegalArgumentException("Invalid order status: " + status);
         }
     }
+
+    public static OrderStatus from(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+
+        isValidStatus(status);
+        return OrderStatus.valueOf(status);
+    }
 }

@@ -43,7 +43,8 @@ public class OrderCommandServiceImpl implements OrderCommandService {
     public void updateOrderSection(OrderSectionUpdateRequest updateRequest) {
         Order order = queryService.fetchById(updateRequest.id());
 
-        order.validateUpdatable(OrderStatus.valueOf(updateRequest.status()), updateRequest.deliveryPreferences());
+        OrderStatus orderStatus = OrderStatus.from(updateRequest.status());
+        order.validateUpdatable(orderStatus, updateRequest.deliveryPreferences());
 
         mapper.updateOrderSectionFromRequest(updateRequest, order);
         save(order);

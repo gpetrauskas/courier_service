@@ -79,8 +79,11 @@ public class Order {
             }
         }
 
-        if (newPreference != null && Long.parseLong(newPreference) == this.preference.getId()) {
-            throw new ValidationException("Delivery preference is already set to: " + newPreference);
+        if (newPreference != null && !newPreference.isBlank()) {
+            Long newPrefId = Long.parseLong(newPreference);
+            if (newPrefId.equals(this.preference.getId())) {
+                throw new ValidationException("Delivery preference is already set to: " + newPreference);
+            }
         }
     }
 

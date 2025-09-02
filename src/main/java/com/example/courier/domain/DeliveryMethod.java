@@ -73,4 +73,8 @@ public class DeliveryMethod implements Serializable {
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
