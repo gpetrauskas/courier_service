@@ -5,6 +5,7 @@ import com.example.courier.domain.*;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.mapper.OrderMapper;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
+import com.example.courier.exception.PaymentCreationException;
 import com.example.courier.repository.OrderRepository;
 import com.example.courier.service.order.factory.OrderFactory;
 import com.example.courier.service.order.query.OrderQueryService;
@@ -56,6 +57,9 @@ public class OrderCommandServiceImpl implements OrderCommandService {
         Order order = orderFactory.createNewOrderFromDTO(orderDTO);
 
         paymentService.createPayment(order);
+        if (order.getPayment() == null) {
+            throw new PaymentCreationException("payment failure");
+        }
         save(order);
         logger.info("Payment id {} created for order with id {}", order.getPayment().getId(), order.getId());
 

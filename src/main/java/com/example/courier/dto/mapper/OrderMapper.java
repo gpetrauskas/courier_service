@@ -1,8 +1,6 @@
 package com.example.courier.dto.mapper;
 
-import com.example.courier.domain.DeliveryMethod;
 import com.example.courier.domain.Order;
-import com.example.courier.domain.Payment;
 import com.example.courier.dto.OrderDTO;
 import com.example.courier.dto.request.order.OrderSectionUpdateRequest;
 import com.example.courier.dto.response.AdminOrderResponseDTO;
@@ -32,6 +30,6 @@ public interface OrderMapper {
     @Mapping(source = "order.parcelDetails", target = "parcelResponseDTO")
     @Mapping(source = "order.status", target = "orderStatus")
     @Mapping(source = "order.createDate", target = "createTime")
-    @Mapping(source = "payment", target = "adminPaymentResponseDTO")
-    AdminOrderResponseDTO toAdminOrderResponseDTO(Order order, Payment payment);
+    @Mapping(source = "order.payment", target = "adminPaymentResponseDTO")
+    AdminOrderResponseDTO toAdminOrderResponseDTO(Order order);
 }

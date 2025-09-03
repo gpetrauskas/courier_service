@@ -4,6 +4,7 @@ import com.example.courier.common.OrderStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.Order;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
 public class OrderSpecification {
@@ -34,5 +35,15 @@ public class OrderSpecification {
             Join<Object, Object> parcelJoin = root.join("parcelDetails");
             return criteriaBuilder.isFalse(parcelJoin.get("isAssigned"));
         });
+    }
+
+    public static Specification<Order> fetchPayment(Specification<Order> specification) {
+        return (root, query, criteriaBuilder) -> {
+            if (query.getResultType() != Long.class) {
+                root.fetch("payment", JoinType.INNER);
+                query.distinct(true);
+            }
+            return specification == null ? null : specification.toPredicate(root, query, criteriaBuilder);
+        };
     }
 }

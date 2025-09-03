@@ -14,7 +14,7 @@ public class OrderSpecificationBuilder {
             specification = specification.and(OrderSpecification.hasOrderStatus(status));
         }
 
-        return specification;
+        return OrderSpecification.fetchPayment(specification);
     }
 
     public static Specification<Order> buildOrderSpecificationByTaskType(String taskType) {
