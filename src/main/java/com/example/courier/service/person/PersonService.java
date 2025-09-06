@@ -91,6 +91,10 @@ public class PersonService {
         return lookupService.checkIfPersonAlreadyExistsByEmail(email);
     }
 
+    public boolean existsByIdAndIsActive(Long id) {
+        return lookupService.existsByIdAndIsActive(id);
+    }
+
     public void delete(Long personId) {
         adminCommands.softDelete(personId);
     }

@@ -3,32 +3,27 @@ package com.example.courier.service.notification.strategy;
 import com.example.courier.domain.*;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
-import com.example.courier.repository.NotificationRepository;
-import com.example.courier.repository.PersonNotificationRepository;
+import com.example.courier.service.notification.NotificationFactory;
 import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.person.PersonService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class BroadcastNotificationStrategy implements NotificationDeliveryStrategy {
 
     private final PersonService personService;
-    private final NotificationRepository notificationRepository;
-    private final PersonNotificationRepository personNotificationRepository;
+    private final NotificationFactory factory;
 
-    public BroadcastNotificationStrategy(PersonService personService, NotificationRepository notificationRepository,
-                                         PersonNotificationRepository personNotificationRepository) {
+    public BroadcastNotificationStrategy(PersonService personService, NotificationFactory factory) {
         this.personService = personService;
-        this.notificationRepository = notificationRepository;
-        this.personNotificationRepository = personNotificationRepository;
+        this.factory = factory;
     }
 
     @Override
-    public boolean supports(NotificationTarget target) {
-        return target instanceof NotificationTarget.BroadCast;
+    public Class<? extends NotificationTarget> getSupportedType() {
+        return NotificationTarget.BroadCast.class;
     }
 
     @Override
@@ -45,10 +40,6 @@ public class BroadcastNotificationStrategy implements NotificationDeliveryStrate
             return new ApiResponseDTO("warning", "No recipients was found for " + personClass.getSimpleName());
         }
 
-        Notification notification = new Notification(requestDTO.title(), requestDTO.message(), LocalDateTime.now());
-        notificationRepository.save(notification);
-        personNotificationRepository.bulkInsert(notification.getId(), recipients);
-
-        return new ApiResponseDTO("success", "Notification sent to " + recipients.size() + " " + personClass.getSimpleName() + "(s)");
+        return factory.createNotification(requestDTO.title(), requestDTO.message(), recipients);
     }
 }

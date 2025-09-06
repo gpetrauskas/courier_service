@@ -9,6 +9,8 @@ import com.example.courier.service.notification.NotificationService;
 import com.example.courier.validation.shared.NotNullOrEmpty;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -39,14 +41,15 @@ public class NotificationController {
 
     @GetMapping()
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
-    public ResponseEntity<PaginatedResponseDTO<NotificationResponseDTO>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(notificationService.getNotificationHistory(pageable));
+    public ResponseEntity<PaginatedResponseDTO<NotificationResponseDTO>> getAll(
+            @PageableDefault(direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(notificationService.getHistoryForCurrentUser(pageable));
     }
 
     @PostMapping("/delete")
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER', 'USER')")
     public ResponseEntity<ApiResponseDTO> delete(@RequestBody @NotNullOrEmpty List<Long> ids) {
-        return ResponseEntity.ok(notificationService.delete(ids));
+        return ResponseEntity.ok(notificationService.deleteNotifications(ids));
     }
 
     @GetMapping("/adminManage")

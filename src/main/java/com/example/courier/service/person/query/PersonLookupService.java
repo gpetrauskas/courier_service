@@ -54,6 +54,10 @@ public class PersonLookupService {
         return personRepository.existsByEmail(email);
     }
 
+    public boolean existsByIdAndIsActive(Long id) {
+        return personRepository.existsByIdAndIsBlockedFalseAndIsDeletedFalse(id);
+    }
+
     public User findUserByIdWithAddresses(Long userId) {
         return personRepository.findUserByIdWithAddresses(userId).orElseThrow(() ->
                 new ResourceNotFoundException("User was not found"));

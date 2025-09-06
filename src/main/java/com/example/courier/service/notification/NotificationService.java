@@ -12,9 +12,9 @@ import java.util.List;
 public interface NotificationService {
     ApiResponseDTO createNotification(NotificationRequestDTO request);
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
-    PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(Pageable pageable);
+    PaginatedResponseDTO<NotificationResponseDTO> getHistoryForCurrentUser(Pageable pageable);
     ApiResponseDTO markAsRead(List<Long> ids);
-    ApiResponseDTO delete(List<Long> ids);
+    ApiResponseDTO deleteNotifications(List<Long> ids);
     PaginatedResponseDTO<AdminNotificationResponseDTO> getAllForAdmin(Pageable pageable);
     PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize);
 }

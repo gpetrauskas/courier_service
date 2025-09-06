@@ -25,6 +25,8 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
 
     boolean existsByEmail(String email);
 
+    boolean existsByIdAndIsBlockedFalseAndIsDeletedFalse(Long id);
+
     @Query("SELECT COUNT(c) FROM Courier c WHERE c.hasActiveTask = false")
     long countAvailableCouriers(Specification<Person> specification);
 

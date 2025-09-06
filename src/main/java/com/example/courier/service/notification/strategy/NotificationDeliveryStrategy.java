@@ -5,6 +5,6 @@ import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.service.notification.NotificationTarget;
 
 public interface NotificationDeliveryStrategy {
-    boolean supports(NotificationTarget target);
+    Class<? extends NotificationTarget> getSupportedType();
     ApiResponseDTO deliver(NotificationRequestDTO requestDTO);
 }

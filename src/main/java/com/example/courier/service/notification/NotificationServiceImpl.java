@@ -12,12 +12,13 @@ import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.NotificationRepository;
 import com.example.courier.repository.PersonNotificationRepository;
 import com.example.courier.service.notification.strategy.NotificationDeliveryStrategy;
+import com.example.courier.service.notification.strategy.NotificationStrategyResolver;
 import com.example.courier.service.security.CurrentPersonService;
+import com.example.courier.util.PageableUtils;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -36,99 +37,121 @@ public class NotificationServiceImpl implements NotificationService {
     private final PersonNotificationRepository personNotificationRepository;
     private final NotificationMapper notificationMapper;
     private final CurrentPersonService currentPersonService;
-    private final List<NotificationDeliveryStrategy> strategies;
+    private final NotificationStrategyResolver strategyResolver;
 
     public NotificationServiceImpl(
             NotificationRepository notificationRepository, PersonNotificationRepository personNotificationRepository, NotificationMapper notificationMapper,
-            CurrentPersonService currentPersonService, List<NotificationDeliveryStrategy> strategies) {
+            CurrentPersonService currentPersonService, NotificationStrategyResolver strategyResolver) {
         this.notificationRepository = notificationRepository;
         this.personNotificationRepository = personNotificationRepository;
         this.notificationMapper = notificationMapper;
         this.currentPersonService = currentPersonService;
-        this.strategies = strategies;
+        this.strategyResolver = strategyResolver;
     }
 
     @Override
-    @Transactional
-    public ApiResponseDTO createNotification(NotificationRequestDTO request) {
-        return strategies.stream()
-                .filter(strategy -> strategy.supports(request.type()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported notification type"))
-                .deliver(request);
+    @Transactional(readOnly = true)
+    public PaginatedResponseDTO<NotificationResponseDTO> getHistoryForCurrentUser(@NotNull Pageable pageable) {
+        Long personId = currentPersonService.getCurrentPersonId();
+        Page<NotificationWithReadStatus> notificationPage = notificationRepository
+                .findAllByRecipientIdPageable(personId, pageable);
+
+        return PageableUtils.mapPage(notificationPage, notificationMapper::toDTO);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    @Override
+    public PaginatedResponseDTO<AdminNotificationResponseDTO> getAllForAdmin(Pageable pageable) {
+        Page<AdminNotificationResponseDTO> page = notificationRepository.findAllProjectedBy(pageable);
+
+        log.info("Returning paginated response for admin");
+        return new PaginatedResponseDTO<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize) {
+        Long personId = currentPersonService.getCurrentPersonId();
+
+        log.info("Fetching page containing {} notification for user {}", pageSize, personId);
+        return PageableUtils.pageContainingItem(
+                notificationId,
+                pageSize,
+                Sort.by("notification.createdAt").descending(),
+                id -> personNotificationRepository.findNotificationPosition(personId, id),
+                pageable -> notificationRepository.findAllByRecipientIdPageable(personId, pageable),
+                notificationMapper::toDTO,
+                () -> new ResourceNotFoundException("Notification not found")
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<NotificationResponseDTO> getUnreadNotifications(Long personId) {
         // for later
         return List.of();
     }
 
+    @Override
     @Transactional
+    public ApiResponseDTO createNotification(NotificationRequestDTO request) {
+        log.info("Calling strategy resolver to find a strategy for notification creation");
+        NotificationDeliveryStrategy strategy = strategyResolver.findStrategy(request.type());
+
+        log.info("Initiating founded strategy");
+        return strategy.deliver(request);
+    }
+
+    @Transactional
+    @Override
     public ApiResponseDTO markAsRead(List<Long> ids) {
+        Objects.requireNonNull(ids, "Mark as read notification list cannot be null");
+
         final Long personId = currentPersonService.getCurrentPersonId();
         int updatedRows = personNotificationRepository.markMultipleAsRead(personId, ids, LocalDateTime.now());
 
+        log.info("{} notification(s) was marked as read", updatedRows);
         return (updatedRows > 0)
                 ? ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_SUCCESS.withParams(updatedRows, ids.size())
                 : ApiResponseType.MULTIPLE_NOTIFICATIONS_MARK_AS_READ_INFO.apiResponseDTO();
     }
 
-    public ApiResponseDTO delete(List<Long> ids) {
+    @Override
+    @Transactional
+    public ApiResponseDTO deleteNotifications(List<Long> ids) {
+        Objects.requireNonNull(ids, "Delete notification list cannot be null");
+
+        log.info("Initiating notification deletion");
         return currentPersonService.isAdmin()
-                ? adminDelete(ids)
-                : userDelete(ids);
+                ? deleteAsAdmin(ids)
+                : deleteAsUser(ids);
     }
 
-    @Transactional
+    /* HELPER METHODS
+    */
+
     @PreAuthorize("hasRole('ADMIN')")
-    private ApiResponseDTO adminDelete(List<Long> ids) {
+    private ApiResponseDTO deleteAsAdmin(List<Long> ids) {
         personNotificationRepository.deleteAllByNotificationIdIn(ids);
         notificationRepository.deleteAllById(ids);
+
+        log.info("Notification was deleted from the system and from the {} user(s)", ids.size());
         return ApiResponseType.NOTIFICATIONS_DELETE_SUCCESS_ADMIN.apiResponseDTO();
     }
 
-    @Transactional
-    private ApiResponseDTO userDelete(List<Long> ids) {
+    private ApiResponseDTO deleteAsUser(List<Long> ids) {
         final Long personId = currentPersonService.getCurrentPersonId();
         int deletedRows = personNotificationRepository.deleteMultipleByIdAndPersonId(ids, personId);
 
+        log.info("Deleted {} notifications for the user {}", deletedRows, personId);
         return (deletedRows > 0)
                 ? ApiResponseType.NOTIFICATIONS_DELETE_SUCCESS.withParams(deletedRows, ids.size())
                 : ApiResponseType.NOTIFICATIONS_DELETE_INFO.apiResponseDTO();
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    public PaginatedResponseDTO<AdminNotificationResponseDTO> getAllForAdmin(Pageable pageable) {
-        Page<AdminNotificationResponseDTO> page = notificationRepository.findAllProjectedBy(pageable);
-
-        return new PaginatedResponseDTO<>(page, Function.identity());
-    }
-
-    public PaginatedResponseDTO<NotificationResponseDTO> getPageContainingNotification(Long notificationId, int pageSize) {
-        Long personId = currentPersonService.getCurrentPersonId();
-
-        int position = personNotificationRepository.findNotificationPosition(personId, notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-
-        Pageable pageable = pageForItemIndex(position, pageSize);
-        Page<NotificationWithReadStatus> page = notificationRepository.findAllByRecipientIdPageable(personId, pageable);
-
-        return mapToDTO(page);
-    }
-
-    private Pageable pageForItemIndex(int index, int size) {
-        return PageRequest.of(index / size, size, Sort.by("notification.createdAt").descending());
-    }
-
-    public PaginatedResponseDTO<NotificationResponseDTO> getNotificationHistory(@NotNull Pageable pageable) {
-        Long personId = currentPersonService.getCurrentPersonId();
-        Page<NotificationWithReadStatus> notificationPage = notificationRepository
-                .findAllByRecipientIdPageable(personId, pageable);
-
-        return mapToDTO(notificationPage);
-    }
-
-    private PaginatedResponseDTO<NotificationResponseDTO> mapToDTO(Page<NotificationWithReadStatus> page) {
-        return new PaginatedResponseDTO<>(page, notificationMapper::toDTO);
     }
 }
