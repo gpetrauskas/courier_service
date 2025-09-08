@@ -1,6 +1,7 @@
 package com.example.courier.repository;
 
 import com.example.courier.common.OrderStatus;
+import com.example.courier.domain.Admin;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
 import com.example.courier.dto.UserWithOrdersCountByStatus;
@@ -47,4 +48,19 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     @EntityGraph(attributePaths = "addresses")
     @Query("SELECT u FROM User u WHERE u.id = :personId")
     Optional<User> findUserByIdWithAddresses(@Param("personId") Long personId);
+
+    @Query("""
+        SELECT new com.example.courier.dto.UserWithOrdersCountByStatus(u, COUNT(o))
+        FROM User u
+        LEFT JOIN u.orders o
+        WHERE u.id = :userId AND o.status = :orderStatus
+        GROUP BY u
+    """)
+    Optional<UserWithOrdersCountByStatus> findUserWithOrdersCountByStatus(
+            @Param("userId") Long userId,
+            @Param("orderStatus") OrderStatus orderStatus
+    );
+
+    @Query("SELECT a FROM Admin a WHERE a.id = :id")
+    Optional<Admin> findAdminById(@Param("id") Long id);
 }

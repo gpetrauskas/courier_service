@@ -1,7 +1,8 @@
 package com.example.courier.config;
 
 import com.example.courier.service.auth.JwtService;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.PersonFacade;
+import com.example.courier.service.person.query.PersonLookupService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,16 +23,16 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
     @Autowired
     private final JwtService jwtService;
     @Autowired
-    private final PersonService personService;
+    private final PersonLookupService personLookupService;
     @Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
-    public SecurityConfig(JwtService jwtService, PersonService personService) {
+    public SecurityConfig(JwtService jwtService, PersonLookupService personLookupService) {
         this.jwtService = jwtService;
-        this.personService = personService;
+        this.personLookupService = personLookupService;
     }
 
     @Bean
@@ -51,7 +52,7 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                                 .requestMatchers("/api/courier/**", "/api/deliveryTaskManagement/").hasAnyRole("COURIER", "ADMIN")
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, personService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, personLookupService),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler(customAccessDeniedHandler)

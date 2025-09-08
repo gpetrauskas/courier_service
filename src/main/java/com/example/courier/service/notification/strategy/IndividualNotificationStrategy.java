@@ -5,7 +5,7 @@ import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.service.notification.NotificationFactory;
 import com.example.courier.service.notification.NotificationTarget;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.query.PersonLookupService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,11 +14,11 @@ import java.util.List;
 public class IndividualNotificationStrategy implements NotificationDeliveryStrategy {
 
     private final NotificationFactory factory;
-    private final PersonService personService;
+    private final PersonLookupService personLookupService;
 
-    public IndividualNotificationStrategy(NotificationFactory factory, PersonService personService) {
+    public IndividualNotificationStrategy(NotificationFactory factory, PersonLookupService personLookupService) {
         this.factory = factory;
-        this.personService = personService;
+        this.personLookupService = personLookupService;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class IndividualNotificationStrategy implements NotificationDeliveryStrat
     @Override
     public ApiResponseDTO deliver(NotificationRequestDTO requestDTO) {
         NotificationTarget.Individual individual = (NotificationTarget.Individual) requestDTO.type();
-        if (!personService.existsByIdAndIsActive(individual.personId())) {
+        if (!personLookupService.existsByIdAndIsActive(individual.personId())) {
             throw new ResourceNotFoundException("User with ID " + individual.personId() + " was not found");
         }
 

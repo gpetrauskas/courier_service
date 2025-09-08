@@ -1,32 +1,31 @@
 package com.example.courier.service.person.strategy;
 
+import com.example.courier.common.Role;
 import com.example.courier.domain.Admin;
-import com.example.courier.domain.Person;
 import com.example.courier.dto.mapper.PersonMapper;
 import com.example.courier.dto.response.person.PersonResponseDTO;
-import com.example.courier.exception.ResourceNotFoundException;
-import com.example.courier.repository.AdminRepository;
+import com.example.courier.service.person.query.PersonLookupService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AdminInfoStrategy implements PersonInfoStrategy {
-    private final AdminRepository adminRepository;
+    private final PersonLookupService personLookupService;
     private final PersonMapper personMapper;
 
-    public AdminInfoStrategy(AdminRepository adminRepository, PersonMapper personMapper) {
-        this.adminRepository = adminRepository;
+    public AdminInfoStrategy(PersonLookupService personLookupService, PersonMapper personMapper) {
+        this.personLookupService = personLookupService;
         this.personMapper = personMapper;
     }
 
     @Override
-    public boolean supports(Person person) {
-        return (person instanceof Admin);
+    public Role supportsType() {
+        return Role.ADMIN;
     }
 
     @Override
-    public PersonResponseDTO map(Person person) {
-        Admin admin = adminRepository.findById(person.getId()).orElseThrow(() ->
-                new ResourceNotFoundException("Not found"));
-        return personMapper.toAdminProfile(admin);
+    public PersonResponseDTO map(Long personId) {
+        Admin person = personLookupService.findAdminById(personId);
+
+        return personMapper.toAdminProfile(person);
     }
 }

@@ -10,7 +10,7 @@ import com.example.courier.dto.request.person.UserEditDTO;
 import com.example.courier.dto.response.BanHistoryDTO;
 import com.example.courier.dto.response.person.AdminPersonResponseDTO;
 import com.example.courier.dto.response.person.PersonResponseDTO;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.PersonFacade;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,11 @@ import java.util.List;
 @RequestMapping("/api/person")
 public class PersonController {
 
-    private final PersonService personService;
+    private final PersonFacade personFacade;
     private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
-    public PersonController(PersonService personService) {
-        this.personService = personService;
+    public PersonController(PersonFacade personFacade) {
+        this.personFacade = personFacade;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -40,7 +40,7 @@ public class PersonController {
             @RequestParam(required = false) String searchKeyword,
             @RequestParam(required = false, defaultValue = "id") String sortBy,
             @RequestParam(required = false, defaultValue = "asc") String direction) {
-        return personService.findAllPaginated(page, size, role, searchKeyword, sortBy, direction);
+        return personFacade.findAllPaginated(page, size, role, searchKeyword, sortBy, direction);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,14 +53,14 @@ public class PersonController {
     @PostMapping("/update/{id}")
     public ResponseEntity<String> updatePerson(@PathVariable Long id,
                                                @RequestBody PersonDetailsUpdateRequest updateRequest) {
-        personService.updateDetails(id, updateRequest);
+        personFacade.updateDetails(id, updateRequest);
         return ResponseEntity.ok("Person was successfully updated.");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        personService.delete(id);
+        personFacade.delete(id);
         return ResponseEntity.ok("Person was successfully deleted.");
     }
 
@@ -68,45 +68,45 @@ public class PersonController {
     @PutMapping("/banUnban/{id}")
     public ResponseEntity<String> banUnban(@PathVariable Long id,
                                            @RequestBody(required = false)  BanActionRequestDTO requestDTO) {
-        String action = personService.banUnban(id, requestDTO);
+        String action = personFacade.banUnban(id, requestDTO);
         return ResponseEntity.ok(action);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/availableCouriers")
     public ResponseEntity<List<CourierDTO>> getAvailableCouriers() {
-        List<CourierDTO> list = personService.getAvailableCouriers();
+        List<CourierDTO> list = personFacade.getAvailableCouriers();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/availableCouriersCount")
     public ResponseEntity<Long> availableCouriersCount() {
-        Long count = personService.availableCouriersCount();
+        Long count = personFacade.availableCouriersCount();
         return ResponseEntity.ok(count);
     }
 
     @GetMapping("/{personId}/banHistory")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BanHistoryDTO>> banHistory(@PathVariable Long personId) {
-        return ResponseEntity.ok(personService.getBanHistory(personId));
+        return ResponseEntity.ok(personFacade.getBanHistory(personId));
     }
 
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<PersonResponseDTO> myInfo() {
-        return ResponseEntity.ok(personService.myInfo());
+        return ResponseEntity.ok(personFacade.myInfo());
     }
 
     @PutMapping("/editMyInfo")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponseDTO> editMyInfo(@RequestBody @Valid UserEditDTO userEditDTO) {
         logger.info("Endpoint invoked");
-        return ResponseEntity.ok(personService.updateMyInfo(userEditDTO));
+        return ResponseEntity.ok(personFacade.updateMyInfo(userEditDTO));
     }
 
     @PutMapping("password")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'COURIER')")
     public ResponseEntity<ApiResponseDTO> changePassword(@RequestBody @Valid PasswordChangeDTO dto) {
-        return ResponseEntity.ok(personService.changePassword(dto));
+        return ResponseEntity.ok(personFacade.changePassword(dto));
     }
 }

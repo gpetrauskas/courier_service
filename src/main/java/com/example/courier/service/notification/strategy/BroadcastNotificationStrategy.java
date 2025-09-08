@@ -5,7 +5,8 @@ import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.request.notification.NotificationRequestDTO;
 import com.example.courier.service.notification.NotificationFactory;
 import com.example.courier.service.notification.NotificationTarget;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.PersonFacade;
+import com.example.courier.service.person.query.PersonLookupService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,11 +14,11 @@ import java.util.List;
 @Service
 public class BroadcastNotificationStrategy implements NotificationDeliveryStrategy {
 
-    private final PersonService personService;
+    private final PersonLookupService lookupService;
     private final NotificationFactory factory;
 
-    public BroadcastNotificationStrategy(PersonService personService, NotificationFactory factory) {
-        this.personService = personService;
+    public BroadcastNotificationStrategy(PersonLookupService lookupService, NotificationFactory factory) {
+        this.lookupService = lookupService;
         this.factory = factory;
     }
 
@@ -35,7 +36,7 @@ public class BroadcastNotificationStrategy implements NotificationDeliveryStrate
             case ADMIN -> Admin.class;
         };
 
-        List<Long> recipients = personService.findAllActiveIdsByType(personClass);
+        List<Long> recipients = lookupService.findAllActiveIdsByType(personClass);
         if (recipients.isEmpty()) {
             return new ApiResponseDTO("warning", "No recipients was found for " + personClass.getSimpleName());
         }

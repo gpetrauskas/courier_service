@@ -20,7 +20,7 @@ public interface DeliveryMethodService {
     void updateDeliveryOption(Long id, UpdateDeliveryMethodDTO dto);
     void addNewDeliveryOption(CreateDeliveryMethodDTO dto);
     void deleteDeliveryOption(Long id);
-    DeliveryMethodDTO getById(Long id);
+    DeliveryMethodDTO getAdminDeliveryOptionById(Long id);
     BigDecimal calculateShippingCost(Order order);
     String getDescriptionById(Long id);
     DeliveryMethod getDeliveryOptionById(Long id);

@@ -13,6 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Service for handling account related operations for currently authenticated person.
+ * <p> Provides functionality to:
+ * <ul>
+ *     <li>Retrieve the current person profile information.</li>
+ *     <li>Change current persons password.</li>
+ * </ul>
+ *
+ * This service relies on {@link CurrentPersonService} to identify the authenticated person
+ * and delegate profile mapping to {@link PersonInfoStrategyResolver}
+ */
 @Service
 public class PersonAccountService {
     private final PersonRepository personRepository;
@@ -31,6 +41,7 @@ public class PersonAccountService {
         this.personRepository = personRepository;
     }
 
+    /** */
     public PersonResponseDTO myInfo() {
         Person person = fetchCurrentPerson();
         return personInfoStrategyResolver.resolve(person);

@@ -1,7 +1,10 @@
 package com.example.courier.service.person.query;
 
+import com.example.courier.common.OrderStatus;
+import com.example.courier.domain.Admin;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.User;
+import com.example.courier.dto.UserWithOrdersCountByStatus;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.UserNotFoundException;
 import com.example.courier.repository.PersonRepository;
@@ -61,6 +64,17 @@ public class PersonLookupService {
     public User findUserByIdWithAddresses(Long userId) {
         return personRepository.findUserByIdWithAddresses(userId).orElseThrow(() ->
                 new ResourceNotFoundException("User was not found"));
+    }
+
+    public UserWithOrdersCountByStatus findUserWithOrdersCountByStatus(Long personId, OrderStatus status) {
+        return personRepository.findUserWithOrdersCountByStatus(personId, status)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found")
+        );
+    }
+
+    public Admin findAdminById(Long adminId) {
+        return personRepository.findAdminById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
     }
 
     private <T extends Person> T convertToType(Person person, Class<T> personType) {

@@ -1,4 +1,4 @@
-package com.example.courier.validation;
+package com.example.courier.validation.deliveryoption;
 
 import com.example.courier.dto.request.deliverymethod.CreateDeliveryMethodDTO;
 import jakarta.validation.ValidationException;
@@ -39,12 +39,4 @@ public class DeliveryOptionValidator {
             throw new ValidationException("Price must be positive value.");
         }
     }
-
-/*    private void validateDeliveryPreference(String newPreference) {
-        Set<String> validPreferences = deliveryOptionService.getDeliveryPreferences();
-        if (!validPreferences.contains(newPreference)) {
-            throw new InvalidDeliveryPreferenceException("Invalid delivery preference");
-        }
-    }*/
-
 }

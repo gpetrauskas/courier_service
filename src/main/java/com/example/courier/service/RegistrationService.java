@@ -7,7 +7,7 @@ import com.example.courier.domain.User;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.RegistrationDTO;
 import com.example.courier.repository.PersonRepository;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.query.PersonLookupService;
 import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.validation.PasswordValidator;
 import com.example.courier.validation.RegistrationValidator;
@@ -24,19 +24,19 @@ public class RegistrationService {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final RegistrationValidator registrationValidator;
-    private final PersonService personService;
+    private final PersonLookupService personLookupService;
     private final PasswordValidator passwordValidator;
     private final CurrentPersonService currentPersonService;
 
     RegistrationService(PersonRepository personRepository,
                         PasswordEncoder passwordEncoder, RegistrationValidator registrationValidator,
-                        PersonService personService, PasswordValidator passwordValidator,
+                        PersonLookupService personLookupService, PasswordValidator passwordValidator,
                         CurrentPersonService currentPersonService
     ) {
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.registrationValidator = registrationValidator;
-        this.personService = personService;
+        this.personLookupService = personLookupService;
         this.passwordValidator = passwordValidator;
         this.currentPersonService= currentPersonService;
     }
@@ -69,7 +69,7 @@ public class RegistrationService {
 
     private void checkIfUserAlreadyExists(String email) {
         logger.info("Checking if user exists with email: {}", email);
-        if (personService.checkIfPersonAlreadyExistsByEmail(email)) {
+        if (personLookupService.checkIfPersonAlreadyExistsByEmail(email)) {
             logger.warn("Registration failed: Email {} already registered", email);
             throw new ValidationException("Email " + email + " is already registered");
         }

@@ -60,7 +60,7 @@ public class DeliveryMethodController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryMethodDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(deliveryMethodService.getById(id));
+        return ResponseEntity.ok(deliveryMethodService.getAdminDeliveryOptionById(id));
     }
 
 }

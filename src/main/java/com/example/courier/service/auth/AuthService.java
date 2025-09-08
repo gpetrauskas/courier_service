@@ -4,7 +4,8 @@ import com.example.courier.domain.Person;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.jwt.JwtClaims;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.PersonFacade;
+import com.example.courier.service.person.query.PersonLookupService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -20,19 +21,19 @@ public class AuthService {
 
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
     private final PasswordEncoder passwordEncoder;
-    private final PersonService personService;
+    private final PersonLookupService personLookupService;
     private final JwtService jwtService;
 
-    public AuthService(PasswordEncoder passwordEncoder, PersonService personService, JwtService jwtService) {
+    public AuthService(PasswordEncoder passwordEncoder, PersonLookupService personLookupService, JwtService jwtService) {
         this.passwordEncoder = passwordEncoder;
-        this.personService = personService;
+        this.personLookupService = personLookupService;
         this.jwtService = jwtService;
     }
 
     @Transactional
     public ApiResponseDTO loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
-            Person person = personService.findByUsername(loginDTO.email());
+            Person person = personLookupService.findByUsername(loginDTO.email());
 
             if (!passwordEncoder.matches(loginDTO.password(), person.getPassword())) {
                 throw new BadCredentialsException("Invalid credentials");

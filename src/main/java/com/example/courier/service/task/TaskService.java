@@ -20,11 +20,11 @@ import com.example.courier.service.authorization.AuthorizationService;
 import com.example.courier.service.notification.NotificationTarget;
 import com.example.courier.service.order.query.OrderQueryService;
 import com.example.courier.service.parcel.ParcelService;
-import com.example.courier.service.person.PersonService;
+import com.example.courier.service.person.PersonFacade;
+import com.example.courier.service.person.query.PersonLookupService;
 import com.example.courier.specification.task.TaskSpecificationBuilder;
 import com.example.courier.util.AuthUtils;
 import com.example.courier.util.PageableUtils;
-import com.example.courier.validation.TaskItemValidator;
 import com.example.courier.validation.task.TaskValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,38 +45,36 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final DeliveryTaskMapper deliveryTaskMapper;
     private final ParcelService parcelService;
-    private final PersonService personService;
+    private final PersonLookupService personLookupService;
     private final OrderQueryService queryService;
     private final TaskItemService taskItemService;
     private final TaskSpecificationBuilder specificationBuilder;
     private final AuthorizationService authorizationService;
     private final TaskValidator taskValidator;
     private final NotificationService notificationService;
-    private final TaskItemValidator taskItemValidator;
 
     public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
-                       ParcelService parcelService, PersonService personService, OrderQueryService queryService,
+                       ParcelService parcelService, PersonLookupService personLookupService, OrderQueryService queryService,
                        TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
                        AuthorizationService authorizationService, TaskValidator taskValidator,
-                       NotificationService notificationService, TaskItemValidator taskItemValidator) {
+                       NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.deliveryTaskMapper = deliveryTaskMapper;
         this.parcelService = parcelService;
-        this.personService = personService;
+        this.personLookupService = personLookupService;
         this.queryService = queryService;
         this.taskItemService = taskItemService;
         this.specificationBuilder = specificationBuilder;
         this.authorizationService = authorizationService;
         this.taskValidator = taskValidator;
         this.notificationService = notificationService;
-        this.taskItemValidator = taskItemValidator;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
         log.info("Creating new delivery task for courier {}", createTaskDTO.courierId());
-        Courier courier = personService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
+        Courier courier = personLookupService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
 
         List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
         List<Order> orders = queryService.fetchAllByParcelDetails(parcels);
@@ -92,11 +90,10 @@ public class TaskService {
         Task task = new Task();
         task.initiateTaskCreation(createTaskDTO, courier, AuthUtils.getAuthenticated(Admin.class));
         task.addTaskItems(taskItemService.createTaskItems(parcels, orders, task));
-        taskRepository.save(task);
 
         courier.setHasActiveTask(true);
 
-        personService.save(courier);
+        taskRepository.save(task);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")

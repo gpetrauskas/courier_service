@@ -7,15 +7,16 @@ import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Pattern;
 
 @Component
 public class CreditCardValidator {
-    private final CreditCardPatterns patterns;
+    private final Pattern CARD_NUMBER_PATTERN = Pattern.compile("\\d{16}");
+    private final Pattern CARD_CVC_PATTERN = Pattern.compile("\\d{3}");
+    private final Pattern CARD_EXPIRY_DATE = Pattern.compile("(0[1-9]|1[0-2])/\\d{2}");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/yy");
 
-    public CreditCardValidator(CreditCardPatterns patterns) {
-        this.patterns = patterns;
-    }
+    public CreditCardValidator() {}
 
     /**
      * Full setup validation ({@link CreditCardDTO} from user input)
@@ -69,13 +70,13 @@ public class CreditCardValidator {
     */
 
     private void validateNumber(String number) {
-        if (number == null || !patterns.cardNumber().matcher(number).matches()) {
+        if (number == null || !CARD_NUMBER_PATTERN.matcher(number).matches()) {
             throw new IllegalArgumentException("Invalid card number");
         }
     }
 
     private void validateExpiry(String expiry) {
-        if (expiry == null || !patterns.expiryDate().matcher(expiry).matches()) {
+        if (expiry == null || !CARD_EXPIRY_DATE.matcher(expiry).matches()) {
             throw new IllegalArgumentException("Invalid expiry date");
         }
 
@@ -86,7 +87,7 @@ public class CreditCardValidator {
     }
 
     private void validateCvc(String cvc) {
-        if (cvc == null || !patterns.cvc().matcher(cvc).matches()) {
+        if (cvc == null || !CARD_CVC_PATTERN.matcher(cvc).matches()) {
             throw new IllegalArgumentException("Invalid CVC");
         }
     }

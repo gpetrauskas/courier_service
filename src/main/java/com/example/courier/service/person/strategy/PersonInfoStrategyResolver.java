@@ -1,5 +1,6 @@
 package com.example.courier.service.person.strategy;
 
+import com.example.courier.common.Role;
 import com.example.courier.domain.Person;
 import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.exception.StrategyNotFoundException;
@@ -19,13 +20,13 @@ public class PersonInfoStrategyResolver {
     }
 
     public PersonResponseDTO resolve(Person person) {
-        PersonInfoStrategy strategy = strategies.stream()
-                .filter(s -> s.supports(person))
+        Role role = Role.valueOf(person.getRole().toUpperCase());
+
+        logger.info("Searching strategy for role: {}", role);
+        return strategies.stream()
+                .filter(s -> s.supportsType() == role)
                 .findFirst()
-                .orElseThrow(() -> new StrategyNotFoundException("Strategy not found for person: " + person.getId()));
-
-        logger.info("Strategy selected: {}", strategy.getClass().getSimpleName());
-        return strategy.map(person);
+                .orElseThrow(() -> new StrategyNotFoundException("Strategy not found for person: " + person.getId()))
+                .map(person.getId());
     }
-
 }
