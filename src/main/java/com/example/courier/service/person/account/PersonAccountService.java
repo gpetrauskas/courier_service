@@ -41,12 +41,25 @@ public class PersonAccountService {
         this.personRepository = personRepository;
     }
 
-    /** */
+    /** Retrieves the profile information of the current person.
+     *
+     * Returned {@link PersonResponseDTO} will be one of permitted type:
+     * {@code UserResponseDTO}, {@code AdminPersonResponseDTO}, {@code AdminProfileResponseDTO}
+     * depending on role of current person.
+     *
+     * @return a role specific {@link PersonResponseDTO} containing person info
+     */
     public PersonResponseDTO myInfo() {
         Person person = fetchCurrentPerson();
         return personInfoStrategyResolver.resolve(person);
     }
 
+    /** Changes the password for current user.
+     *
+     * @param dto the password change request containing current and new passwords
+     * @return an {@link ApiResponseDTO} response message
+     * @throws ValidationException if validation fails
+     * */
     @Transactional
     public ApiResponseDTO changePassword(PasswordChangeDTO dto) {
         if (dto == null || dto.newPassword() == null || dto.currentPassword() == null) {

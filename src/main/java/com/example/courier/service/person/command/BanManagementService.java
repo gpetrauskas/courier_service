@@ -16,6 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/** Service responsible for managing bans on {@link Person} entities.
+ *
+ * Accessible to users with the {@code ADMIN} role.
+ * All ban/unban actions are recorded in {@link BanHistory} for auditing.
+ */
 @Service
 @PreAuthorize("hasRole('ADMIN')")
 public class BanManagementService {
@@ -35,6 +40,17 @@ public class BanManagementService {
         this.lookupService = lookupService;
     }
 
+    /** Ban or unban a {@link Person}.
+     *
+     * Fetches a targeted {@link Person} via {@link PersonLookupService} and
+     * the admin via {@link CurrentPersonService}.
+     *
+     * The updated status is saved, thr action is logged to {@link BanHistory} and
+     * a response message is returned.
+     *
+     * @param requestDTO a {@link BanActionRequestDTO} a request dto containing reason.
+     * @return a message of generated response (banned or unbanned).
+     */
     @Transactional
     public String banUnban(Long personId, BanActionRequestDTO requestDTO) {
         Person person = lookupService.findNotDeletedPerson(personId);
@@ -50,6 +66,14 @@ public class BanManagementService {
         return generateResponseMessage(personId, newBlockedStatus);
     }
 
+    /** Returns the ban history of the specified {@link Person}.
+     *
+     * Fetches ban records via {@link BanHistoryRepository} using auto generated jpa query,
+     * then maps each record to a {@link BanHistoryDTO} using {@link BanHistoryMapper}.
+     *
+     * @param personId the id of the person.
+     * @return a list of {@link BanHistoryDTO} records in reverse chronological order.
+     */
     public List<BanHistoryDTO> getBanHistory(Long personId) {
         return banHistoryRepository.findByPersonIdOrderByActionTimeDesc(personId)
                 .stream()
@@ -57,6 +81,8 @@ public class BanManagementService {
                 .toList();
     }
 
+    /* Helper methods
+    */
     private void logBanAction(Person person, String email, String reason, boolean banStatus) {
         BanHistory ban = new BanHistory(person, banStatus, email, reason);
         banHistoryRepository.save(ban);

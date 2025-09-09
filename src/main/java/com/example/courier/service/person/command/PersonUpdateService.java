@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Service responsible for updating {@link Person} profile information.
+ *
+ */
 @Service
 public class PersonUpdateService {
     private final Logger logger = LoggerFactory.getLogger(PersonUpdateService.class);
@@ -31,6 +34,12 @@ public class PersonUpdateService {
         this.transformationService = transformationService;
     }
 
+    /**
+     * Updates profile information to current user {@link User}.
+     *
+     * @param dto the link {@link UserEditDTO} containing updated profile info.
+     * @return an {@link ApiResponseDTO} an outcome message
+     * */
     @Transactional
     public ApiResponseDTO updateMyInfo(@Valid UserEditDTO dto) {
         Long personId = currentPersonService.getCurrentPersonId();

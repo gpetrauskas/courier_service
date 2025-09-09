@@ -115,7 +115,9 @@ public abstract class Person implements UserDetails {
     }
 
     public void setBlocked(boolean blocked) {
-        this.isBlocked = blocked;
+        if (this.isBlocked != blocked) {
+            this.isBlocked = blocked;
+        }
     }
 
     public boolean isDeleted() {
