@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Service for retrieving data related to {@link Person} entities.
+ * Accessible only for users with {@code ADMIN} role.
+ */
 @Service
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminPersonQueryService {
@@ -30,6 +33,19 @@ public class AdminPersonQueryService {
         this.mapper = mapper;
     }
 
+    /** Retrieves a paginated list of {@link Person} entities matching the given filters.
+     *
+     * Allows optional filtering by role and search keyword,
+     * and support sorting by the sort field and direction.
+     *
+     * @param page the page number
+     * @param size the number of records per page.
+     * @param role optional role filter (can be {@code null})
+     * @param searchKeyword optional keyword filter (can be {@code null})
+     * @param sortBy the field to sort by (never {@code null} when called from controller)
+     * @param direction the sort direction (never {@code null}; when called from controller)
+     * @return a {@link PaginatedResponseDTO} containing {@link AdminPersonResponseDTO} records
+     */
     public PaginatedResponseDTO<AdminPersonResponseDTO> findAllPaginated(
             int page, int size, String role, String searchKeyword, String sortBy, String direction
     ) {
@@ -40,7 +56,10 @@ public class AdminPersonQueryService {
         return new PaginatedResponseDTO<>(personPage, mapper::toAdminPersonResponseDTO);
     }
 
-
+    /** Retrieves list of available couriers.
+     *
+     * @return a list of {@link CourierDTO}
+     */
     public List<CourierDTO> getAvailableCouriers() {
         Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
         List<Person> personList = personRepository.findAll(specification);
@@ -52,6 +71,10 @@ public class AdminPersonQueryService {
                 .toList();
     }
 
+    /** Counts number of available couriers.
+     *
+     * @return the total number of available couriers
+     */
     public Long availableCouriersCount() {
         Specification<Person> specification = PersonSpecificationBuilder.buildAvailableCourierSpecification();
         return personRepository.countAvailableCouriers(specification);

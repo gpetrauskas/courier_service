@@ -7,6 +7,8 @@ import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.service.person.query.PersonLookupService;
 import org.springframework.stereotype.Component;
 
+/** {@link PersonInfoStrategy} implementation for {@link Role#ADMIN}.
+ */
 @Component
 public class AdminInfoStrategy implements PersonInfoStrategy {
     private final PersonLookupService personLookupService;
@@ -24,7 +26,7 @@ public class AdminInfoStrategy implements PersonInfoStrategy {
 
     @Override
     public PersonResponseDTO map(Long personId) {
-        Admin person = personLookupService.findAdminById(personId);
+        Admin person = personLookupService.fetchPersonByIdAndType(personId, Admin.class);
 
         return personMapper.toAdminProfile(person);
     }

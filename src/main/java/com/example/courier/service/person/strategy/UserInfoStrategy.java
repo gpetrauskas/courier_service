@@ -9,6 +9,8 @@ import com.example.courier.dto.response.person.PersonResponseDTO;
 import com.example.courier.service.person.query.PersonLookupService;
 import org.springframework.stereotype.Component;
 
+/** {@link PersonInfoStrategy} implementation for {@link Role#USER}.
+ */
 @Component
 public class UserInfoStrategy implements PersonInfoStrategy {
     private final PersonLookupService lookupService;

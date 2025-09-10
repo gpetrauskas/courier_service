@@ -10,6 +10,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/** Resolves the appropriate {@link PersonInfoStrategy} implementation for a give {@link Person}
+ * based on their {@link Role} and delegates the mapping to a {@link PersonResponseDTO}.
+ *
+ * This class uses the strategy pattern to select the correct mapping logic at runtime.
+ * All available strategies are injected by spring via constructor injection.
+ */
 @Component
 public class PersonInfoStrategyResolver {
     private static final Logger logger = LoggerFactory.getLogger(PersonInfoStrategyResolver.class);
@@ -19,6 +25,12 @@ public class PersonInfoStrategyResolver {
         this.strategies = strategies;
     }
 
+    /** Resolves and executes the appropriate {@link PersonInfoStrategy} for the given {@link Person}.
+     *
+     * @param person the person whose information should be mapped
+     * @return a {@link PersonResponseDTO} mapped for the given person
+     * @throws StrategyNotFoundException if no strategy supports the persons role
+     */
     public PersonResponseDTO resolve(Person person) {
         Role role = Role.valueOf(person.getRole().toUpperCase());
 
