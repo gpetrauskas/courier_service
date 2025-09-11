@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/** Resolves appropriate {@link NotificationDeliveryStrategy} for a given {@link NotificationTarget}.
+ * */
 @Component
 public class NotificationStrategyResolver {
     private final Map<Class<? extends NotificationTarget>, NotificationDeliveryStrategy> strategyMap;
@@ -19,6 +21,12 @@ public class NotificationStrategyResolver {
                 ));
     }
 
+    /** Finds a {@link NotificationDeliveryStrategy} that supports the given {@link NotificationTarget}.
+     *
+     * @param target the notification target
+     * @return the matching delivery strategy
+     * @throws ResourceNotFoundException if no strategy supports the given target
+     */
     public NotificationDeliveryStrategy findStrategy(NotificationTarget target) {
         NotificationDeliveryStrategy strategy = strategyMap.get(target.getClass());
         if (strategy == null) {

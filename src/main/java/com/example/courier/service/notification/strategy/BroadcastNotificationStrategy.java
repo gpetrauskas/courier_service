@@ -11,6 +11,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** {@link NotificationDeliveryStrategy} for broadcasting notifications to all active persons of a given class.
+ *
+ * <p>
+ *     Supports broadcasting to {@link User}, {@link Courier} or {@link Admin} recipients.
+ * </p>
+ */
 @Service
 public class BroadcastNotificationStrategy implements NotificationDeliveryStrategy {
 

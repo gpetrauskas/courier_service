@@ -10,6 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** {@link NotificationDeliveryStrategy} for sending notifications to a single person.
+ *
+ * <p>
+ *     Validates that the target person exists and is active before sending.
+ * </p>
+ *
+ * */
 @Service
 public class IndividualNotificationStrategy implements NotificationDeliveryStrategy {
 
