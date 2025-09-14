@@ -4,7 +4,6 @@ import com.example.courier.domain.Person;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.LoginDTO;
 import com.example.courier.dto.jwt.JwtClaims;
-import com.example.courier.service.person.PersonFacade;
 import com.example.courier.service.person.query.PersonLookupService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Service responsible for authenticating users and issuing JWT based session cookies.
+ */
 @Service
 public class AuthService {
 
@@ -30,6 +31,15 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
+    /** Authenticates user and sets authentication cookies in the HTTP response.
+     *
+     * @param loginDTO the logic credentials (email and password)
+     * @param response the HTTP response to which cookies will be added
+     * @return a {@link ApiResponseDTO} indicating a result of the login attempt
+     * @throws UsernameNotFoundException if email is not registered
+     * @throws BadCredentialsException if password is incorrect
+     * @throws RuntimeException if unexpected error happens
+     */
     @Transactional
     public ApiResponseDTO loginUser(LoginDTO loginDTO, HttpServletResponse response) {
         try {
@@ -54,6 +64,9 @@ public class AuthService {
             throw new RuntimeException("Unexpected error occurred during login");
         }
     }
+
+    /* Helper methods
+    */
 
     private void setCookies(HttpServletResponse response, String jwtToken, String encryptedAuthToken) {
         setCookie(response, jwtToken, "jwt");

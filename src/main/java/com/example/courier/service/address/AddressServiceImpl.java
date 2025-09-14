@@ -22,6 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
+/** Service responsible for retrieving, creating, updating and deleting addresses.
+ *
+ * <p>
+ *     Implements {@link AddressService} interface and provide transactional operations for managing
+ *     user addresses and order addresses.
+ * </p>
+ */
 @Service
 public class AddressServiceImpl implements AddressService {
 
@@ -46,6 +53,7 @@ public class AddressServiceImpl implements AddressService {
         this.phoneValidator = phoneValidator;
     }
 
+    @Override
     @Transactional
     public void addressSectionUpdate(AddressSectionUpdateRequest updateRequest) {
         OrderAddress orderAddress = getOrderAddressById(updateRequest.id());
@@ -53,6 +61,7 @@ public class AddressServiceImpl implements AddressService {
         orderAddressRepository.save(orderAddress);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<AddressDTO> getAllMyAddresses() {
         Long userId = currentPersonService.getCurrentPersonId();
@@ -63,6 +72,7 @@ public class AddressServiceImpl implements AddressService {
                 .toList();
     }
 
+    @Override
     @Transactional
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
         validationService.validateAddress(addressDTO, AddressValidationMode.UPDATE);
@@ -76,12 +86,15 @@ public class AddressServiceImpl implements AddressService {
         return addressMapper.toAddressDTO(address);
     }
 
+    @Override
     @Transactional
     public void deleteAddressById(Long addressId) {
         addressRepository.delete(findAddressForCurrentPerson(addressId));
         logger.info("Deleted address with id: {}", addressId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public OrderAddress fetchOrCreateOrderAddress(AddressDTO addressDTO, User user) {
         Objects.requireNonNull(addressDTO, "AddressDTO cannot be null");
         Objects.requireNonNull(user, "User cannot be null");
@@ -92,6 +105,14 @@ public class AddressServiceImpl implements AddressService {
         Address address = processAddressByMode(addressDTO, user, mode);
         return createOrderAddressFromAddress(address);
     }
+
+    public Address getAddressById(Long id) {
+        return addressRepository.findById(id)
+                .orElseThrow(() -> new AddressNotFoundException("Address not found."));
+    }
+
+    /* Helper methods
+    */
 
     private Address handleExistingAddress(AddressDTO dto, User user) {
         logger.info("Fetching existing address with id {}", dto.id());
@@ -119,11 +140,6 @@ public class AddressServiceImpl implements AddressService {
         Address address = addressMapper.toAddress(addressDTO);
         address.setUser(user);
         return addressRepository.saveAndFlush(address);
-    }
-
-    public Address getAddressById(Long id) {
-        return addressRepository.findById(id)
-                .orElseThrow(() -> new AddressNotFoundException("Address not found."));
     }
 
     private void saveAddress(Address address) {
