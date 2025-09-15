@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "delivery_tasks")
@@ -48,6 +49,8 @@ public class Task {
     @Column(nullable = true)
     private LocalDateTime completedAt;
 
+    protected Task() {}
+
     public Long getId() {
         return id;
     }
@@ -56,7 +59,7 @@ public class Task {
         return courier;
     }
 
-    public void setCourier(Courier courier) {
+    private void setCourier(Courier courier) {
         this.courier = courier;
     }
 
@@ -64,7 +67,7 @@ public class Task {
         return createdBy;
     }
 
-    public void setCreatedBy(Admin createdBy) {
+    private void setCreatedBy(Admin createdBy) {
         this.createdBy = createdBy;
     }
 
@@ -72,15 +75,11 @@ public class Task {
         return Collections.unmodifiableList(items);
     }
 
-    public void setItems(List<TaskItem> items) {
-        this.items = items;
-    }
-
     public TaskType getTaskType() {
         return taskType;
     }
 
-    public void setTaskType(TaskType taskType) {
+    private void setTaskType(TaskType taskType) {
         this.taskType = taskType;
     }
 
@@ -122,7 +121,7 @@ public class Task {
         }
         this.deliveryStatus = DeliveryStatus.AT_CHECKPOINT;
         this.completedAt = LocalDateTime.now();
-        this.courier.setHasActiveTask(false);
+        this.courier.completeTask();
     }
 
     public void markAsComplete() {
@@ -138,13 +137,6 @@ public class Task {
             } else if (item.getTask())
         });
     }*/
-
-    public void initiateTaskCreation(CreateTaskDTO taskDTO, Courier courier, Admin admin) {
-        setCourier(courier);
-        setCreatedBy(admin);
-        setTaskType(taskDTO.taskType().equals("PICKING_UP") ? TaskType.PICKUP : TaskType.DELIVERY);
-        setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
-    }
 
     public void updateStatusIfAllItemsFinal() {
         if (this.items.stream().allMatch(item -> item.getStatus().isFinalState())) {
@@ -163,7 +155,7 @@ public class Task {
     }
 
     public void cancel(Long adminId) {
-        this.courier.setHasActiveTask(false);
+        this.courier.completeTask();
         this.setDeliveryStatus(DeliveryStatus.CANCELED);
         this.setCanceledByAdminId(adminId);
     }
@@ -192,5 +184,26 @@ public class Task {
 
         this.getItems().forEach(TaskItem::applyFinalStatusToParcel);
         this.setDeliveryStatus(DeliveryStatus.COMPLETED);
+    }
+
+    public void transitParcelsIfRequired(List<Order> orders) {
+        if (this.taskType != TaskType.PICKUP) {
+            orders.forEach(o -> o.getParcelDetails().transitionToDelivery());
+        }
+    }
+
+    public static Task create(String taskType, Courier courier, Admin admin) {
+        Objects.requireNonNull(taskType);
+        Objects.requireNonNull(courier);
+        Objects.requireNonNull(admin);
+
+
+        Task task = new Task();
+        task.setCourier(courier);
+        task.setCreatedBy(admin);
+        task.setTaskType(TaskType.fromString(taskType));
+        task.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
+
+        return task;
     }
 }

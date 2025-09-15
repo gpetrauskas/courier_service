@@ -28,4 +28,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     List<Order> findAllByParcelDetails(@Param("parcels") List<Parcel> parcels);
 
     int countByUserIdAndStatus(Long userId, OrderStatus status);
+
+    @Query("SELECT o FROM Order o JOIN FETCH o.parcelDetails p WHERE p.id IN :parcelIds")
+    List<Order> findAllByParcelIdInWithParcel(@Param("parcelIds") List<Long> parcelIds);
 }

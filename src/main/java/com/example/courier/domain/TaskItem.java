@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "delivery_task_items")
@@ -42,21 +43,19 @@ public class TaskItem {
     @ElementCollection
     @CollectionTable(name = "delivery_task_item_notes", joinColumns = @JoinColumn(name = "task_item_id"))
     @Column(name = "notes")
-    private List<String> notes = new ArrayList<>();
+    private final List<String> notes = new ArrayList<>();
+
+    private TaskItem() {}
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Task getTask() {
         return task;
     }
 
-    public void setTask(Task task) {
+    void setTask(Task task) {
         this.task = task;
     }
 
@@ -64,7 +63,7 @@ public class TaskItem {
         return parcel;
     }
 
-    public void setParcel(Parcel parcel) {
+    void setParcel(Parcel parcel) {
         this.parcel = parcel;
     }
 
@@ -72,7 +71,7 @@ public class TaskItem {
         return status;
     }
 
-    public void setStatus(ParcelStatus status) {
+    void setStatus(ParcelStatus status) {
         this.status = status;
     }
 
@@ -104,10 +103,6 @@ public class TaskItem {
         return notes;
     }
 
-    public void setNotes(List<String> notes) {
-        this.notes = notes;
-    }
-
     public void addDefaultStatusChangeNote(Long personId, ParcelStatus newStatus) {
         String note = switch (newStatus) {
             case FAILED_PICKUP -> "Failed to pick up";
@@ -128,7 +123,11 @@ public class TaskItem {
         this.parcel.unassign();
     }
 
-    public static TaskItem from(Parcel parcel, Order order, Task task) {
+    public static TaskItem create(Parcel parcel, Order order, Task task) {
+        Objects.requireNonNull(parcel);
+        Objects.requireNonNull(order);
+        Objects.requireNonNull(task);
+
         TaskItem taskItem = new TaskItem();
         taskItem.parcel = parcel;
         taskItem.status = parcel.getStatus();

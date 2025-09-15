@@ -100,4 +100,15 @@ public interface OrderQueryService {
      * @return {@link Order} a fetched order
      * */
     Order getOrderByIdAndCurrentPersonId(Long orderId);
+
+    /** Fetches all order entities that are associated with given {@link Parcel} IDs.
+     *
+     * <p>
+     *     Uses a fetch join to ensure {@link Order#getParcelDetails()} is loaded in the same query.
+     * </p>
+     *
+     * @param parcelIds ids of parcels used to fetch matching orders
+     * @return a list of {@link Order} with their {@link Parcel} details
+     */
+    List<Order> getAllOrdersWithParcelByParcelIds(List<Long> parcelIds);
 }

@@ -129,4 +129,8 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         return orderRepository.findByIdAndUserId(orderId, currentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found or not owned by the user"));
     }
+
+    public List<Order> getAllOrdersWithParcelByParcelIds(List<Long> parcelIds) {
+        return orderRepository.findAllByParcelIdInWithParcel(parcelIds);
+    }
 }
