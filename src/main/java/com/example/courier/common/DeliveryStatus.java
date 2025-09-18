@@ -25,7 +25,7 @@ public enum DeliveryStatus {
     }
 
     public static boolean isAdminUpdatable(DeliveryStatus status) {
-        return status == AT_CHECKPOINT || status == IN_PROGRESS;
+        return status == AT_CHECKPOINT || status == IN_PROGRESS || status == RETURNING_TO_STATION || status == COMPLETED;
     }
 
     public static boolean isTaskItemUpdatable(DeliveryStatus status) {
@@ -41,5 +41,14 @@ public enum DeliveryStatus {
 
     public boolean isFinalState() {
         return historicalStatuses().contains(this);
+    }
+
+    public boolean canTransitionTo(DeliveryStatus nextStatus) {
+        return switch (this) {
+            case IN_PROGRESS -> nextStatus == RETURNING_TO_STATION || nextStatus == CANCELED;
+            case RETURNING_TO_STATION -> nextStatus == AT_CHECKPOINT;
+            case AT_CHECKPOINT -> nextStatus == COMPLETED;
+            default -> false;
+        };
     }
 }

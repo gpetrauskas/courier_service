@@ -165,9 +165,12 @@ public class TaskItem {
     }
 
     public void applyFinalStatusToParcel() {
-        if (this.parcel== null) {
+        if (this.parcel == null) {
             throw new IllegalStateException("TaskItem must be associated with a Parcel");
         }
-        this.parcel.updateStatusFromTaskItem(this.status);
+
+        if (this.status != ParcelStatus.REMOVED_FROM_THE_LIST) {
+            this.parcel.updateStatusFromTaskItem(this.status);
+        }
     }
 }

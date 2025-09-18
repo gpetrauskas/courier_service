@@ -4,14 +4,12 @@ package com.example.courier.domain;
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
-import com.example.courier.dto.CreateTaskDTO;
+import com.example.courier.exception.TaskNotCancelableException;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "delivery_tasks")
@@ -33,7 +31,7 @@ public class Task {
     private Long canceledByAdminId;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TaskItem> items = new ArrayList<>();
+    private final List<TaskItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -116,7 +114,7 @@ public class Task {
     }
 
     public void completeOnCheckIn() {
-        if (this.deliveryStatus != DeliveryStatus.RETURNING_TO_STATION) {
+        if (!this.deliveryStatus.canTransitionTo(DeliveryStatus.AT_CHECKPOINT)) {
             throw new IllegalArgumentException("Invalid status for check in.");
         }
         this.deliveryStatus = DeliveryStatus.AT_CHECKPOINT;
@@ -124,28 +122,24 @@ public class Task {
         this.courier.completeTask();
     }
 
-    public void markAsComplete() {
-        this.deliveryStatus = DeliveryStatus.COMPLETED;
-        this.completedAt = LocalDateTime.now();
-       // updateItemsOnCompletion();
-    }
+    public void changeStatusAsAdmin(DeliveryStatus newStatus, Long adminId) {
+        Objects.requireNonNull(newStatus, "Status must be provided");
+        if (!this.deliveryStatus.canTransitionTo(newStatus)) {
+            throw new IllegalArgumentException("Task status cannot be changed.");
+        }
 
-/*    private void updateItemsOnCompletion() {
-        this.items.forEach(item -> {
-            if (item.getStatus() == ParcelStatus.PICKED_UP) {
-                item.setStatus(ParcelStatus.DELIVERING);
-            } else if (item.getTask())
-        });
-    }*/
+        switch (newStatus) {
+            case COMPLETED -> completeTask();
+            case CANCELED -> cancelWithItems(adminId);
+            case RETURNING_TO_STATION -> this.setDeliveryStatus(DeliveryStatus.RETURNING_TO_STATION);
+            default -> throw new IllegalArgumentException("Unsupported status change.");
+        }
+    }
 
     public void updateStatusIfAllItemsFinal() {
         if (this.items.stream().allMatch(item -> item.getStatus().isFinalState())) {
             setDeliveryStatus(DeliveryStatus.RETURNING_TO_STATION);
         }
-    }
-
-    public void cancelItems() {
-        this.items.forEach(TaskItem::cancel);
     }
 
     public boolean isAllItemsCanceled() {
@@ -155,12 +149,34 @@ public class Task {
     }
 
     public void cancel(Long adminId) {
+        Objects.requireNonNull(adminId, "Admin ID must be provided.");
+        validateCancelable();
+
         this.courier.completeTask();
         this.setDeliveryStatus(DeliveryStatus.CANCELED);
         this.setCanceledByAdminId(adminId);
     }
 
+    public void cancelWithItems(Long adminId) {
+        Objects.requireNonNull(adminId, "adminId null");
+        items.stream()
+                .filter(i -> !i.getStatus().isAlreadyCanceledOrRemoved())
+                .forEach(TaskItem::cancel);
+
+        if (!isAllItemsCanceled()) {
+            String notCanceled = items.stream()
+                    .filter(i -> i.getStatus() != ParcelStatus.CANCELED && i.getStatus() != ParcelStatus.REMOVED_FROM_THE_LIST)
+                    .map(i -> i.getId().toString())
+                    .collect(Collectors.joining(", "));
+            throw new TaskNotCancelableException("Some items cannot be canceled: " + notCanceled);
+        }
+
+        cancel(adminId);
+    }
+
     public void addTaskItems(List<TaskItem> taskItems) {
+        Objects.requireNonNull(taskItems, "Task items list cannot be null");
+
         if (this.deliveryStatus.isFinalState()) {
             throw new IllegalStateException("Cannot add items to a final state task.");
         }
@@ -169,6 +185,8 @@ public class Task {
     }
 
     public void addTaskItem(TaskItem item) {
+        Objects.requireNonNull(item, "Item cannot be null");
+
         if (this.deliveryStatus.isFinalState()) {
             throw new IllegalStateException("Cannot add items to a final state task.");
         }
@@ -186,9 +204,13 @@ public class Task {
         this.setDeliveryStatus(DeliveryStatus.COMPLETED);
     }
 
-    public void transitParcelsIfRequired(List<Order> orders) {
-        if (this.taskType != TaskType.PICKUP) {
-            orders.forEach(o -> o.getParcelDetails().transitionToDelivery());
+    public void validateCancelable() {
+        if (this.deliveryStatus.isFinalState()) {
+            throw new TaskNotCancelableException("Task is in final state or already canceled");
+        }
+
+        if (this.items.stream().anyMatch(i -> i.getStatus().preventsTaskCancel())) {
+            throw new TaskNotCancelableException("Task cannot be canceled. One or more item state blocking it.");
         }
     }
 

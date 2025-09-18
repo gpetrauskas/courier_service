@@ -29,7 +29,11 @@ public enum ParcelStatus {
             .map(Enum::name)
             .collect(Collectors.toSet());
 
-    private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY);
+    private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY, REMOVED_FROM_THE_LIST);
+
+    private static final Set<ParcelStatus> PREVENT_TASK_FROM_CANCEL = Set.of(PICKED_UP, DELIVERED);
+
+    private static final Set<ParcelStatus> ALREADY_REMOVED_OR_CANCELED = Set.of(REMOVED_FROM_THE_LIST, CANCELED);
 
     public static List<ParcelStatus> getStatusesPreventingRemoval() {
         return List.of(CANCELED, REMOVED_FROM_THE_LIST);
@@ -47,6 +51,14 @@ public enum ParcelStatus {
 
     public boolean isFinalState() {
         return FINAL_STATES.contains(this);
+    }
+
+    public boolean isAlreadyCanceledOrRemoved() {
+        return ALREADY_REMOVED_OR_CANCELED.contains(this);
+    }
+
+    public boolean preventsTaskCancel() {
+        return PREVENT_TASK_FROM_CANCEL.contains(this);
     }
 
     public boolean isValidTransition(ParcelStatus newStatus) {
