@@ -11,5 +11,6 @@ public sealed interface TaskBase permits CourierTaskDTO, AdminTaskDTO {
     DeliveryStatus deliveryStatus();
     LocalDateTime createdAt();
     LocalDateTime completedAt();
+    int itemsCount();
 
 }

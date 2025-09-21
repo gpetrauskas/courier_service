@@ -22,6 +22,14 @@ public interface NotificationService {
     ApiResponseDTO createNotification(NotificationRequestDTO request);
 
     /**
+     * Sends notification to admins that a courier has returned from a task and successfully checked in.
+     *
+     * @param taskId the id of the task that was completed
+     * @param courierId the id of returned courier
+     */
+    void notifyCourierCheckedIn(Long taskId, Long courierId);
+
+    /**
      */
     List<NotificationResponseDTO> getUnreadNotifications(Long personId);
 

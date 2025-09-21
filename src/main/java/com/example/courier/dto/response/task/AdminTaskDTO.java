@@ -17,6 +17,7 @@ public record AdminTaskDTO(
         DeliveryStatus deliveryStatus,
         List<String> notes,
         LocalDateTime createdAt,
-        LocalDateTime completedAt
+        LocalDateTime completedAt,
+        int itemsCount
 ) implements TaskBase {
 }

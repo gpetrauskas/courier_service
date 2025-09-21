@@ -40,11 +40,6 @@ public class ParcelService {
                 ));
     }
 
-    private Parcel fetchById(Long id) {
-        return parcelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Parcel was not found"));
-    }
-
     public List<Parcel> fetchParcelsByIdBatch(List<Long> ids) {
         List<Parcel> parcels = parcelRepository.findAllById(ids);
         if (parcels.isEmpty()) {
@@ -54,7 +49,15 @@ public class ParcelService {
         return parcels;
     }
 
-    public Long getAvailableItemsCountByStatus(ParcelStatus status) {
+    /* Helper methods
+    */
+
+    private Long getAvailableItemsCountByStatus(ParcelStatus status) {
         return parcelRepository.countByStatusAndIsAssignedFalse(status);
+    }
+
+    private Parcel fetchById(Long id) {
+        return parcelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Parcel was not found"));
     }
 }

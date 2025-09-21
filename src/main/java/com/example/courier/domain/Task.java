@@ -4,6 +4,7 @@ package com.example.courier.domain;
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
+import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.TaskNotCancelableException;
 import jakarta.persistence.*;
 
@@ -71,6 +72,13 @@ public class Task {
 
     public List<TaskItem> getItems() {
         return Collections.unmodifiableList(items);
+    }
+
+    public TaskItem findItem(Long itemId) {
+        return items.stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Task item ID " + itemId + " not found in task ID " + this.getId()));
     }
 
     public TaskType getTaskType() {
@@ -142,6 +150,17 @@ public class Task {
         }
     }
 
+    public void updateItemStatus(Long itemId, ParcelStatus newStatus, Long courierId) {
+        TaskItem item = findItem(itemId);
+
+        if (!item.getStatus().isValidTransition(newStatus)) {
+            throw new IllegalArgumentException("Invalid transition from " + item.getStatus() + " to " + newStatus);
+        }
+
+        item.changeStatus(newStatus, courierId);
+        updateStatusIfAllItemsFinal();
+    }
+
     public boolean isAllItemsCanceled() {
         return this.items.stream()
                 .allMatch(item -> item.getStatus() == ParcelStatus.CANCELED ||
@@ -172,6 +191,22 @@ public class Task {
         }
 
         cancel(adminId);
+    }
+
+    public void removeItem(Long itemId, Long adminId) {
+        if (deliveryStatus != DeliveryStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Task is not in progress, cannot remove items");
+        }
+
+        TaskItem item = items.stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item was not found"));
+
+        item.removeFromTask();
+        if (items.stream().noneMatch(TaskItem::isRemovable)) {
+            this.cancel(adminId);
+        }
     }
 
     public void addTaskItems(List<TaskItem> taskItems) {
@@ -218,7 +253,6 @@ public class Task {
         Objects.requireNonNull(taskType);
         Objects.requireNonNull(courier);
         Objects.requireNonNull(admin);
-
 
         Task task = new Task();
         task.setCourier(courier);

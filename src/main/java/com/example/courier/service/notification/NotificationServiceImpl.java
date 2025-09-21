@@ -1,6 +1,7 @@
 package com.example.courier.service.notification;
 
 import com.example.courier.common.ApiResponseType;
+import com.example.courier.common.NotificationTargetType;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
 import com.example.courier.dto.mapper.NotificationMapper;
@@ -131,6 +132,18 @@ public class NotificationServiceImpl implements NotificationService {
         return currentPersonService.isAdmin()
                 ? deleteAsAdmin(ids)
                 : deleteAsUser(ids);
+    }
+
+    @Override
+    @Transactional
+    public void notifyCourierCheckedIn(Long taskId, Long courierId) {
+        createNotification(
+                new NotificationRequestDTO(
+                        String.format("Courier %d CheckedIn", courierId),
+                        String.format("Courier checked in: Task ID = %d, Courier ID = %d", taskId, courierId),
+                        new NotificationTarget.BroadCast(NotificationTargetType.ADMIN)
+                )
+        );
     }
 
     /* HELPER METHODS

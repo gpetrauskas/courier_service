@@ -4,6 +4,7 @@ import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
 import com.example.courier.domain.Task;
+import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,6 +16,42 @@ import java.util.stream.Stream;
 
 @Component
 public class DeliveryTaskSpecification {
+
+    public Specification<Task> build(DeliveryTaskFilterDTO filterDTO) {
+        return Specification.where(hasCourier(filterDTO.courierId()))
+                .and(hasTaskList(filterDTO.taskListId()))
+                .and(hasStatus(filterDTO.deliveryStatus()))
+                .and(hasTaskType(filterDTO.taskType()));
+    }
+
+    private Specification<Task> hasCourier(Long id) {
+        return ((root, query, criteriaBuilder)
+                -> id == null ? null : criteriaBuilder.equal(root.get("courier").get("id"), id));
+    }
+
+    private Specification<Task> hasTaskList(Long id) {
+        return (root, query, criteriaBuilder)
+                -> id == null ? null : criteriaBuilder.equal(root.get("id"), id);
+    }
+
+    private Specification<Task> hasStatus(DeliveryStatus status) {
+        return ((root, query, criteriaBuilder)
+                -> status == null ? null : criteriaBuilder.equal(root.get("deliveryStatus"), status));
+    }
+
+    private Specification<Task> hasTaskType(TaskType taskType) {
+        return (root, query, criteriaBuilder)
+                -> taskType == null ? null : criteriaBuilder.equal(root.get("taskType"), taskType);
+    }
+
+    private Specification<Task> isCanceled(Boolean showCanceled) {
+        if (showCanceled == null || showCanceled) {
+            return null;
+        }
+
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNull(root.get("canceledByAdminId"));
+    }
+
     public Specification<Task> filterTasks(
             Long courierId, Long taskListId, TaskType tType, DeliveryStatus status, Boolean canceled) {
         return ((root, query, criteriaBuilder) -> {

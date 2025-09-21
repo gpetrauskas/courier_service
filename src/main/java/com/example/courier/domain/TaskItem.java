@@ -1,5 +1,6 @@
 package com.example.courier.domain;
 
+import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -144,15 +145,25 @@ public class TaskItem {
         if (note == null || note.isEmpty()) {
             throw new IllegalArgumentException("Note cannot be empty");
         }
+
+        if (status.isFinalState()) {
+            throw new IllegalArgumentException("Cannot add note to final state item");
+        }
+
         this.notes.add(note);
     }
 
-    public void removeFromTask() {
-        setStatus(ParcelStatus.REMOVED_FROM_THE_LIST);
+    public boolean isRemovable() {
+        return !status.isFinalState();
+    }
 
-        if (this.parcel != null) {
-            parcel.unassign();
+    public void removeFromTask() {
+        if (!isRemovable()) {
+            throw new IllegalArgumentException("Item is in final state and cannot be removed");
         }
+
+        setStatus(ParcelStatus.REMOVED_FROM_THE_LIST);
+        if (this.parcel != null) parcel.unassign();
     }
 
     public void changeStatus(@NotBlank ParcelStatus status, @NotNull Long personId) {

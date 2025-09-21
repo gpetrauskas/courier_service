@@ -5,6 +5,7 @@ import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
 import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.response.task.TaskBase;
 import com.example.courier.service.task.TaskService;
+import com.example.courier.validation.shared.NotNullOrEmpty;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,4 +78,22 @@ public class TaskController {
         return ResponseEntity.ok(new ApiResponseDTO("success", String.format("Courier successfully" +
                 " check-in with task %s", taskId)));
     }
+
+    @PostMapping("/{taskId}/removeItem/{itemId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponseDTO> removeItem(
+            @PathVariable @NotNullOrEmpty(message = "Task id cannot be empty.") Long taskId,
+            @PathVariable @NotNullOrEmpty(message = "Task id cannot be empty.") Long itemId) {
+        return ResponseEntity.ok(taskService.removeItem(taskId, itemId));
+    }
+
+    @PostMapping("/{taskId}/updateItemStatus/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
+    public ResponseEntity<ApiResponseDTO> updateStatus(
+            @NotNullOrEmpty @PathVariable Long itemId,
+            @NotNullOrEmpty @RequestParam String status,
+            @NotNullOrEmpty @PathVariable Long taskId) {
+        return ResponseEntity.ok(taskService.updateItemStatus(itemId, status, taskId));
+    }
+
 }

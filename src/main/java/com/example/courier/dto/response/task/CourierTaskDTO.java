@@ -14,6 +14,7 @@ public record CourierTaskDTO(
         DeliveryStatus deliveryStatus,
         LocalDateTime createdAt,
         LocalDateTime completedAt,
-        List<CourierTaskItemDTO> taskItemDTOS
+        List<CourierTaskItemDTO> taskItemDTOS,
+        int itemsCount
 ) implements TaskBase {
 }

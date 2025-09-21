@@ -1,8 +1,10 @@
 package com.example.courier.service.task.command;
 
 import com.example.courier.common.DeliveryStatus;
+import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
 import com.example.courier.domain.*;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CreateTaskDTO;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskRepository;
@@ -14,12 +16,12 @@ import com.example.courier.service.security.CurrentPersonService;
 import com.example.courier.service.task.TaskItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/** Command side service for mutating {@link Task} aggregates.
+ */
 @Service
 public class TaskCommandService {
     private final Logger logger = LoggerFactory.getLogger(TaskCommandService.class);
@@ -44,8 +46,13 @@ public class TaskCommandService {
         this.notificationService = notificationService;
     }
 
-
-    @Transactional
+    /**
+     * Creates a new task and its items for a courier.
+     *
+     * <p>Also transits parcels to delivery state if the task type is not {@code PICKUP}.
+     *
+     * @param dto task creation details
+     */
     public void initiateNewTask(CreateTaskDTO dto) {
         logger.info("Creating a task list for the courier: {}", dto.courierId());
 
@@ -66,7 +73,12 @@ public class TaskCommandService {
         repository.save(task);
     }
 
-    @Transactional
+    /**
+     * Cancels the given task and all its items.
+     *
+     * @param id task identifier
+     * @throws ResourceNotFoundException if no task is found
+     */
     public void cancel(Long id) {
         Task task = repository.findWithCourierItemsAndParcelsById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No task found with id: " + id));
@@ -77,8 +89,16 @@ public class TaskCommandService {
         repository.save(task);
     }
 
-    @Transactional
-    @PreAuthorize("hasRole('COURIER')")
+    /**
+     * Marks a courier as checked in for a task.
+     *
+     * <p>
+     *     Validates courier assignment and triggers a notification.
+     * </p>
+     *
+     * @param taskId task identifier
+     * @throws ResourceNotFoundException if no task found
+     */
     public void checkIn(Long taskId) {
         logger.info("Courier Trying to check in. Task ID: {}", taskId);
         Task task = repository.findWithRelationsById(taskId)
@@ -94,6 +114,14 @@ public class TaskCommandService {
         logger.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId,task.getCourier().getId());
     }
 
+    /**
+     * Changes the task status as an admin.
+     *
+     * @param taskId task identifier
+     * @param newStatus new status as string
+     * @throws ResourceNotFoundException if task is not found
+     * @throws IllegalArgumentException if task is not updatable for an admin
+     */
     public void changeStatus(Long taskId, String newStatus) {
         DeliveryStatus nStatus = DeliveryStatus.validateAndGetStatus(newStatus);
         if (!DeliveryStatus.isAdminUpdatable(nStatus)) {
@@ -107,6 +135,57 @@ public class TaskCommandService {
         logger.info("Task ID: {} status was successfully changed to: {}", task.getId(), nStatus);
 
         repository.save(task);
+    }
+
+    /**
+     * Removes a task item from a given task.
+     *
+     * @param taskId task identifier
+     * @param itemId item identifier
+     * @return response indicating success
+     * @throws ResourceNotFoundException if no task is found
+     */
+    public ApiResponseDTO removeTaskItemFromTask(Long taskId, Long itemId) {
+        Long adminId = currentPersonService.getCurrentPersonId();
+        Task task = repository.findWithDetailsById(taskId).orElseThrow(
+                () -> new ResourceNotFoundException("Tak not found"));
+
+        task.removeItem(itemId, adminId);
+
+        repository.save(task);
+        return new ApiResponseDTO("success", "Item was successfully removed");
+    }
+
+
+    /**
+     * Updates the status of a task item.
+     *
+     * <p>
+     *     Validates courier assignment unlesss the caller is admin.
+     * </p>
+     *
+     * @param itemId item identifier
+     * @param newStatus new status as a string
+     * @param taskId task identifier
+     * @return api response
+     * @throws ResourceNotFoundException if no task is found
+     */
+    public ApiResponseDTO updateTaskItemStatus(Long itemId, String newStatus, Long taskId) {
+        ParcelStatus status = ParcelStatus.valueOf(newStatus);
+        Long courierId = currentPersonService.getCurrentPersonId();
+
+        Task task = repository.findWithRelationsById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task was not found"));
+
+        if (!currentPersonService.isAdmin()) {
+            authorizationService.validateCourierTaskAssignment(task);
+        }
+
+        task.updateItemStatus(itemId, status, courierId);
+
+        repository.save(task);
+
+        return new ApiResponseDTO("success", "Task item status was changed successfully");
     }
 
     /* Helper methods

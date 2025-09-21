@@ -14,8 +14,7 @@ public class TaskSpecificationBuilder {
     }
 
     public Specification<Task> buildTaskSpecification(DeliveryTaskFilterDTO dto) {
-        return deliveryTaskSpecification.filterTasks(dto.courierId(), dto.taskListId(),
-                dto.taskType(), dto.deliveryStatus(), false);
+        return deliveryTaskSpecification.build(dto);
     }
 
     public Specification<Task> buildSpecificationCanBeCanceled(Long id) {

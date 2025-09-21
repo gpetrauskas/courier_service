@@ -1,201 +1,111 @@
 package com.example.courier.service.task;
 
-import com.example.courier.common.DeliveryStatus;
-import com.example.courier.common.NotificationTargetType;
-import com.example.courier.common.ParcelStatus;
 import com.example.courier.domain.*;
-import com.example.courier.dto.request.notification.NotificationRequestDTO;
+import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
-import com.example.courier.dto.response.task.AdminTaskDTO;
 import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.CreateTaskDTO;
 import com.example.courier.dto.PaginatedResponseDTO;
-import com.example.courier.dto.mapper.DeliveryTaskMapper;
 import com.example.courier.dto.response.task.TaskBase;
-import com.example.courier.exception.ResourceNotFoundException;
-import com.example.courier.exception.TaskNotCancelableException;
-import com.example.courier.repository.TaskRepository;
-import com.example.courier.service.notification.NotificationService;
-import com.example.courier.service.authorization.AuthorizationService;
-import com.example.courier.service.notification.NotificationTarget;
-import com.example.courier.service.order.query.OrderQueryService;
-import com.example.courier.service.parcel.ParcelService;
-import com.example.courier.service.person.PersonFacade;
-import com.example.courier.service.person.query.PersonLookupService;
-import com.example.courier.specification.task.TaskSpecificationBuilder;
-import com.example.courier.util.AuthUtils;
-import com.example.courier.util.PageableUtils;
-import com.example.courier.validation.task.TaskValidator;
+import com.example.courier.service.task.command.TaskCommandService;
+import com.example.courier.service.task.query.TaskQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
+/** Task service that is orchestrating task operations.
+ *
+ * <p>
+ *     Acts as the transactional boundary for task commands and queries,
+ *     delegating to {@link TaskCommandService} and {@link TaskQueryService}.
+ * </p>
+ */
 @PreAuthorize("hasRole('ADMIN')")
 @Service
 public class TaskService {
     private static final Logger log = LoggerFactory.getLogger(TaskService.class);
-    private final TaskRepository taskRepository;
-    private final DeliveryTaskMapper deliveryTaskMapper;
-    private final ParcelService parcelService;
-    private final PersonLookupService personLookupService;
-    private final OrderQueryService queryService;
-    private final TaskItemService taskItemService;
-    private final TaskSpecificationBuilder specificationBuilder;
-    private final AuthorizationService authorizationService;
-    private final TaskValidator taskValidator;
-    private final NotificationService notificationService;
 
-    public TaskService(TaskRepository taskRepository, DeliveryTaskMapper deliveryTaskMapper,
-                       ParcelService parcelService, PersonLookupService personLookupService, OrderQueryService queryService,
-                       TaskItemService taskItemService, TaskSpecificationBuilder specificationBuilder,
-                       AuthorizationService authorizationService, TaskValidator taskValidator,
-                       NotificationService notificationService) {
-        this.taskRepository = taskRepository;
-        this.deliveryTaskMapper = deliveryTaskMapper;
-        this.parcelService = parcelService;
-        this.personLookupService = personLookupService;
+    private final TaskCommandService commandService;
+    private final TaskQueryService queryService;
+
+    public TaskService(TaskCommandService commandService, TaskQueryService queryService) {
+        this.commandService = commandService;
         this.queryService = queryService;
-        this.taskItemService = taskItemService;
-        this.specificationBuilder = specificationBuilder;
-        this.authorizationService = authorizationService;
-        this.taskValidator = taskValidator;
-        this.notificationService = notificationService;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    /** Creates new delivery task and its items.
+     *
+     * <p> Delegates to {@link TaskCommandService#initiateNewTask(CreateTaskDTO)}. </p>
+     */
     @Transactional
     public void createNewDeliveryTask(CreateTaskDTO createTaskDTO) {
-        log.info("Creating new delivery task for courier {}", createTaskDTO.courierId());
-        Courier courier = personLookupService.fetchPersonByIdAndType(createTaskDTO.courierId(), Courier.class);
-
-        List<Parcel> parcels = parcelService.fetchParcelsByIdBatch(createTaskDTO.parcelsIds());
-        List<Order> orders = queryService.fetchAllByParcelDetails(parcels);
-
-        parcels.forEach(parcel -> {
-            if (parcel.getStatus() == ParcelStatus.PICKED_UP) {
-                parcel.transitionToDelivery();
-            }
-        });
-
-        taskValidator.validateCreation(createTaskDTO, courier, parcels);
-
-        Task task = new Task();
-        task.initiateTaskCreation(createTaskDTO, courier, AuthUtils.getAuthenticated(Admin.class));
-        task.addTaskItems(taskItemService.createTaskItems(parcels, orders, task));
-
-        courier.setHasActiveTask(true);
-
-        taskRepository.save(task);
+        commandService.initiateNewTask(createTaskDTO);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
+    /** Return paginated list of tasks matching the given filter.
+     *
+     * <p> Delegates to {@link TaskQueryService#getAllTasksList(DeliveryTaskFilterDTO)}. </p>
+     */
+    @Transactional(readOnly = true)
     public PaginatedResponseDTO<? extends TaskBase> getAllTaskLists(DeliveryTaskFilterDTO dto) {
-        Pageable pageable = PageableUtils.createPageable(dto.page(), dto.size(), dto.sortBy(), dto.direction().toString());
-        if (!AuthUtils.isAdmin()) {
-            return getCourierHistory(pageable);
-        }
-
-        Specification<Task> specification = specificationBuilder.buildTaskSpecification(dto);
-        Page<Task> taskPage = taskRepository.findAll(specification, pageable);
-
-        List<AdminTaskDTO> paginatedResponseDTO = taskPage.getContent().stream()
-                .map(deliveryTaskMapper::toDeliveryTaskDTO)
-                .toList();
-
-        return new PaginatedResponseDTO<>(paginatedResponseDTO, taskPage.getNumber(),
-                taskPage.getTotalElements(), taskPage.getTotalPages());
+        return queryService.getAllTasksList(dto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    /** Cancel task and its task items.
+     *
+     * <p> Delegates to {@link TaskCommandService#cancel(Long)}. </p>
+     */
+    @Transactional
     public void cancel(Long id) {
-        Specification<Task> specification = specificationBuilder.buildSpecificationCanBeCanceled(id);
-        Task task = taskRepository.findOne(specification)
-                .orElseThrow(() -> new ResourceNotFoundException("No such Task with id: " + id));
-
-        task.cancelItems();
-
-        if (!task.isAllItemsCanceled()) {
-            log.error("Task cannot be canceled because some items are still active. Task ID: {}", task.getId());
-            throw new TaskNotCancelableException("There are active items. Task cannot be canceled");
-        }
-
-        Long adminId = AuthUtils.getAuthenticatedPersonId();
-        task.cancel(adminId);
-
-        taskRepository.save(task);
+        commandService.cancel(id);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    /** Change task status.
+     *
+     * <p> Delegates to {@link TaskCommandService#changeStatus(Long, String)}. </p>
+     */
+    @Transactional
     public void changeTaskStatus(Long taskId, String newStatus) {
-        log.info("Changing tak {} status to {}", taskId, newStatus);
-        DeliveryStatus status = DeliveryStatus.valueOf(newStatus);
-        Task task = fetchTaskById(taskId);
-        taskValidator.validateAdminUpdatable(task);
-
-        if (status.equals(DeliveryStatus.COMPLETED)) {
-            task.completeTask();
-        } else if (status.equals(DeliveryStatus.CANCELED)) {
-           cancel(taskId);
-        } else {
-            throw new IllegalStateException("No such status.");
-        }
-
-        taskRepository.save(task);
+        commandService.changeStatus(taskId, newStatus);
     }
 
-    @PreAuthorize("hasRole('COURIER')")
+    /** Get couriers currently active tasks.
+     *
+     * <p> Delegates to {@link TaskQueryService#getCurrentCourierTask()}. </p>
+     */
+    @Transactional(readOnly = true)
     public List<CourierTaskDTO> getCourierCurrentTask() {
-        Long id = AuthUtils.getAuthenticatedPersonId();
-        Set<DeliveryStatus> currentStatuses = DeliveryStatus.currentStatuses();
-        List<Task> taskList = taskRepository.findByCourierIdAndDeliveryStatusIn(id, currentStatuses);
-
-        return taskList.stream()
-                .map(task -> deliveryTaskMapper.toCourierTaskDTO(task, task.getTaskType()))
-                .toList();
+        return queryService.getCurrentCourierTask();
     }
 
-    private PaginatedResponseDTO<CourierTaskDTO> getCourierHistory(Pageable pageable) {
-        Long courierId = AuthUtils.getAuthenticatedPersonId();
-        Page<Task> taskList = taskRepository.findByCourierIdAndDeliveryStatusIn(
-                courierId, DeliveryStatus.historicalStatuses(), pageable);
-
-        return new PaginatedResponseDTO<>(taskList.stream()
-                .map(task -> deliveryTaskMapper.toCourierTaskDTO(task, task.getTaskType()))
-                .toList(), taskList.getNumber(), taskList.getTotalElements(), taskList.getTotalPages());
-    }
-
-    @PreAuthorize("hasRole('COURIER')")
+    /** Check-in a courier.
+     *
+     * <p> Delegates to {@link TaskCommandService#checkIn(Long)}. </p>
+     * */
     @Transactional
     public void checkIn(Long taskId) {
-        log.info("Courier Trying to check in. Task ID: {}", taskId);
-        Task task = taskRepository.findWithRelationsById(taskId)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
-        log.info("authorizing task assignment to courier");
-        authorizationService.validateCourierTaskAssignment(task);
-        task.completeOnCheckIn();
-        taskRepository.save(task);
-
-        NotificationRequestDTO notificationMessage = new NotificationRequestDTO(
-                String.format("Courier %d CheckedIn", task.getCourier().getId()),
-                String.format("Courier checked in: Task ID = %d, Courier ID = %d", taskId,task.getCourier().getId()),
-                new NotificationTarget.BroadCast(NotificationTargetType.ADMIN)
-        );
-
-        notificationService.createNotification(notificationMessage);
-        log.info("Courier checked in: Task ID = {}, Courier ID = {}", taskId,task.getCourier().getId());
+        commandService.checkIn(taskId);
     }
 
-    private Task fetchTaskById(Long id) {
-        return taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task was not found with ID: " + id));
+    /** Removes an item from a task.
+     *
+     * <p> Delegates to {@link TaskCommandService#removeTaskItemFromTask(Long, Long)}. </p>
+     * */
+    @Transactional
+    public ApiResponseDTO removeItem(Long taskId, Long itemId) {
+        return commandService.removeTaskItemFromTask(taskId, itemId);
     }
 
+    /** Update item status.
+     *
+     * <p> Delegates to {@link TaskCommandService#updateTaskItemStatus(Long, String, Long)}. </p>
+     * */
+    @Transactional
+    public ApiResponseDTO updateItemStatus(Long itemId, String newStatus, Long taskId) {
+        return commandService.updateTaskItemStatus(itemId, newStatus, taskId);
+    }
 }
