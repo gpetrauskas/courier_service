@@ -2,9 +2,11 @@ package com.example.courier.domain;
 
 import com.example.courier.common.TicketPriority;
 import com.example.courier.common.TicketStatus;
+import com.example.courier.dto.request.ticket.TicketCreateRequestDTO;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.*;
 
 @Entity
 @Table(name = "tickets")
@@ -30,6 +32,9 @@ public class Ticket {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final Set<TicketComment> comments = new HashSet<>();
+
     private LocalDateTime updatedAt;
 
     @ManyToOne
@@ -40,7 +45,9 @@ public class Ticket {
     @JoinColumn(name = "assigned_to_id")
     private Person assignedTo;
 
-    public Ticket() {}
+    protected Ticket() {
+        this.status = TicketStatus.OPEN;
+    }
 
     public Long getId() {
         return id;
@@ -50,48 +57,24 @@ public class Ticket {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public TicketStatus getStatus() {
         return status;
     }
 
-    public void setStatus(TicketStatus status) {
-        this.status = status;
-    }
-
     public TicketPriority getPriority() {
         return priority;
-    }
-
-    public void setPriority(TicketPriority priority) {
-        this.priority = priority;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public Person getCreatedBy() {
@@ -99,6 +82,8 @@ public class Ticket {
     }
 
     public void setCreatedBy(Person createdBy) {
+        Objects.requireNonNull(createdBy, "user cannot be nul");
+
         this.createdBy = createdBy;
     }
 
@@ -108,5 +93,78 @@ public class Ticket {
 
     public void setAssignedTo(Person assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public Set<TicketComment> getComments() {
+        return comments;
+    }
+
+    private void attachComment(TicketComment comment) {
+        assertCommentAllowed();
+
+        this.comments.add(comment);
+        comment.setTicket(this);
+    }
+
+    public void removeComment(TicketComment comment) {
+        this.comments.remove(comment);
+        comment.setTicket(null);
+    }
+
+    public void assertCommentAllowed() {
+        if (this.getStatus().isClosed()) {
+            throw new IllegalStateException("Cannot comment on a closed ticket");
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public TicketComment addComment(Person author, String message) {
+        TicketComment ticketComment = new TicketComment();
+        ticketComment.setAuthor(author);
+        ticketComment.setMessage(message);
+        ticketComment.setCreatedAt(LocalDateTime.now());
+
+        this.updatedAt = LocalDateTime.now();
+
+        attachComment(ticketComment);
+        return ticketComment;
+    }
+
+    public static Ticket create(TicketCreateRequestDTO requestDTO, Person creator) {
+        Objects.requireNonNull(requestDTO, "Ticket creation dto cannot be null");
+        Objects.requireNonNull(creator);
+
+        Ticket ticket = new Ticket();
+        ticket.title = Objects.requireNonNull(requestDTO.title());
+        ticket.description = Objects.requireNonNull(requestDTO.description());
+        ticket.changePriority(requestDTO.priority());
+        ticket.createdBy = creator;
+
+        return ticket;
+    }
+
+    public void changeStatus(TicketStatus newStatus) {
+        if (!TicketStatus.isValidTransition(this.status, newStatus)) {
+            throw new IllegalStateException("Transition to " + newStatus + " is not valid");
+        }
+
+        this.status = newStatus;
+    }
+
+    public void changePriority(TicketPriority priority) {
+        if (!TicketPriority.isValidPriority(priority.name())) {
+            throw new IllegalStateException("Given priority status is not valid");
+        }
+
+        this.priority = priority;
     }
 }
