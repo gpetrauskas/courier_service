@@ -3,7 +3,6 @@ package com.example.courier.common;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public enum TicketStatus {
     OPEN,
@@ -18,13 +17,34 @@ public enum TicketStatus {
             CLOSED, Set.of()
     );
 
+    private static final Set<TicketStatus> CLOSED_STATUSES = Set.of(RESOLVED, CLOSED);
+
+    /**
+     * Checks if a transition from the current status to the proposed one is valid.
+     *
+     * @param current current status
+     * @param proposed a proposed status
+     * @return true if valid and false if not
+     */
     public static boolean isValidTransition(TicketStatus current, TicketStatus proposed) {
         return VALID_TRANSITIONS.getOrDefault(current, Set.of())
                 .contains(proposed);
     }
 
+    /**
+     * Checks if given string match any of enum name.
+     *
+     * @param status a status as a string
+     * @return true if string matches a valid status and false if not
+     */
     public static boolean isValidStatus(String status) {
         return Arrays.stream(TicketStatus.values())
                 .anyMatch(e -> e.name().equalsIgnoreCase(status));
+    }
+
+    /**
+     * Checks if a */
+    public boolean isClosed() {
+        return CLOSED_STATUSES.contains(this);
     }
 }
