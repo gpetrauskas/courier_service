@@ -4,6 +4,7 @@ import com.example.courier.domain.Address;
 import com.example.courier.domain.PaymentMethod;
 import com.example.courier.domain.Person;
 import com.example.courier.domain.Ticket;
+import com.example.courier.repository.projection.TicketAccessIdsProjection;
 import com.example.courier.service.security.CurrentPersonService;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,14 @@ public class DefaultPermissionService implements PermissionService {
     }
 
     @Override
+    public boolean hasTicketAccess(TicketAccessIdsProjection ids) {
+        return (currentPersonService.isAdmin()
+                || hasAccess(ids.getAssignedToId())
+                || hasAccess(ids.getCreatedById())
+        );
+    }
+
+    @Override
     public boolean hasAddressAccess(Person person, Address address) {
         return address.getUser().getId().equals(person.getId())
                 || person.getRole().equals("ADMIN");
@@ -31,6 +40,10 @@ public class DefaultPermissionService implements PermissionService {
     @Override
     public boolean hasPaymentMethodAccess(PaymentMethod paymentMethod) {
         return paymentMethod.getUser().getId().equals(currentUserId());
+    }
+
+    private boolean hasAccess(Long objectId) {
+        return currentUserId().equals(objectId);
     }
 
     private Long currentUserId() {
