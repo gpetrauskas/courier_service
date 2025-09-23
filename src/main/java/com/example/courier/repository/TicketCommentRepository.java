@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TicketCommentRepository extends JpaRepository<TicketComment, Long> {
-    Page<TicketComment> findByTicketIdOrderByCreatedAtAsc(Long ticketId, Pageable pageable);
+    Page<TicketComment> findByTicketId(Long ticketId, Pageable pageable);
 }

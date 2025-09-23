@@ -17,5 +17,5 @@ public interface TaskItemRepository extends JpaRepository<TaskItem, Long>, JpaSp
     Optional<TaskItem> findTaskItemWithTaskAndItemsById(@Param("itemId") Long itemId);
 
     @EntityGraph(attributePaths = {"task", "task.courier"})
-    Optional<TaskItem> findByIdWithTaskAndCourier(Long taskItemId);
+    Optional<TaskItem> findTaskItemWithTaskAndCourierById(Long taskItemId);
 }
