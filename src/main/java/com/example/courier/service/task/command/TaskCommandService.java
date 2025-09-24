@@ -124,9 +124,6 @@ public class TaskCommandService {
      */
     public void changeStatus(Long taskId, String newStatus) {
         DeliveryStatus nStatus = DeliveryStatus.validateAndGetStatus(newStatus);
-        if (!DeliveryStatus.isAdminUpdatable(nStatus)) {
-            throw new IllegalArgumentException("Task currently cannot be updated");
-        }
 
         Task task = repository.findWithCourierItemsAndParcelsById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task with ID " + taskId + " was not found"));

@@ -24,7 +24,7 @@ import java.util.List;
  *     delegating to {@link TaskCommandService} and {@link TaskQueryService}.
  * </p>
  */
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'COURIER')")
 @Service
 public class TaskService {
     private static final Logger log = LoggerFactory.getLogger(TaskService.class);

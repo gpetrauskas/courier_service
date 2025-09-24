@@ -19,7 +19,7 @@ public interface PersonMapper {
     CourierDTO toCourierDTO(Person person);
 
     @Mapping(target = "confirmedOrdersCount", source = "confirmedCount")
-    UserResponseDTO toUserResponseDTO(User person, int confirmedCount);
+    UserResponseDTO toUserResponseDTO(User person, Long confirmedCount);
 
     AdminProfileResponseDTO toAdminProfile(Person person);
 }

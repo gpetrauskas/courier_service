@@ -61,7 +61,7 @@ public class TaskItemCommandService {
      * @throws ResourceNotFoundException if task item is not found
      */
     public UpdateTaskItemNotesResponse updateNotes(UpdateTaskItemNotesRequest request, Long taskItemId) {
-        TaskItem item = repository.findByIdWithTaskAndCourier(taskItemId)
+        TaskItem item = repository.findTaskItemWithTaskAndCourierById(taskItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task item not found"));
 
         authorizationService.validateCourierTaskAssignmentByTaskItem(item);

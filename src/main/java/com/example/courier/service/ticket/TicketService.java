@@ -63,6 +63,7 @@ public interface TicketService {
      * @param ticketId a ticket identifier
      * @param currentPage the current page index
      * @param pageSize number of comments per page
+     * @return a paginated response of ticket comments dto
      * @throws ResourceNotFoundException if ticket was not found
      * @throws UnauthorizedAccessException if currently logged-in user has no access to given ticket
      */
