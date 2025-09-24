@@ -1,3 +1,4 @@
+/*
 package com.example.courier.common;
 
 public enum DeliveryMethodCategory {
@@ -6,3 +7,4 @@ public enum DeliveryMethodCategory {
     WEIGHT,
     PREFERENCE
 }
+*/

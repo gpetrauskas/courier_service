@@ -1,21 +1,21 @@
 package com.example.courier.common;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.example.courier.domain.PaymentAttempt;
+import com.example.courier.domain.Payment;
 
+/**
+ * Represents a current status of a {@link PaymentAttempt}.
+ *
+ * <ul>
+ *     <li>{@code PENDING} - initial status after the attempt has been created</li>
+ *     <li>{@code FAILED} - the attempt was processed but failed</li>
+ *     <li>{@code SUCCESS} - the attempt was processed successfully</li>
+ * </ul>
+ *
+ * <p>This enum is used to track the lifecycle of payment attempts for a {@link Payment}</p>
+ */
 public enum PaymentAttemptStatus {
     PENDING,
     FAILED,
     SUCCESS;
-
-    private static final Set<String> STATUS_NAMES = Arrays.stream(values())
-            .map(Enum::name)
-            .collect(Collectors.toSet());
-
-    private static void isValid(String status) {
-        if (status != null && !STATUS_NAMES.contains(status)) {
-            throw new IllegalArgumentException("invalid payment attempt status");
-        }
-    }
 }

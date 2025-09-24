@@ -1,21 +1,19 @@
 package com.example.courier.common;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.example.courier.domain.PaymentAttempt;
 
+
+/**
+ * Represents type of payment method.
+ *
+ * <p>Each {@link PaymentAttempt} also records the {@link ProviderType} user for that attempt</p>
+ * <ul>
+ *     <li>{@code CREDIT_CARD} - user pays via credit card</li>
+ *     <li>{@code PAYPAL} - //user pays via paypal (not implemented yet)</li>
+ *     <li>{@code UNKNOWN} - used for payment attempt if it fails before knowing payment type</li>
+ * </ul>*/
 public enum ProviderType {
     CREDIT_CARD,
     PAYPAL,
     UNKNOWN;
-
-    private static final Set<String> PROVIDER_TYPES = Arrays.stream(values())
-            .map(Enum::name)
-            .collect(Collectors.toSet());
-
-    private static void isTypeSupported(String type) {
-        if (type != null && !PROVIDER_TYPES.contains(type)) {
-            throw new IllegalArgumentException("Provider type is not supported");
-        }
-    }
 }

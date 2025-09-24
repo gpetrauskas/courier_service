@@ -3,7 +3,17 @@ package com.example.courier.common;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import com.example.courier.domain.Ticket;
 
+/**
+ * Represents status of a {@link Ticket}.
+ *
+ * <ul>
+ *     <li>{@code OPEN} - initial status after a ticket has been created</li>
+ *     <li>{@code IN_PROGRESS} - ticket is being worked on</li>
+ *     <li>{@code RESOLVED} - ticket issues has been resolved</li>
+ *     <li>{@code CLOSED} - ticket is closed</li>
+ * </ul>*/
 public enum TicketStatus {
     OPEN,
     IN_PROGRESS,
