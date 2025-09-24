@@ -40,13 +40,9 @@ public class ParcelService {
                 ));
     }
 
-    public List<Parcel> fetchParcelsByIdBatch(List<Long> ids) {
-        List<Parcel> parcels = parcelRepository.findAllById(ids);
-        if (parcels.isEmpty()) {
-            return List.of();
-        }
-
-        return parcels;
+    public ParcelStatus getParcelStatusByTrackingNumber(String trackingNumber) {
+        return parcelRepository.findStatusByTrackingNumber(trackingNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Parcel with such tracking number was not found"));
     }
 
     /* Helper methods
