@@ -1,38 +1,33 @@
 package com.example.courier.config;
 
 import com.example.courier.service.auth.JwtService;
-import com.example.courier.service.person.PersonFacade;
 import com.example.courier.service.person.query.PersonLookupService;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableMethodSecurity
-public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
+public class SecurityConfig {
 
-    @Autowired
     private final JwtService jwtService;
-    @Autowired
     private final PersonLookupService personLookupService;
-    @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
-    public SecurityConfig(JwtService jwtService, PersonLookupService personLookupService) {
+    public SecurityConfig(JwtService jwtService, PersonLookupService personLookupService,
+                          CustomAccessDeniedHandler customAccessDeniedHandler, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.jwtService = jwtService;
         this.personLookupService = personLookupService;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     @Bean
@@ -42,14 +37,9 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth ->
                         auth
-                                .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/courier/components/**", "/courier/**").permitAll()
-                                .requestMatchers("/*", "/testpage/**").permitAll()
-                                .requestMatchers("/api/registration/register", "/api/auth/login", "/api/parcel/**", "/api/notifications/**",
-                                        "/api/orders/trackOrder/{id}", "/api/orders/**", "/api/person/**",
-                                        "/api/paymentMethods/**", "/api/auth/cc/*", "/api/addresses/**").permitAll()
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/registration/registerCourier").hasRole("ADMIN")
-                                .requestMatchers("/api/courier/**", "/api/deliveryTaskManagement/").hasAnyRole("COURIER", "ADMIN")
+                                .requestMatchers(publicUrls()).permitAll()
+                                .requestMatchers(adminUrls()).hasRole("ADMIN")
+                                .requestMatchers(courierUrls()).hasAnyRole("COURIER", "ADMIN")
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, personLookupService),
@@ -67,5 +57,30 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
                         })
                 );
         return httpSecurity.build();
+    }
+
+    /* Helper methods
+    */
+
+    private String[] publicUrls() {
+        return new String[] {
+                "/api/registration/register",
+                "/api/auth/login",
+                "/api/parcel/**",
+                "/api/notifications/**",
+                "/api/orders/**",
+                "/api/person/**",
+                "/api/paymentMethods/**",
+                "/api/auth/cc/*",
+                "/api/addresses/**"
+        };
+    }
+
+    private String[] adminUrls() {
+        return new String[] { "/api/admin/**", "/api/registration/registerCourier" };
+    }
+
+    private String[] courierUrls() {
+        return new String[] { "/api/courier/**", "/api/deliveryTaskManagement/*" };
     }
 }
