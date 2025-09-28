@@ -1,6 +1,7 @@
 package com.example.courier.domain;
 
 import com.example.courier.common.ParcelStatus;
+import com.example.courier.common.TaskType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -121,7 +122,7 @@ public class Parcel {
     }
 
     public void transitionToDelivery() {
-        if (this.status != ParcelStatus.PICKED_UP) {
+        if (!ParcelStatus.PICKED_UP.equals(this.status)) {
             throw new IllegalStateException(
                     String.format("Cannot transition to DELIVERY from %s", this.status)
             );
@@ -130,4 +131,9 @@ public class Parcel {
         this.status = ParcelStatus.DELIVERING;
     }
 
+    public void transitionIfNeeded(TaskType taskType) {
+        if (!taskType.equals(TaskType.PICKUP)) {
+            transitionToDelivery();
+        }
+    }
 }

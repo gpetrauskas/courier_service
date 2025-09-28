@@ -1,6 +1,5 @@
 package com.example.courier.domain;
 
-import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -124,19 +123,18 @@ public class TaskItem {
         this.parcel.unassign();
     }
 
-    public static TaskItem create(Parcel parcel, Order order, Task task) {
-        Objects.requireNonNull(parcel);
+    public static TaskItem create(Order order, Task task) {
         Objects.requireNonNull(order);
         Objects.requireNonNull(task);
 
         TaskItem taskItem = new TaskItem();
-        taskItem.parcel = parcel;
-        taskItem.status = parcel.getStatus();
+        taskItem.parcel = order.getParcelDetails();
+        taskItem.status = order.getParcelDetails().getStatus();
         taskItem.senderAddress = order.getSenderAddress();
         taskItem.recipientAddress = order.getRecipientAddress();
         taskItem.deliveryPreference = order.getPreference().getDescription();
         taskItem.task = task;
-        parcel.assign();
+        order.getParcelDetails().assign();
 
         return taskItem;
     }

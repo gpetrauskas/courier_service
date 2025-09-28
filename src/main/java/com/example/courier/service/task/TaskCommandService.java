@@ -1,11 +1,12 @@
-package com.example.courier.service.task.command;
+package com.example.courier.service.task;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
-import com.example.courier.common.TaskType;
 import com.example.courier.domain.*;
 import com.example.courier.dto.ApiResponseDTO;
 import com.example.courier.dto.CreateTaskDTO;
+import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
+import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.repository.TaskRepository;
 import com.example.courier.service.authorization.AuthorizationService;
@@ -13,7 +14,6 @@ import com.example.courier.service.notification.NotificationService;
 import com.example.courier.service.order.query.OrderQueryService;
 import com.example.courier.service.person.query.PersonLookupService;
 import com.example.courier.service.security.CurrentPersonService;
-import com.example.courier.service.task.TaskItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,19 +28,18 @@ public class TaskCommandService {
     private final PersonLookupService personLookupService;
     private final TaskRepository repository;
     private final OrderQueryService orderQueryService;
-    private final TaskItemService taskItemService;
     private final CurrentPersonService currentPersonService;
     private final AuthorizationService authorizationService;
     private final NotificationService notificationService;
 
 
     public TaskCommandService(PersonLookupService personLookupService, TaskRepository repository,
-                              OrderQueryService orderQueryService, TaskItemService taskItemService, CurrentPersonService currentPersonService,
-                              AuthorizationService authorizationService, NotificationService notificationService) {
+                              OrderQueryService orderQueryService, CurrentPersonService currentPersonService,
+                              AuthorizationService authorizationService, NotificationService notificationService
+    ) {
         this.personLookupService = personLookupService;
         this.repository = repository;
         this.orderQueryService = orderQueryService;
-        this.taskItemService = taskItemService;
         this.currentPersonService = currentPersonService;
         this.authorizationService = authorizationService;
         this.notificationService = notificationService;
@@ -57,18 +56,12 @@ public class TaskCommandService {
         logger.info("Creating a task list for the courier: {}", dto.courierId());
 
         Courier courier = personLookupService.fetchPersonByIdAndType(dto.courierId(), Courier.class);
-        courier.activateTask();
         Admin admin = currentPersonService.getCurrentPersonAs(Admin.class);
-
-        Task task = Task.create(dto.taskType(), courier, admin);
-
         List<Order> orderListWithParcelDetails = orderQueryService.getAllOrdersWithParcelByParcelIds(dto.parcelsIds());
-        if (task.getTaskType() != TaskType.PICKUP) {
-            orderListWithParcelDetails.forEach(o -> o.getParcelDetails().transitionToDelivery());
-        }
 
-        List<TaskItem> taskItems = taskItemService.createTaskItems(orderListWithParcelDetails, task);
-        task.addTaskItems(taskItems);
+        courier.activateTask();
+
+        Task task = Task.create(dto.taskType(), courier, admin, orderListWithParcelDetails);
 
         repository.save(task);
     }
@@ -183,6 +176,29 @@ public class TaskCommandService {
         repository.save(task);
 
         return new ApiResponseDTO("success", "Task item status was changed successfully");
+    }
+
+    /**
+     * Adds a note to the selected {@link TaskItem} within a {@link Task}.
+     *
+     * <p>Performs validation to make use the current user is assigned to the task.</p>
+     *
+     * @param request contains a note
+     * @param itemId identifier of task item
+     * @throws ResourceNotFoundException if task is not found
+     * @throws IllegalArgumentException if note is invalid or in the final state
+     */
+    public UpdateTaskItemNotesResponse addItemNote(UpdateTaskItemNotesRequest request, Long itemId) {
+        Task task = repository.findTaskByItemIdWithItems(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task was not found"));
+
+        authorizationService.validateCourierTaskAssignment(task);
+        task.addTaskItemNote(request.note(), itemId);
+        logger.info("Note was added to item: {} in a task: {}", itemId, task.getId());
+
+        repository.save(task);
+
+        return new UpdateTaskItemNotesResponse("Note was added successfully.", itemId);
     }
 
     /* Helper methods

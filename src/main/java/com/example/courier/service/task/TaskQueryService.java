@@ -1,4 +1,4 @@
-package com.example.courier.service.task.query;
+package com.example.courier.service.task;
 
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.domain.Task;

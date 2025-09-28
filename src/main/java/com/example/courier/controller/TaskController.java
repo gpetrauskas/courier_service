@@ -1,10 +1,13 @@
 package com.example.courier.controller;
 
 import com.example.courier.dto.*;
+import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
 import com.example.courier.dto.request.task.DeliveryTaskFilterDTO;
+import com.example.courier.dto.response.UpdateTaskItemNotesResponse;
 import com.example.courier.dto.response.task.CourierTaskDTO;
 import com.example.courier.dto.response.task.TaskBase;
-import com.example.courier.service.task.TaskService;
+import com.example.courier.service.task.TaskCommandService;
+import com.example.courier.service.task.TaskQueryService;
 import com.example.courier.validation.shared.NotNullOrEmpty;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -19,18 +22,20 @@ import java.util.List;
 @RequestMapping("/api/deliveryTaskManagement")
 public class TaskController {
 
-    private final TaskService taskService;
+    private final TaskCommandService commandService;
+    private final TaskQueryService queryService;
     private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
 
-    public TaskController(TaskService taskService) {
-        this.taskService = taskService;
+    public TaskController(TaskCommandService commandService, TaskQueryService queryService) {
+        this.commandService = commandService;
+        this.queryService = queryService;
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseDTO> createNewList(@RequestBody @Valid CreateTaskDTO createTaskDTO) {
         logger.info("check {} and {}", createTaskDTO.courierId(), createTaskDTO.adminId());
-        taskService.createNewDeliveryTask(createTaskDTO);
+        commandService.initiateNewTask(createTaskDTO);
         return ResponseEntity.ok(new ApiResponseDTO("success", "Delivery task was successfully created"));
     }
 
@@ -40,7 +45,7 @@ public class TaskController {
             @ModelAttribute DeliveryTaskFilterDTO filterDTO
     ) {
         logger.info("fetching {}", filterDTO);
-        PaginatedResponseDTO<? extends TaskBase> list = taskService.getAllTaskLists(filterDTO);
+        PaginatedResponseDTO<? extends TaskBase> list = queryService.getAllTasksList(filterDTO);
 
         return ResponseEntity.ok(list);
     }
@@ -48,7 +53,7 @@ public class TaskController {
     @PostMapping("/cancel/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponseDTO> cancel(@PathVariable Long id) {
-        taskService.cancel(id);
+        commandService.cancel(id);
         return ResponseEntity.ok(new ApiResponseDTO("success", "Task was successfully canceled. IDL " + id));
     }
 
@@ -58,7 +63,7 @@ public class TaskController {
             @PathVariable Long taskId,
             @RequestBody String newStatus
     ) {
-        taskService.changeTaskStatus(taskId, newStatus);
+        commandService.changeStatus(taskId, newStatus);
         return ResponseEntity.ok(new ApiResponseDTO("success", "Status for Task ID: " + taskId +
                 " was successfully changed to: " + newStatus));
     }
@@ -66,7 +71,7 @@ public class TaskController {
     @GetMapping("/current")
     @PreAuthorize("hasRole('COURIER')")
     public ResponseEntity<List<CourierTaskDTO>> getCurrentTask() {
-        List<CourierTaskDTO> taskDTO = taskService.getCourierCurrentTask();
+        List<CourierTaskDTO> taskDTO = queryService.getCurrentCourierTask();
         return ResponseEntity.ok(taskDTO);
     }
 
@@ -74,7 +79,7 @@ public class TaskController {
     @PreAuthorize("hasRole('COURIER')")
     public ResponseEntity<ApiResponseDTO> checkIn(@PathVariable Long taskId) {
         logger.info("im here??");
-        taskService.checkIn(taskId);
+        commandService.checkIn(taskId);
         return ResponseEntity.ok(new ApiResponseDTO("success", String.format("Courier successfully" +
                 " check-in with task %s", taskId)));
     }
@@ -84,7 +89,7 @@ public class TaskController {
     public ResponseEntity<ApiResponseDTO> removeItem(
             @PathVariable @NotNullOrEmpty(message = "Task id cannot be empty.") Long taskId,
             @PathVariable @NotNullOrEmpty(message = "Task id cannot be empty.") Long itemId) {
-        return ResponseEntity.ok(taskService.removeItem(taskId, itemId));
+        return ResponseEntity.ok(commandService.removeTaskItemFromTask(taskId, itemId));
     }
 
     @PostMapping("/{taskId}/updateItemStatus/{itemId}")
@@ -93,7 +98,15 @@ public class TaskController {
             @NotNullOrEmpty @PathVariable Long itemId,
             @NotNullOrEmpty @RequestParam String status,
             @NotNullOrEmpty @PathVariable Long taskId) {
-        return ResponseEntity.ok(taskService.updateItemStatus(itemId, status, taskId));
+        return ResponseEntity.ok(commandService.updateTaskItemStatus(itemId, status, taskId));
+    }
+
+    @PostMapping("/updateNote/{taskItemId}")
+    @PreAuthorize("hasRole('COURIER')")
+    public ResponseEntity<UpdateTaskItemNotesResponse> addTaskItemNote(
+            Long taskItemId,
+            UpdateTaskItemNotesRequest request) {
+        return ResponseEntity.ok(commandService.addItemNote(request, taskItemId));
     }
 
 }

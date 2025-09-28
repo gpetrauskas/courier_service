@@ -4,6 +4,7 @@ package com.example.courier.domain;
 import com.example.courier.common.DeliveryStatus;
 import com.example.courier.common.ParcelStatus;
 import com.example.courier.common.TaskType;
+import com.example.courier.dto.request.UpdateTaskItemNotesRequest;
 import com.example.courier.exception.ResourceNotFoundException;
 import com.example.courier.exception.TaskNotCancelableException;
 import jakarta.persistence.*;
@@ -230,6 +231,11 @@ public class Task {
         this.items.add(item);
     }
 
+    public void addTaskItemNote(String note, Long itemId) {
+        TaskItem item = findItem(itemId);
+        item.addNote(note);
+    }
+
     public void completeTask() {
         if (this.getItems().stream().anyMatch(item -> !item.getStatus().isFinalState())) {
             throw new IllegalArgumentException("All items must be in final state;");
@@ -249,16 +255,20 @@ public class Task {
         }
     }
 
-    public static Task create(String taskType, Courier courier, Admin admin) {
-        Objects.requireNonNull(taskType);
-        Objects.requireNonNull(courier);
-        Objects.requireNonNull(admin);
-
+    public static Task create(String taskType, Courier courier, Admin admin, List<Order> orders) {
         Task task = new Task();
         task.setCourier(courier);
         task.setCreatedBy(admin);
         task.setTaskType(TaskType.fromString(taskType));
         task.setDeliveryStatus(DeliveryStatus.IN_PROGRESS);
+
+        for (Order order : orders) {
+            Parcel parcel = order.getParcelDetails();
+            parcel.transitionIfNeeded(task.taskType);
+
+            TaskItem taskItem = TaskItem.create(order, task);
+            task.addTaskItem(taskItem);
+        }
 
         return task;
     }
