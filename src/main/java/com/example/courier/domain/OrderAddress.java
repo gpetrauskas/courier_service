@@ -4,13 +4,19 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "order_addresses")
-public class OrderAddress extends BaseAddress {
+public class OrderAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    public OrderAddress() {
+    @Embedded
+    private AddressDetails details;
+
+    protected OrderAddress() {}
+
+    public OrderAddress(AddressDetails details) {
+        this.details = details;
     }
 
     public Long getId() {
@@ -19,5 +25,9 @@ public class OrderAddress extends BaseAddress {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public AddressDetails getDetails() {
+        return details;
     }
 }

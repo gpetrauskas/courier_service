@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "addresses")
-public class Address extends BaseAddress {
+public class Address {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,15 +16,18 @@ public class Address extends BaseAddress {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Address() {
+    @Embedded
+    private AddressDetails details;
+
+    protected Address() {}
+
+    public Address(User user, AddressDetails details) {
+        this.user = user;
+        this.details = details;
     }
 
     public User getUser() {
         return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public Long getId() {
@@ -33,5 +36,13 @@ public class Address extends BaseAddress {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public AddressDetails getDetails() {
+        return details;
+    }
+
+    public void updateAddress(AddressDetails details) {
+        this.details = details;
     }
 }
