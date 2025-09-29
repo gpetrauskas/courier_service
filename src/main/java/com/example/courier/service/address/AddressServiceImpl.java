@@ -112,7 +112,9 @@ public class AddressServiceImpl implements AddressService {
         Address address = addressRepository.findByIdAndUserId(dto.id(), user.getId())
                 .orElseThrow(() -> new UserAddressMismatchException("Address not found or not owned by user"));
 
-        AddressDetails details = addressMapper.updateFromDTOAndEntity(address, dto);
+        AddressDetails details = addressMapper.toAddressDetails(dto);
+        address.updateAddress(details);
+        
         return new OrderAddress(details);
     }
 
