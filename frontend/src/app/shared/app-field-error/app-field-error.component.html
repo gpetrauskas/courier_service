@@ -1,0 +1,13 @@
+<div class="error" *ngIf="control && control.touched && control.invalid">
+  <span *ngIf="control.errors?.['required']">
+    This field is required
+  </span>
+
+  <span *ngIf="control.errors?.['email']">
+    Invalid email
+  </span>
+
+  <span *ngIf="control.errors?.['pattern']">
+    Invalid format
+  </span>
+</div>

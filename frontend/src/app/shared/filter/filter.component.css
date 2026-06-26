@@ -1,0 +1,74 @@
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f7f4f1;
+  border: 2px solid #b8a89e;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filters label {
+  font-size: 12px;
+  color: #4d4d4d;
+  margin-right: 5px;
+}
+
+.filters input[type="text"],
+.filters select {
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 2px solid #8b7a6b;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #3b3b3b;
+  outline: none;
+  max-width: 150px;
+}
+
+.filters input[type="text"]:focus,
+.filters select:focus {
+  border-color: #4d4d4d;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.filters button {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #3b3b3b;
+  background-color: #d3c2b2;
+  border: 2px solid #8b7a6b;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.filters button:hover {
+  background-color: #c0af9e;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filters p {
+  margin: 0 5px;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filters label,
+  .filters input[type="text"],
+  .filters select,
+  .filters button {
+    width: 100%;
+  }
+
+  .filters p {
+    display: show;
+  }
+}

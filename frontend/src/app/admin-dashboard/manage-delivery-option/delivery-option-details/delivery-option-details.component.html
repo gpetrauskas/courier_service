@@ -1,0 +1,23 @@
+<div *ngIf="preference" class="delivery-option-details">
+  <div class="grid-container">
+    <div class="grid-item">
+      <div class="option-info">
+        <h4>Pricing Option</h4>
+
+        <p><strong>Option ID:</strong> {{ preference.id }}</p>
+        <label><strong>Name:</strong></label>
+        <input [(ngModel)]="preference.name">
+        <label><strong>Description:</strong></label>
+        <input [(ngModel)]="preference.description">
+        <label><strong>Price:</strong></label>
+        <input [(ngModel)]="preference.price">
+        <button (click)="saveOption()" class="save-btn">Save</button>
+        <button (click)="cancel()" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!preference">
+  <p>No delivery option found</p>
+</div>

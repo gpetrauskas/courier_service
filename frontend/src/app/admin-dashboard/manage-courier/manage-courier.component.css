@@ -1,0 +1,16 @@
+.manage-courier-nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.manage-courier-nav ul li a {
+  text-decorations: none;
+  color: #333;
+}
+
+.manage-courier-nav ul li a.active {
+  font-weight: bold;
+  color: #007bff;
+}

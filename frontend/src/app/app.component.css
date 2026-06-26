@@ -1,0 +1,10 @@
+main {
+  padding-top: 4rem;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  main {
+    padding-top: 3rem;
+  }
+}

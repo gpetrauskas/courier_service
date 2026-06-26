@@ -1,0 +1,6 @@
+<div class="pagination-control">
+  <button (click)="previousPage()" [disabled]="currentPage < 1">Previous</button>
+  <p>Page: {{ currentPage + 1 }} / {{ totalPages }}</p>
+  <input type="number" [(ngModel)]="inputPageSize" (change)="onPageSizeChange()" [min]="1" [max]="totalItems">
+  <button (click)="nextPage()" [disabled]="currentPage + 1 >= totalPages">Next</button>
+</div>

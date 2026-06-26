@@ -1,0 +1,42 @@
+<div class="dashboard-dashboard">
+
+  <nav class="tab-group" *ngIf="activeTabGroup === 'myAccount'">
+    <ul>
+      <li><a routerLink="./test" routerLinkActive="active">Payment Methods</a></li>
+      <li><a routerLink="address" routerLinkActive="active">Addresses</a></li>
+    </ul>
+  </nav>
+
+  <nav class="tab-group" *ngIf="activeTabGroup === 'settings'">
+    <ul>
+      <li><a routerLink="account-settings/change-password" routerLinkActive="active">Change Password</a></li>
+      <li><a routerLink="account-settings/edit-info" routerLinkActive="active">Edit Info</a></li>
+    </ul>
+  </nav>
+
+  <nav class="tab-group" *ngIf="activeTabGroup === 'orderDetails'">
+    <ul>
+      <li><a routerLink="user-orders" routerLinkActive="active">Orders</a></li>
+    </ul>
+  </nav>
+
+  <nav class="tab-group" *ngIf="activeTabGroup === 'ticketManage'">
+    <ul>
+      <li><a routerLink="ticket/create-ticket" routerLinkActive="active">Create Ticket</a></li>
+      <li><a routerLink="ticket/my-tickets" routerLinkActive="active">My Tickets</a></li>
+    </ul>
+  </nav>
+
+
+  <div class="main-content">
+    <div class="dashboard-content">
+      <router-outlet (activate)="handleActivate($event)"></router-outlet>
+    </div>
+    <div class="payment-section" *ngIf="showPaymentSection">
+      <app-payment-form
+        [paymentInfo]="paymentInfo"
+        [orderId]="orderId"
+      ></app-payment-form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+<div class="address-section">
+
+  <div *ngIf="hasAddress; else noAddress">
+    <div class="address-content" *ngFor="let address of savedUserAddresses" (click)="toggleAddressEdit(address.id)">
+      <div class="address-header">
+        <p>
+          <strong>Address:</strong>
+          {{ address.street }}
+          {{ address.houseNumber }}<span *ngIf="address.flatNumber">-{{ address.flatNumber }}</span>,
+          {{ address.postCode }},
+          {{ address.city }}
+        </p>
+      </div>
+      <div class="address-edit-dropdown" *ngIf="activeDropdownId === address.id" (click)="$event.stopPropagation()">
+
+        <!-- address -->
+        <div class="form-container">
+          <form [formGroup]="addressForm" class="address-form">
+            <div>
+              <label for="street">Street:</label>
+              <input type="text" id="street" formControlName="street">
+              <div *ngIf="addressForm.get('street')?.invalid && addressForm.get('street')?.touched">
+                Street is required
+              </div>
+            </div>
+            <div>
+              <label for="houseNumber">House Number:</label>
+              <input type="text" id="houseNumber" formControlName="houseNumber">
+              <div *ngIf="addressForm.get('houseNumber')?.invalid && addressForm.get('houseNumber')?.touched">
+                House number is required
+              </div>
+            </div>
+            <div>
+              <label for="flatNumber">Flat Number:</label>
+              <input type="text" id="flatNumber" formControlName="flatNumber">
+            </div>
+            <div>
+              <label for="postCode">Post Code:</label>
+              <input type="text" id="postCode" formControlName="postCode">
+              <div *ngIf="addressForm.get('postCode')?.invalid && addressForm.get('postCode')?.touched">
+                Post code is required and must be 5 digits
+              </div>
+            </div>
+            <div>
+              <label for="city">City:</label>
+              <input type="text" id="city" formControlName="city">
+              <div *ngIf="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+                City is required
+              </div>
+            </div>
+
+            <!-- contact -->
+            <div class="address-contacts">
+              <div>
+                <label for="addressContactName">Name:</label>
+                <input type="text" id="addressContactName" formControlName="name">
+                <div *ngIf="addressForm.get('name')?.invalid && addressForm.get('name')?.touched">
+                  Name is required
+                </div>
+              </div>
+              <div>
+                <label for="addressContactPhone">Phone Number:</label>
+                <input type="text" id="addressContactPhone" formControlName="phoneNumber">
+                <div *ngIf="addressForm.get('phoneNumber')?.invalid && addressForm.get('phoneNumber')?.touched">
+                  Phone number is required and must be 10 digits
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="button-container">
+          <button type="submit" (click)="saveAddress(address.id)">Save</button>
+          <button type="button" (click)="openConfirmDialog(address.id)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noAddress>
+    <p>No address was found.</p>
+  </ng-template>
+
+  <app-confirmation-dialog
+  [isVisible]="showConfirmDialog"
+  [itemName]="addressToDeleteName"
+  [itemType]="'address'"
+  (confirmed)="onDeleteConfirmed()"
+  (canceled)="onDeleteCanceled()">
+  </app-confirmation-dialog>
+</div>

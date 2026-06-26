@@ -1,0 +1,35 @@
+<div class="order-review">
+  <h1>Order Review</h1>
+
+  <div class="addresses">
+    <div class="address">
+      <p class="section-title">Sender Address:</p>
+      <p>{{ orderData.senderAddress.street }} {{ orderData.senderAddress.houseNumber }}<span *ngIf="orderData.senderAddress.flatNumber"> - {{ orderData.senderAddress.flatNumber }}</span></p>
+      <p>{{ orderData.senderAddress.city }} {{ orderData.senderAddress.postCode }}</p>
+      <p>{{ orderData.senderAddress.name }}, {{ orderData.senderAddress.phoneNumber }}</p>
+    </div>
+
+    <div class="address">
+      <p class="section-title">Recipient Address:</p>
+      <p>{{ orderData.recipientAddress.street }} {{ orderData.recipientAddress.houseNumber }}<span *ngIf="orderData.recipientAddress.flatNumber"> - {{ orderData.recipientAddress.flatNumber }}</span></p>
+      <p>{{ orderData.recipientAddress.city }} {{ orderData.recipientAddress.postCode }}</p>
+      <p>{{ orderData.recipientAddress.name }}, {{ orderData.recipientAddress.phoneNumber }}</p>
+    </div>
+  </div>
+
+  <div class="package-details">
+    <p class="section-title">Package Info:</p>
+    <p>{{ selectedWeightOption?.description }} - €{{ selectedWeightOption?.price }}</p>
+    <p>{{ selectedSizeOption?.description }} - €{{ selectedSizeOption?.price }}</p>
+    <p>Contents: {{ orderData.parcelDetails.contents }}</p>
+  </div>
+
+  <div class="delivery-preferences">
+    <p class="section-title">Delivery Preferences:</p>
+    <p>{{ selectedPreferenceOption?.description }} - €{{ selectedPreferenceOption?.price }}</p>
+  </div>
+
+  <button *ngIf="alert$ | async as alert" (click)="confirmOrder()"
+          [disabled]="alert.isLoading">
+          {{ alert.isLoading ? 'Processing...' : 'Confirm Order' }}</button>
+</div>

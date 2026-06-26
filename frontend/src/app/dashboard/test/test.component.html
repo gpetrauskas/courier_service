@@ -1,0 +1,31 @@
+<div>
+  <div *ngIf="paymentsFound else noPayments">
+    <ul class="payment-list">
+      <ng-container *ngFor="let savedPayment of savedPaymentMethods">
+        <li class="payment-item cc" *ngIf="savedPayment.type === 'CREDIT_CARD'">
+        <div class="card-details">
+          <p><strong>Card Number Ends with:</strong> {{ savedPayment.last4 }}</p>
+        </div>
+          <button class="delete-button" (click)="openConfirmDialog(savedPayment)">Delete Card</button>
+        </li>
+        <li class="pp" *ngIf="savedPayment.type == 'PAYPAL'">
+          <div class="card-details">
+            <p><strong>PayPal:</strong> {{ savedPayment.ppEmail }}</p>
+          </div>
+          <button class="delete-button" (click)="openConfirmDialog(savedPayment)">Delete Card</button>
+        </li>
+      </ng-container>
+    </ul>
+  </div>
+  <ng-template #noPayments>
+    <p>No saved payment methods found.</p>
+  </ng-template>
+
+  <app-confirmation-dialog
+    [isVisible]="showConfirmDialog"
+    [itemType]="methodToDeleteType"
+    [itemName]="methodToDeleteName"
+    (confirmed)="onDeleteConfirmed()"
+    (canceled)="onDeleteCanceled()">
+  </app-confirmation-dialog>
+</div>

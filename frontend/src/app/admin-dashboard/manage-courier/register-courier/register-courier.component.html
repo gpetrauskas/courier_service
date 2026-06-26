@@ -1,0 +1,22 @@
+<div class="courier-register">
+  <h2>Register Courier</h2>
+  <form [formGroup]="courierForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="name">Courier Name</label>
+      <input type="text" id="name" formControlName="name" placeholder="Enter courier name" required>
+    </div>
+  <div>
+      <label for="email">Courier Email</label>
+      <input type="email" id="email" formControlName="email" placeholder="Enter email address" required>
+  </div>
+  <div>
+      <label for="password">Courier Password</label>
+      <input type="password" id="password" formControlName="password" placeholder="Enter password" required>
+  </div>
+  <div>
+      <label for="passwordConfirm">Confirm Password</label>
+      <input type="password" id="passwordConfirm" formControlName="passwordConfirm" placeholder="Confirm password" required>
+  </div>
+      <button type="submit" [disabled]="courierForm.invalid">Register</button>
+  </form>
+</div>

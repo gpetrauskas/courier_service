@@ -43,6 +43,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### frontend ###
-frontend/

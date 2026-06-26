@@ -1,0 +1,23 @@
+<div class="track-order-container">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="trackingNumber">Tracking Number:</label>
+      <input
+        type="text"
+        id="trackingNumber"
+        name="tracingNumber"
+        [(ngModel)]="trackingNumber"
+        required
+        />
+    </div>
+    <button type="submit">Track Order</button>
+  </form>
+
+  <div *ngIf="parcelStatus" class="status-container">
+    <p><strong>Status:</strong> {{ parcelStatus }}</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+  </div>
+</div>

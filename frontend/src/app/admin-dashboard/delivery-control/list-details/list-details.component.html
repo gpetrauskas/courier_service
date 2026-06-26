@@ -1,0 +1,84 @@
+<div class="task-details-container" *ngIf="task">
+  <h2>Task Details</h2>
+  <div class="task-info">
+    <p><strong>Task ID:</strong> {{ task.id }} </p>
+    <p><strong>Task Type:</strong> {{ task.taskType | enumLabel }} </p>
+    <p><strong>Status:</strong><span class="status-badge {{ statusBadgeClass }}">{{ task.deliveryStatus | enumLabel }}</span> </p>
+    <p><strong>Assigned Courier:</strong> {{ task.courierName }} (ID: {{ task.courierId }}) </p>
+    <p><strong>Created At:</strong> {{ task.createdAt | date: 'short' }} </p>
+    <p><strong>Completed At:</strong>
+      {{ completedAtLabel }}
+    </p>
+  </div>
+
+  <div class="actions-container">
+
+    <div class="courier-change">
+      <label for="courier-select">Change Courier:</label>
+      <div class="fetch-couriers" *ngIf="isChangingCourier">
+
+      <select id="courier-select" [(ngModel)]="selectedCourier" [disabled]="isCanceled">
+        <option [ngValue]="null" disabled>Current: {{ task.courierName }}</option>
+        <option *ngFor="let courier of couriers" [ngValue]="courier.id">
+          {{ courier.name }} (ID: {{ courier.id }})
+        </option>
+      </select>
+
+      <button class="change-btn" (click)="changeCourier()" [disabled]="isAtCheckpoint">
+        Update Courier
+      </button>
+      </div>
+
+      <button class="change-btn" (click)="changeCourierToggle()">
+        {{ isChangingCourier ? 'Cancel' : 'Change' }}
+      </button>
+    </div>
+
+    <div class="task-status-change">
+      <label for="task-status-select">Change Task Status</label>
+      <select id="task-status-select" [(ngModel)]="tempDeliveryStatus">
+        <option *ngFor="let status of taskStatuses" [value]="status">
+          {{ status | enumLabel }}
+        </option>
+      </select>
+      <button class="change-btn"
+              (click)="changeTaskStatus()"
+              [disabled]="tempDeliveryStatus === task.deliveryStatus">
+        Update Status
+      </button>
+    </div>
+  </div>
+
+  <h3>Items in Task</h3>
+  <table class="styled-table">
+    <thead>
+    <tr>
+      <th>Item ID</th>
+      <th>Parcel ID</th>
+      <th>Weight</th>
+      <th>Dimensions</th>
+      <th>Address</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr *ngFor="let item of task.items">
+      <td data-label="Item ID"> {{ item.id }} </td>
+      <td data-label="Parcel ID"> {{ item.parcelId }} </td>
+      <td data-label="Weight"> {{ item.weight | enumLabel }} </td>
+      <td data-label="Dimensions"> {{ item.dimensions | enumLabel }} </td>
+      <td data-label="Address"> {{ item.address }} </td>
+      <td data-label="Status"> {{ item.parcelStatus | enumLabel }} </td>
+      <td data-label="Actions">
+        <button class="delete-btn"
+                (click)="deleteItem(item)"
+                [disabled]="!isInProgress">
+          Delete
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

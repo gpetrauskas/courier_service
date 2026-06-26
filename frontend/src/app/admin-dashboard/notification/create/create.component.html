@@ -1,0 +1,27 @@
+<div class="create-container">
+  <mat-form-field>
+    <mat-label>Tittle</mat-label>
+    <input matInput [(ngModel)]="titleRequest">
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Select target</mat-label>
+    <mat-select [(ngModel)]="selectedTarget">
+      @for (target of targetTypes; track target) {
+      <mat-option [value]="target">{{ target }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field *ngIf="selectedTarget === 'SPECIFIC_USER'">
+    <mat-label>Enter Specific User ID</mat-label>
+    <input matInput [(ngModel)]="specificUserId">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>content</mat-label>
+    <textarea matInput [(ngModel)]="messageRequest"></textarea>
+  </mat-form-field>
+  <button class="button-create" (click)="create()">
+    Send
+  </button>
+</div>

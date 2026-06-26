@@ -1,0 +1,128 @@
+<mat-toolbar color="darkgrey" class="sticky-header">
+  <!-- toggle -->
+  <button mat-icon-button *ngIf="isAuthenticated" (click)="sidenav.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <span>
+      <a class="navbar-brand" href="/">Gytis Courier Service</a>
+    </span>
+
+  <span class="spacer"></span>
+
+  <!-- header -->
+  <button mat-icon-button
+          *ngIf="isAuthenticated"
+          [matMenuTriggerFor]="notificationsMenu"
+          [matBadge]="(notificationService.unreadCount$ | async) || null"
+          #notificationsTrigger="matMenuTrigger"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+          aria-label="Notifications">
+    <mat-icon>notifications</mat-icon>
+  </button>
+
+  <mat-menu #notificationsMenu="matMenu" class="notifications-menu">
+    <ng-container *ngIf="notificationService.lastNotifications$ | async as notifications">
+      <div class="notifications-header" (click)="$event.stopPropagation()">
+        <div class="action-buttons">
+          <button mat-stroked-button color="primary" (click)="viewAllNotifications()" matTooltip="View all">
+            View all
+          </button>
+          <ng-container *ngIf="notificationService.unreadCount$ | async as unreadCount">
+            <button
+              [disabled]="unreadCount === 0"
+              mat-stroked-button color="accent"
+              (click)="markAllAsRead()"
+              matTooltip="Mark all as read">
+              Mark all as read
+            </button>
+          </ng-container>
+        </div>
+      </div>
+      @if (notifications.length > 0) {
+      <div class="notifications-list">
+        @for (notification of notifications; track notification.id) {
+        <button mat-menu-item (click)="viewAllNotifications(notification.id)" [class.unread]="!notification.isRead">
+          <div class="notification-content">
+            <div class="notification-text">
+              <span class="title">{{ notification.title }}</span>
+              <span class="notification-content">
+                      {{ notification.message.length > 80 ? (notification.message | slice:0:80) + "..." : notification.message }}
+                    </span>
+              <span class="time">{{ notification.createdAt | date:'short' }}</span>
+            </div>
+          </div>
+        </button>
+        }
+      </div>
+      } @else {
+      <div class="empty-state">
+        <mat-icon>notifications_off</mat-icon>
+        <p>No new notifications</p>
+      </div>
+      }
+    </ng-container>
+  </mat-menu>
+
+  <!-- links for unaut users only -->
+  <div class="navbar-links" *ngIf="!isAuthenticated">
+    <button mat-button (click)="navigateTo('/login')">Login</button>
+    <button mat-button (click)="navigateTo('/register')">Register</button>
+  </div>
+
+  <!-- links for all with logout for auth users -->
+  <div class="nav-links">
+    <button mat-button (click)="navigateTo('/track-order')">Track Order</button>
+    <button mat-button (click)="navigateTo('/news')">News</button>
+    <button mat-button (click)="navigateTo('/company')">Company</button>
+    <button mat-button (click)="navigateTo('/contact')">Contact</button>
+    <button *ngIf="isAuthenticated" mat-button (click)="logout()">Logout</button>
+  </div>
+</mat-toolbar>
+
+<!-- side menu -->
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav mode="over" opened="false" class="sidenav">
+    <div *ngIf="userRole">
+      <mat-toolbar>{{ userRole | titlecase }} Menu</mat-toolbar>
+      <nav>
+        <mat-accordion>
+          <ng-container *ngFor="let item of menuItems">
+            <a *ngIf="!item.children"
+               class="menu-item-header"
+               [routerLink]="item.path"
+               routerLinkActive="active"
+               (click)="accordion().closeAll()">
+              <mat-icon *ngIf="item.icon">{{ item.icon }}</mat-icon>
+              <span>{{ item.title }}</span>
+            </a>
+
+
+            <mat-expansion-panel *ngIf="item.children">
+              <mat-expansion-panel-header>
+                <mat-icon *ngIf="item.icon">{{ item.icon }}</mat-icon>
+                <mat-panel-title>{{ item.title }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <ul>
+                <li *ngFor="let child of item.children">
+                  <a mat-button [routerLink]="[item.path, child.path]" routerLinkActive="active" (click)="sidenav.close()" >
+                    <mat-panel-title>{{ child.title }} </mat-panel-title>
+                  </a>
+                </li>
+
+              </ul>
+            </mat-expansion-panel>
+          </ng-container>
+        </mat-accordion>
+      </nav>
+    </div>
+  </mat-sidenav>
+
+  <!-- main content from side menu -->
+  <mat-sidenav-content>
+    <div class="main-content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

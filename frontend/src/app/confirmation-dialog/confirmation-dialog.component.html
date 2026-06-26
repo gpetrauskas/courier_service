@@ -1,0 +1,21 @@
+<div class="modal-overlay" *ngIf="isVisible">
+  <div class="modal">
+    <h2>{{ getTitle() }}</h2>
+    <p>Are you sure want to {{ getVerb() }} {{ itemType }}: </p>
+    <pre>{{ itemName }} ?</pre>
+
+    <div *ngIf="showReasonInput" class="reason-input">
+      <label for="banReason">Reason: </label>
+      <textarea
+        id="banReason"
+        [(ngModel)]="reason"
+        placeholder="Enter ban reason..."
+        ></textarea>
+    </div>
+
+    <div class="modal-buttons">
+      <button (click)="confirm()">Yes, {{ getButtonLabel() }}</button>
+      <button (click)="cancel()">Cancel</button>
+    </div>
+  </div>
+</div>

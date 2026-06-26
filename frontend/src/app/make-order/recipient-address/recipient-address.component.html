@@ -1,0 +1,59 @@
+<div class="recipient-address">
+  <h3>Recipient Address</h3>
+
+  <form [formGroup]="addressForm">
+
+    <div id="saved-address-container">
+      <label>
+        <input type="radio" name="recipientAddressOption" value="saved" (click)="toggleRecipientAddressForm('saved')"> Select Recipient Address
+      </label>
+        <select id="saved-recipient-address" [disabled]="selectedOption !== 'saved'" (change)="onAddressSelect($event)">
+          <option value="" disabled>Select an address</option>
+          <option *ngFor="let addr of savedAddresses" [value]="addr.id">{{ addr.street }}</option>
+      </select>
+      <div id="edit-recipient-address-contacts" *ngIf="selectedOption === 'saved'">
+        <label for="recipientName">Name</label>
+          <input type="text" id="recipientName" name="recipientName" formControlName="name" required>
+        <div *ngIf="addressForm.get('name')?.invalid && addressForm.get('name')?.touched">
+          <span class="error">Name required</span>
+        </div>
+        <label for="recipientPhoneNumber">Phone</label>
+          <input type="text" id="recipientPhoneNumber" name="recipientPhoneNumber" formControlName="phoneNumber" required>
+        <div *ngIf="addressForm.get('phoneNumber')?.invalid && addressForm.get('phoneNumber')?.touched">
+          <span class="error">Phone number required</span>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="new-address-container">
+      <label>
+        <input type="radio" name="recipientAddressOption" value="new" (click)="toggleRecipientAddressForm('new')">Enter new Recipient Address
+      </label>
+      <div id="new-recipient-address" *ngIf="selectedOption === 'new'">
+        <label for="street">Street</label>
+        <input id="street" name="street" formControlName="street" required />
+
+        <label for="houseNumber">House Number</label>
+        <input id="houseNumber" name="houseNumber" formControlName="houseNumber" required />
+
+        <label for="flatNumber">Flat Number</label>
+        <input id="flatNumber" name="flatNumber" formControlName="flatNumber" />
+
+        <label for="postCode">Post Code</label>
+        <input id="postCode" name="postCode" formControlName="postCode" required />
+
+        <label for="city">City</label>
+        <input id="city" name="city" formControlName="city" required />
+
+        <label for="name">Name</label>
+        <input id="name" name="name" formControlName="name" required />
+
+        <label for="phoneNumber">Phone Number</label>
+        <input id="phoneNumber" name="phoneNumber" formControlName="phoneNumber" required />
+
+      </div>
+    </div>
+    <button (click)="reviewOrder()" [disabled]="selectedOption === ''">Review Order</button>
+  </form>
+</div>

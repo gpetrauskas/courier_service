@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Me</title>
+  </head>
+
+  <body>
+
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <div class="avatar-container" mat-card-avatar>
+        <mat-icon class="avatar-icon">account_circle</mat-icon>
+      </div>
+      <mat-card-title-group>
+        <mat-card-title>{{ myInfo?.name }}</mat-card-title>
+        <mat-card-subtitle>Member since 1991</mat-card-subtitle>
+      </mat-card-title-group>
+    </mat-card-header>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+    @if (myInfo) {
+    <mat-card-content>
+      @if (role === 'USER') {
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Email</mat-label>
+          <input matInput [value]="myInfo.email" disabled/>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Phone</mat-label>
+          <span class="phone-prefix" matPrefix>+370 &nbsp;</span>
+          <input
+            matInput
+            [formControl]="phone"
+            placeholder="12345678"
+            maxlength="8"
+            (blur)="updateErrorMessage()"
+            required
+          >
+          @if (phone.invalid) {
+            <mat-error>{{ errorMessage() }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+      <label>Default Address: </label>
+
+        <div class="form-row">
+          @if (getUser().defaultAddress) {
+            {{ getUser().defaultAddress }}
+          } @else {
+            <span>Not assigned</span>
+
+          }
+          @if (addresses != null) {
+          <mat-form-field appearance="fill" class="form-field">
+            <mat-label>Default Address</mat-label>
+            <mat-select
+              (selectionChange)="onAddressSelect($event)"
+            >
+              @for (address of addresses; track address.id) {
+                <mat-option [value]="address.id">
+                  <mat-icon>location_on</mat-icon>
+                  <div class="address-option">
+                    <span>
+                      {{ address.street }} {{ address.houseNumber }}
+                      @if (address.flatNumber) {
+                        - {{ address.flatNumber }}
+                      }
+                    </span>
+                  </div>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          }
+          @if (!changeTriggered) {
+            <button mat-button (click)="fetchAddresses()">Change</button>
+          } @else {
+            <button mat-button (click)="cancelChange()">Cancel</button>
+          }
+        </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <div class="stats-container">
+        <div class="stat-item">
+          <label>Completed orders: </label>
+          <span>{{ getUser().orderCount }}</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="subscription-status">
+        <mat-icon [class.active]="getUser().subscribed">
+          {{ getUser().subscribed ? 'notifications_active' : 'notifications_off' }}
+        </mat-icon>
+        <span>Subscribed to newsletter: {{ getUser().subscribed ? 'Yes' : 'No' }}</span>
+        <mat-slide-toggle [(ngModel)]="subscribed">Subscribe</mat-slide-toggle>
+      </div>
+      }
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button class="save-btn" mat-flat-button color="primary" (click)="save()">Save Changes</button>
+    </mat-card-actions>
+    } @else {
+        <div>Loading or no data...</div>
+    }
+
+  </mat-card>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+html {
+  background-color: #ffffff;
+}
+
+html, body {
+ height: 100%;
+ margin: 0;
+ padding: 0;
+}
+
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+:root {
+  --primary: #4169E1;
+  --secondary: #FF7F50;
+  --third: #F7E7CE;
+  --neutral: #2F2F2F;
+  --highlight: #FFE900;
+  --background: #FFFFFF;
+  --card-bg: #FCFCFC;
+
+
+  /* test */
+  --background-white: #fff;
+  --background-light-gray: #f9f9f9;
+  --background-hover-gray: #efefef;
+  --background-blocked: #ffe6e6;
+  --background-blocked-hover: #ffcccc;
+
+  --border-light: #e0e0e0;
+  --border-mobile: #ddd;
+
+  --text-dark: #2f2f2f;
+  --text-medium: #555;
+  --text-light: #777;
+  --text-button: #333;
+  --text-button-inverse: #fff;
+  --text-button-muted: #aaa;
+  --text-unblock: #2e2e2e;
+
+  --header-bg-dark: #3e3e3e;
+  --header-text: #ffffff;
+
+  --btn-default-bg: #dcdcdc;
+  --btn-default-hover: #cfcfcf;
+  --btn-disabled-bg: #eaeaea;
+
+  --btn-delete-bg: #a93226;
+  --btn-delete-hover: #922b21;
+
+  --btn-block-bg: #5d4037;
+  --btn-block-hover: #4e342e;
+
+  --btn-unblock-bg: #c2b280;
+  --btn-unblock-hover: #b4a068;
+
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-mobile: 0 1px 4px rgba(0, 0, 0, 0.05);
+
+  --bg-light: #ffffff;
+  --primary-light: #575757;
+  --text-main: #2f2f2f;
+  --bg-accent: #f1f1f1;
+}

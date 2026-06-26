@@ -1,0 +1,43 @@
+<div class="user-order-detail" *ngIf="order">
+  <h2>Order Details</h2>
+
+  <div class="order-info">
+    <div class="order-info-main">
+      <p><strong>Order ID:</strong> {{ order.id }}</p>
+      <p><strong>Date:</strong> {{ order.createDate | date: 'mediumDate' }}</p>
+      <p><strong>Order Status:</strong> {{ order.status }}</p>
+      <p><strong>Payment Status:</strong> {{ paymentInfo?.status }}</p>
+      <p><strong>Package Status:</strong> {{ order.parcelStatus }}</p>
+      <p><strong>Delivery Preferences:</strong> {{ order.deliveryMethodName }}</p>
+    </div>
+    <div>
+      <p><strong>Sender Address: </strong> {{ order.senderAddress }}</p>
+      <p><strong>Recipient Address: </strong> {{ order.recipientAddress }}</p>
+    </div>
+
+    <div class="order-info-actions">
+      <div *ngIf="order.status !== 'CONFIRMED'" class="pay-button-container">
+        <button class="pay-button" (click)="onPay(order.id)">Pay</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button (click)="showPaymentInfo()">Payment Info</button>
+    <button (click)="showPackageInfo()">Package Info</button>
+  </div>
+
+  <div class="details">
+    <ng-container *ngIf="selectedInfo === 'payment'">
+      <h3>Payment Information</h3>
+      <p><strong>Amount:</strong> {{ paymentInfo?.amount }}€</p>
+      <p><strong>Payment Status:</strong> {{ paymentInfo?.status }}</p>
+    </ng-container>
+
+    <ng-container *ngIf="selectedInfo === 'package'">
+      <h3>Package Information</h3>
+      <p><strong>Weight:</strong> {{ order.weightName }}</p>
+      <p><strong>Dimensions:</strong> {{ order.dimensionsName }}</p>
+    </ng-container>
+  </div>
+</div>

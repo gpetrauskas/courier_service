@@ -1,0 +1,70 @@
+<app-filter
+  [showTicketFilter]="true"
+  [isAdmin]="isAdmin"
+  (filterChange)="onFilterChange($event)"
+></app-filter>
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="pageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+></app-pagination>
+
+<div class="ticket-grid">
+  @for (ticket of tickets; track ticket.id) {
+  <mat-card appearance="outlined" [ngClass]="ticket.status.toLowerCase()" class="ticket-card" (click)="choseTicket(ticket)">
+    <mat-card-header>
+      <mat-card-title>{{ ticket.title }}</mat-card-title>
+      <mat-card-subtitle>
+        <span class="priority-badge" [ngClass]="ticket.priority.toLowerCase()">{{ ticket.priority }}</span>
+        <span class="status-badge" [ngClass]="ticket.status.toLowerCase()">{{ ticket.status }}</span>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="ticket-content">
+      <p class="description">
+        {{ ticket.description.length > 100 ? (ticket.description | slice:0:100) + '...' : ticket.description }}
+      </p>
+      <div class="meta-info">
+          <span>
+            <mat-icon>calendar_today</mat-icon>
+            {{ ticket.createdAt | date:'mediumDate' }}
+          </span>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions class="actions">
+
+      @if (!isAdmin) {
+        @if (ticket.status != 'CLOSED') {
+      <button mat-stroked-button color="warn"
+              (click)="openDialog(ticket); $event.stopPropagation()"
+              class="action-button">
+        <mat-icon>lock</mat-icon> Close
+      </button>
+        } @else {
+          <button mat-stroke-button color="warn"
+                  disabled="true" class="action_button">
+            <mat-icon>lock</mat-icon> Closed
+          </button>
+        }
+      }
+
+    </mat-card-actions>
+
+  </mat-card>
+  }
+</div>
+
+<app-confirmation-dialog
+  [isVisible]="isDialogVisible"
+  [itemType]="itemType"
+  [itemName]="itemName"
+  [actionType]="actionType"
+  (confirmed)="onDialogConfirmed()"
+  (canceled)="onDialogCanceled()"
+></app-confirmation-dialog>
+

@@ -1,0 +1,86 @@
+<div *ngIf="currentStep === 1" class="create-new-list-filter">
+  <div class="task-option" (click)="onTaskTypeChange(taskType.Pickup)">
+    <span>Pickup</span>
+    <span>{{ itemsToPickupCount }} items</span>
+  </div>
+  <div class="task-option" (click)="onTaskTypeChange(taskType.Delivery)">
+    <span>Delivery</span>
+    <span>{{ itemsToDeliverCount }} items</span>
+  </div>
+</div>
+
+<div *ngIf="currentStep === 2" class="task-item-list">
+  <div class="pagination-control">
+    <button (click)="previousPage()" [disabled]="currentPage < 1">Previous</button>
+    <p>Page: {{ currentPage + 1 }} / {{ totalPages }}</p>
+    <input type="number" [(ngModel)]="inputPageSize" (change)="onPageSizeChange()" min="1" />
+    <button (click)="nextPage()" [disabled]="currentPage + 1 >= totalPages">Next</button>
+  </div>
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Dimensions</th>
+        <th>Weight</th>
+        <th>Delivery</th>
+        <th>Address</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of items"
+          (click)="onRowClick(item)"
+          [class.selected]="isSelected(item.parcelId)"
+          [class.failed-status]="wasFailed(item)"
+      >
+        <td data-label="ID">{{ item.parcelId }}</td>
+        <td data-label="Dimensions">{{ item.dimensions }}</td>
+        <td data-label="Weight">{{ item.weight }}</td>
+        <td data-label="Delivery">{{ item.deliveryMethodName }}</td>
+        <td data-label="Address">
+          <div> {{ item.fullAddress }}</div>
+        </td>
+        <td data-label="Action" class="actionsSection">
+          <button>{{ isSelected(item.parcelId) ? 'Remove' : 'Add' }}</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <button class="next-btn" (click)="goToReview()">Next</button>
+  <button class="back-btn" (click)="back()">Back</button>
+</div>
+
+<div *ngIf="currentStep === 3" class="review-list">
+  <h2>Review Items</h2>
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Dimensions</th>
+        <th>Weight</th>
+        <th>Delivery</th>
+        <th>Address</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of selectedItems">
+        <td>{{ item.parcelId }}</td>
+        <td>{{ item.dimensions }}</td>
+        <td>{{ item.weight }}</td>
+        <td>{{ item.deliveryMethodName }}</td>
+        <td>
+          <div>{{ item.fullAddress }}</div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label for="courier">Assign Courier</label>
+  <select id="courier" [(ngModel)]="selectedCourierId">
+    <option *ngFor="let courier of couriers" [value]="courier.id">{{ courier.name }}</option>
+  </select>
+
+  <button class="submit-btn" (click)="assignCourier()">Assign Courier</button>
+
+  <button class="back-btn" (click)="back()">Back</button>
+</div>

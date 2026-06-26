@@ -1,0 +1,65 @@
+.table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f1f1f1;
+}
+
+.detail-row {
+  display: none;
+}
+
+.detail-row.expanded-row {
+  display: table-row;
+}
+
+.expanded-content {
+  padding: 16px;
+  background-color: #f9f9f9;
+}
+
+@media (max-width: 600px) {
+  th, td {
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .mat-icon-button {
+    padding: 4px;
+  }
+
+  .expanded-content {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .expanded-content {
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    margin-top: 8px;
+  }
+
+  .expanded-content p {
+    margin: 4px 0;
+  }
+
+  table {
+    min-width: 100%;
+  }
+
+  .mat-column-completedAt {
+    display: none;
+  }
+}

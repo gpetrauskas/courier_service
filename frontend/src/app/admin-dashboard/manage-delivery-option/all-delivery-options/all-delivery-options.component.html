@@ -1,0 +1,43 @@
+<div *ngIf="deliveryOptions.length > 0; else noOptions">
+  <div class="table-container">
+    <table>
+      <thead>
+      <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let option of deliveryOptions">
+        <td data-label="Id">{{ option.id }}</td>
+        <td data-label="Name">{{ option.name }}</td>
+        <td data-label="Description">{{ option.description }}</td>
+        <td data-label="Price">{{ option.price }}</td>
+        <td data-label="Actions">
+          <div class="action-buttons">
+            <button (click)="editDeliveryOption(option)">Edit Option</button>
+            <button class="delete-btn" (click)="openConfirmDialog(option)">Delete Option</button>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  <ng-template #noOptions>
+    <p>No options found</p>
+  </ng-template>
+
+
+
+  <app-confirmation-dialog
+    [isVisible]="isDialogVisible"
+    [itemType]="'delivery option'"
+    [itemName]="selectedOption?.name + ' (ID: ' + selectedOption?.id + ')'"
+    (canceled)="onCancel()"
+    (confirmed)="onConfirmDelete()">
+  </app-confirmation-dialog>

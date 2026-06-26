@@ -1,0 +1,16 @@
+.manage-notification-nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.manage-notification-nav ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.manage-notification-nav ul li a.active {
+  font-weight: bold;
+  color: #007bff;
+}

@@ -1,0 +1,14 @@
+<ng-container *ngIf="alert$ | async as alert">
+  @if (alert.message.length) {
+  <div class="alert-banner"
+     [ngClass]="{
+      'success': alert.type === 'success',
+      'error': alert.type === 'error',
+      'info': alert.type === 'info'
+     }">
+
+    <p>{{ alert.message }}</p>
+  </div>
+  }
+</ng-container>
+

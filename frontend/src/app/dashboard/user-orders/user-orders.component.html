@@ -1,0 +1,33 @@
+<section class="user-orders">
+  <header class="orders-header">
+    <h2>My Orders</h2>
+  </header>
+
+  <div class="pagination-controls">
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [pageSize]="pageSize"
+      [totalItems]="totalOrders"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
+  </div>
+
+  <div class="orders-container">
+    <div class="orders-list">
+      <div *ngFor="let order of orders" class="order-card" (click)="viewOrderDetails(order.id)">
+        <div class="order-main-info">
+          <span class="order-id">#{{ order.id }}</span>
+          <span class="order-date">{{ order.createDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="order-details">
+          <span class="order-status" [class]="'status-' + order.status.toLowerCase()">
+            {{ order.status }}
+          </span>
+          <span class="order-price">{{ order.total | currency }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

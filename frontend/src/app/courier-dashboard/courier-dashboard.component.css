@@ -1,0 +1,16 @@
+.courier-dashboard-nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.courier-dashboard-nav ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.courier-dashboard-nav ul li a.active {
+  font-weight: bold;
+  color: #007bff;
+}

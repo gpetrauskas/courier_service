@@ -1,0 +1,149 @@
+<div class="ticket-container">
+  <ng-container *ngIf="ticket; else loading">
+    <mat-card class="ticket-card">
+      <mat-card-header class="ticket-header">
+        <mat-card-title class="ticket-title">{{ ticket.title }}</mat-card-title>
+
+        <mat-card-content class="ticket-content">
+          <div class="status-indicators">
+            <span class="chip status">{{ ticket.status }}</span>
+            <span class="chip priority">{{ ticket.priority }}</span>
+          </div>
+
+          <mat-divider class="content-divider"></mat-divider>
+
+          <div class="description-container">
+            <h4 class="description-title">Description</h4>
+            <p class="ticket-description">{{ ticket.description }}</p>
+          </div>
+        </mat-card-content>
+
+        <div class="ticket-meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">Created at:</div>
+            <div class="meta-value">{{ ticket.createdAt | date: 'short' }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Updated at:</div>
+            <div class="meta-value">{{ (ticket.updatedAt) ? (ticket.updatedAt | date: 'short') : 'none' }}</div>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <div class="admin-controls-section" *ngIf="isAdmin">
+        <mat-divider class="section-divider"></mat-divider>
+        <h4 class="controls-heading">Ticket Administration</h4>
+        <div class="action-controls">
+          <div class="control-group">
+            <mat-form-field appearance="outline" class="control-field">
+              <mat-label>Status</mat-label>
+              <mat-select [(ngModel)]="tempStatus" #statusSelect>
+                @for (status of statusOptions; track status) {
+                  <mat-option [value]="status">{{ status }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button
+                    color="primary"
+                    class="control-button"
+                    [disabled]="tempStatus === ticket.status"
+                    (click)="update(ticket.id, tempStatus, 'Status')">
+              Update Status
+            </button>
+          </div>
+
+          <div class="control-group">
+            <mat-form-field appearance="outline" class="control-field">
+              <mat-label>Priority</mat-label>
+              <mat-select [(ngModel)]="tempPriority" #prioritySelect>
+                @for (priority of priorityOptions; track priority) {
+                  <mat-option [value]="priority">{{ priority }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-raised-button
+                    class="control-button"
+                    color="primary"
+                    [disabled]="tempPriority === ticket.priority"
+                    (click)="update(ticket.id, tempPriority, 'Priority')">
+              Update Priority
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (isAdmin) {
+        <mat-card-subtitle class="user-summary">
+          <div class="summary-label">Created by:</div>
+          <div class="user-info">
+            <div class="user-detail"><span class="detail-label">Name:</span> {{ ticket.creator?.name }}</div>
+            <div class="user-detail"><span class="detail-label">Email:</span> {{ ticket.creator?.email }}</div>
+            <div class="user-detail"><span class="detail-label">Blocked:</span> {{ ticket.creator?.blocked ? 'Yes' : 'No' }}</div>
+            <div class="user-detail"><span class="detail-label">Deleted:</span> {{ ticket.creator?.deleted ? 'Yes' : 'No' }}</div>
+          </div>
+          <button mat-stroked-button color="accent"
+                  (click)="userDetails(ticket.creator!.id)"
+                  class="user-details-btn">
+            View Full User Data
+          </button>
+        </mat-card-subtitle>
+      }
+    </mat-card>
+
+    <mat-card class="comments-section">
+      <div class="comments-header">
+        <h3 class="comments-title">Comments</h3>
+        <span class="comments-count">{{ comments.length || 0 }} {{ comments.length === 1 ? 'comment' : 'comments' }}</span>
+      </div>
+      <mat-divider class="section-divider"></mat-divider>
+
+      <div class="comments-lists" *ngIf="comments.length; else noComments">
+        <div *ngFor="let comment of comments" class="comment"
+             [ngClass]="{'my-comment': comment.authorName === currentUsername, 'other-comment': comment.authorName !== currentUsername}">
+          <mat-card class="comment-card">
+            <mat-card-header class="comment-header">
+              <div class="comment-author">{{ comment.authorName }}</div>
+              <div class="comment-date">{{ comment.createdAt | date: 'medium' }}</div>
+            </mat-card-header>
+            <mat-card-content class="comment-content">
+              <p>{{ comment.message }}</p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <ng-template #noComments>
+        <div class="no-comments">
+          <mat-icon>forum</mat-icon>
+          <p>No comments yet.</p>
+        </div>
+      </ng-template>
+
+      @if (ticket.status !== 'CLOSED') {
+        <form [formGroup]="commentForm" (ngSubmit)="addComment(ticket)" class="comment-form">
+          <mat-divider class="section-divider"></mat-divider>
+          <h4 class="add-comment-titte">Addd a comment</h4>
+          <mat-form-field appearance="outline" class="comment-field">
+            <textarea matInput formControlName="message" rows="3" placeholder="Write your comment here..."></textarea>
+          </mat-form-field>
+          <button mat-raised-button color="primary" type="submit" class="submit-comment" [disabled]="commentForm.invalid">
+            Post Comment
+          </button>
+        </form>
+      } @else {
+        <div class="ticket-closed-notice">
+          <mat-icon>lock</mat-icon>
+          <span>This ticket is closed and no longer accepting comments</span>
+        </div>
+      }
+    </mat-card>
+
+  </ng-container>
+</div>
+
+<ng-template #loading>
+  <mat-spinner></mat-spinner>
+  <span>loading ticket details...</span>
+</ng-template>
+

@@ -1,0 +1,118 @@
+:root {
+  --primary: #4361ee;
+  --success: #4cc9f0;
+  --danger: #f72585;
+  --light: #f8f9fa;
+  --dark: #212529;
+}
+
+.user-order-detail {
+  background: white;
+  border: 1px solid #e9ecef;
+  padding: 1rem;
+  margin: 0 auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.order-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.pay-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.pay-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pay-button:hover {
+  background: #3a56d4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.75rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.addresses {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.address-column {
+  padding: 1.25rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+@media (min-width: 768px) {
+  .user-order-detail {
+    padding: 1.5rem;
+    max-width: 800px;
+  }
+
+  .order-info {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .pay-button-container {
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  .addresses {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.button-group button {
+  background: var(--primary);
+  transition: all 0.2s ease;
+}
+
+.button-group button:hover {
+  background: #3a56d4;
+  transform: translateY(-1px);
+}
+
+.address-column {
+  background: var(--light);
+  border: 1px solid #e9ecef;
+}

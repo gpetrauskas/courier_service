@@ -1,0 +1,5 @@
+<div class="success-container" *ngIf="countdown$ | async as cd">
+  <h1>{{ cd.message }}</h1>
+  <p>You will be redirected to your order details page in {{ cd.timer }} seconds.</p>
+  <button (click)="goToOrder()">Go to Order Now</button>
+</div>

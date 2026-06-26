@@ -1,0 +1,130 @@
+<div class="person-info-container" *ngIf="user">
+
+  <mat-toolbar class="header">
+    <span>Person Information</span>
+  </mat-toolbar>
+
+  <!-- identity -->
+  <mat-card appearance="outlined">
+    <div class="section-title">Identity</div>
+
+    <div class="info-block" *ngIf="!isEditMode">
+      <div class="row">
+        <span class="label">ID:</span>
+        <span class="data">{{ user.id }}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Name:</span>
+        <span class="data">{{ user.name }}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Email:</span>
+        <span class="data">{{ user.email }}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Role:</span>
+        <span class="data">{{ user.role }}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Phone Number:</span>
+        <span class="data">{{ user.phoneNumber }}</span>
+      </div>
+
+      <button class="info-btn" (click)="toggleEditMode()">Edit</button>
+    </div>
+
+
+
+    <form *ngIf="isEditMode"
+          [formGroup]="profileForm"
+          (ngSubmit)="saveUser()"
+          class="info-block">
+
+      <div class="row edit-row">
+        <span class="label">Name:</span>
+        <input class="edit-input" formControlName="name"/>
+        <app-app-field-error [control]="profileForm.get('name')"></app-app-field-error>
+
+      </div>
+      <div class="row edit-row">
+        <span class="label">Email:</span>
+        <input class="edit-input" formControlName="email"/>
+      </div>
+      <div class="row edit-row">
+        <span class="label">Phone Number:</span>
+        <input class="edit-input" formControlName="phoneNumber"/>
+      </div>
+
+      <button class="info-btn save" [disabled]="profileForm.invalid" type="submit">Save</button>
+      <button class="info-btn cancel" (click)="cancelEditMode()">Cancel</button>
+    </form>
+  </mat-card>
+
+
+
+  <!-- status -->
+  <mat-card appearance="outlined">
+    <div class="section-title">Status</div>
+
+    <div class="info-block">
+      <div class="row">
+        <span class="label">Blocked:</span>
+        <span class="data">{{ user.blocked }}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Deleted:</span>
+        <span class="data">{{ user.deleted }}</span>
+      </div>
+    </div>
+  </mat-card>
+
+
+
+
+
+  <!-- stats specific -->
+  <mat-card appearance="outlined">
+    <div class="section-title">
+      {{ user.role === 'ADMIN' ? 'Admin Details' :
+      user.role === 'USER' ? 'User Details' :
+      'Courier Details' }}
+    </div>
+
+    <div class="info-block">
+      <ng-container [ngSwitch]="user.role">
+
+        <ng-container *ngSwitchCase="'ADMIN'">
+          <div class="row">
+            <span class="label">Created Tasks:</span>
+            <span class="data">{{ user.createdTasks }}</span>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'USER'">
+          <div class="row">
+            <span class="label">Subscribed:</span>
+            <span class="data">{{ user.subscribed }}</span>
+          </div>
+
+          <div class="row">
+            <span class="label">Order Count:</span>
+            <span class="data">{{ user.orderCount }}</span>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'COURIER'">
+          <div class="row">
+            <span class="label">Completed Tasks:</span>
+            <span class="data">{{ user.completedDeliveries }}</span>
+          </div>
+        </ng-container>
+
+      </ng-container>
+    </div>
+  </mat-card>
+</div>

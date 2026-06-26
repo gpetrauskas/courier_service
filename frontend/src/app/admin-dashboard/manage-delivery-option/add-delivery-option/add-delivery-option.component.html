@@ -1,0 +1,18 @@
+<div class="add-delivery-option">
+  <h4>Add new option</h4>
+  <form [formGroup]="newOption" (ngSubmit)="onSubmit()">
+
+    <label for="name">Option name: </label>
+    <input id="name" type="text" formControlName="name">
+
+    <label for="description">Description: </label>
+    <input id="description" type="text" formControlName="description">
+
+    <label for="price">Price: </label>
+    <input id="price" type="text" formControlName="price">
+
+    <button class="save-btn" [disabled]="!newOption.valid" type="submit">Save</button>
+    <button class="cancel-btn" (click)="cancel()">Cancel</button>
+
+  </form>
+</div>

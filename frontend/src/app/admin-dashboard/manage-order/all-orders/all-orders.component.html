@@ -1,0 +1,47 @@
+<app-filter
+  (filterChange)="onFilterChange($event)"
+  [showOrderFilter]="true"
+></app-filter>
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="onPageChange($event)"
+  (onPageSizeChange)="onPageSizeChange($event)"
+></app-pagination>
+
+<div class="user-table-container">
+<div *ngIf="orders.length > 0; else noOrders">
+
+  <table>
+    <thead>
+    <tr>
+      <th>Id</th>
+      <th>User Id</th>
+      <th>Status</th>
+      <th>Created Time</th>
+      <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let order of orders">
+      <td data-label="Id">{{ order.id }}</td>
+      <td data-label="User Id">{{ order.userId }}</td>
+      <td data-label="Status">{{ order.status }}</td>
+      <td data-label="Created Time">{{ order.createDate | date: 'short' }}</td>
+      <td data-label="Action">
+        <div class="action-buttons">
+          <button (click)="viewOrder(order)">View Order</button>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<ng-template #noOrders>
+  <p>No orders available</p>
+</ng-template>

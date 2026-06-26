@@ -1,0 +1,71 @@
+<div class="make-order">
+  <header class="make-order-header">
+    <h1>Make Order</h1>
+  </header>
+
+  <div class="make-order-container">
+    <nav class="make-order-nav">
+      <ul>
+        <li><a href="#" (click)="selectTab($event, 'deliveryOptions')"
+               [class.active]="isTabVisible('deliveryOptions')"
+               [class.disabled]="!isTabEnabled('deliveryOptions')">Pricing Options</a>
+        </li>
+        <li><a href="#" (click)="selectTab($event, 'senderAddress')"
+               [class.active]="isTabVisible('senderAddress')"
+               [class.disabled]="!isTabEnabled('senderAddress')">Sender Address</a>
+        </li>
+        <li><a href="#" (click)="selectTab($event, 'recipientAddress')"
+               [class.active]="isTabVisible('recipientAddress')"
+               [class.disabled]="!isTabEnabled('recipientAddress')">Recipient Address</a>
+        </li>
+        <li><a href="#" (click)="selectTab($event, 'orderReview')"
+               [class.active]="isTabVisible('orderReview')"
+               [class.disabled]="!isTabEnabled('orderReview')">Order Review</a>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="make-order-content">
+      <div *ngIf="activeTab === 'startOrder'">
+        <div class="info">
+          <p>information about my delivery prices, options etc etc</p>
+          <button (click)="startOrder()">Start ordering</button>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'deliveryOptions'">
+        <app-delivery-options
+          [parcelDetails]="orderData.parcelDetails"
+          [preferenceId]="orderData.preferenceId"
+          [selectedWeightOption]="selectedWeightOption"
+          [selectedSizeOption]="selectedSizeOption"
+          [selectedPreferenceOption]="selectedPreferenceOption"
+          (senderAddressButtonClicked)="handleSenderAddressButtonClick($event)">
+        </app-delivery-options>
+      </div>
+      <div *ngIf="activeTab === 'senderAddress'">
+        <app-sender-address
+          [senderAddress]="orderData.senderAddress"
+          (recipientAddressButtonClicked)="handleRecipientAddressButtonClick($event.senderAddress, $event.savedAddresses)">
+        </app-sender-address>
+      </div>
+      <div *ngIf="activeTab === 'recipientAddress'">
+        <app-recipient-address
+          [recipientAddress]="orderData.recipientAddress"
+          [savedAddresses]="savedAddresses"
+          (orderReviewButtonClicked)="handleOrderReviewButtonClick($event)">
+
+        </app-recipient-address>
+      </div>
+      <div *ngIf="activeTab === 'orderReview'">
+        <app-order-review
+          [orderData]="orderData"
+          [selectedWeightOption]="selectedWeightOption"
+          [selectedSizeOption]="selectedSizeOption"
+          [selectedPreferenceOption]="selectedPreferenceOption"
+          (confirmOrderButtonClicked)="handleConfirmOrderButtonClick()">
+        </app-order-review>
+      </div>
+    </main>
+  </div>
+</div>

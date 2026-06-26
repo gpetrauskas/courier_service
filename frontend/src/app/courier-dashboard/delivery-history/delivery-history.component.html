@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History</title>
+</head>
+
+<header>
+  <nav>
+  <app-pagination
+    [currentPage]="page"
+    [totalPages]="totalPages"
+    [totalItems]="totalItems"
+    [pageSize]="size"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+  ></app-pagination>
+  </nav>
+</header>
+
+<table mat-table [dataSource]="tasksList" multiTemplateDataRows class="mat-elevation-z8">
+
+  <ng-container *ngFor="let column of displayedHistoryTasksListColumn" [matColumnDef]="column">
+    <th mat-header-cell *matHeaderCellDef>{{ column | titlecase }}</th>
+    <td mat-cell *matCellDef="let task">{{ task[column] || 'none' }}</td>
+  </ng-container>
+
+
+
+  <ng-container matColumnDef="expand">
+    <th mat-header-cell *matHeaderCellDef>&nbsp;</th>
+    <td mat-cell *matCellDef="let task">
+      <button mat-icon-button (click)="toggle(task); $event.stopPropagation()"
+              [class.expanded]="isExpanded(task)">
+        <mat-icon>{{ isExpanded(task) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand"></tr>
+
+  <tr mat-row *matRowDef="let task; columns: columnsToDisplayWithExpand"
+      [class.expanded-row]="isExpanded(task)"
+      (click)="toggle(task)"
+      class="data-row">
+  </tr>
+
+
+  <ng-container matColumnDef="expandedDetail">
+    <td mat-cell *matCellDef="let task" [attr.colspan]="columnsToDisplayWithExpand.length">
+      <div class="expanded-content" *ngIf="isExpanded(task)">
+        <p><strong>Created At:</strong> {{ task.createdAt | date: 'short' }}</p>
+        <p><strong>Completed At</strong> {{ task.completedAt === null ? 'none' : task.completedAt | date: 'short' }}</p>
+        <p><strong>Total Items:</strong> {{ task.taskItemDTOS.length }}</p>
+      </div>
+    </td>
+  </ng-container>
+
+
+  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']"
+      [class.detail-row]="true"
+      [class.expanded-row]="isExpanded(row)">
+  </tr>
+</table>
+
+</html>

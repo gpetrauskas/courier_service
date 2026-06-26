@@ -1,0 +1,62 @@
+div.delivery-options {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+div.delivery-options label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+div.delivery-options select, div.delivery-options textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+div.delivery-options textarea {
+    resize: vertical;
+}
+
+div.delivery-options button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+div.delivery-options button:hover {
+    background-color: #0056b3;
+}
+
+.error {
+  color: red;
+  font-size: 15px;
+  text-style: bold;
+  border: 1px solid black;
+  border-radius: 3px;
+  background-color: silver;
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+  margin-left: 25%;
+  margin-right: 25%;
+}

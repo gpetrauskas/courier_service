@@ -1,0 +1,58 @@
+.pagination-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #fdfaf6;
+  border: 1px solid #d1b7a0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Georgia', serif;
+}
+
+.pagination-control button {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: 'Georgia', serif;
+  color: #ffffff;
+  background-color: #a67c52;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pagination-control button:disabled {
+  background-color: #d3c3b1;
+  cursor: not-allowed;
+}
+
+.pagination-control button:not(:disabled):hover {
+  background-color: #825d3a;
+}
+
+.pagination-control p {
+  margin: 0;
+  font-size: 14px;
+  color: #5b4f44;
+}
+
+.pagination-control input[type="number"] {
+  width: 60px;
+  padding: 6px;
+  font-size: 14px;
+  font-family: 'Georgia', serif;
+  border: 1px solid #d1b7a0;
+  border-radius: 5px;
+  background-color: #ffffff;
+  color: #000000;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.pagination-control input[type="number"]:focus {
+  border-color: #a67c52;
+}

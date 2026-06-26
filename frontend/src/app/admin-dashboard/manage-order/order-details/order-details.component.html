@@ -1,0 +1,335 @@
+<div *ngIf="order" class="details-container">
+  <div class="grid-container">
+    <!-- order -->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>Order Details</h4>
+        <div *ngIf="sectionToEdit === 'orderSection'">
+          <div class="form-group">
+            <label>Order ID:</label>
+            <p>{{ order.id }}</p>
+          </div>
+          <div class="form-group">
+            <label>Status:</label>
+            <select [(ngModel)]="order.status">
+              <option *ngFor="let element of orderStatuses.values()" [value]="element">{{ element | titlecase}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Created Time:</label>
+            <p>{{ order.createDate | date: 'short' }}</p>
+          </div>
+          <div class="form-group">
+            <label>Delivery Preferences:</label>
+            <select [(ngModel)]="order.deliveryMethodName">
+              <option *ngFor="let option of preferenceOptions" [value]="option.name">{{ option.name | titlecase }}</option>
+            </select>
+          </div>
+          <div class="button-group">
+            <button (click)="saveSection('orderSection')" class="btn save-btn">Save</button>
+            <button (click)="cancelSection()" class="btn cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="sectionToEdit !== 'orderSection'">
+          <div class="info-group">
+            <label>Order ID:</label>
+            <p>{{ order.id }}</p>
+          </div>
+          <div class="info-group">
+            <label>Status:</label>
+            <p>{{ order.status | titlecase }}</p>
+          </div>
+          <div class="info-group">
+            <label>Created Time:</label>
+            <p>{{ order.createDate | date: 'short' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Delivery Preferences:</label>
+            <p>{{ order.deliveryMethodName | titlecase }}</p>
+          </div>
+          <button (click)="toggleEditButton('orderSection')" class="btn edit-btn">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- payment -->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>Payment Details</h4>
+        <div *ngIf="sectionToEdit === 'paymentSection'">
+          <div class="form-group">
+            <label>Payment ID:</label>
+            <p>{{ order.payment.id }}</p>
+          </div>
+          <div class="form-group">
+            <label>Payment Status:</label>
+            <select [(ngModel)]="order.payment.status">
+              <option *ngFor="let elem of paymentStatuses.values()" [value]="elem">{{ transform(elem) | titlecase }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount:</label>
+            <p>{{ order.payment.amount }}</p>
+          </div>
+          <div class="button-group">
+            <button (click)="saveSection('paymentSection')" class="btn save-btn">Save</button>
+            <button (click)="cancelSection()" class="btn cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="sectionToEdit !== 'paymentSection'">
+          <div class="info-group">
+            <label>Payment ID:</label>
+            <p>{{ order.payment.id }}</p>
+          </div>
+          <div class="info-group">
+            <label>Payment Status:</label>
+            <p>{{ transform(order.payment.status) | titlecase}}</p>
+          </div>
+          <div class="info-group">
+            <label>Amount:</label>
+            <p>{{ order.payment.amount }}</p>
+          </div>
+          <button (click)="toggleEditButton('paymentSection')" class="btn edit-btn">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- package-->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>Package Details</h4>
+        <div *ngIf="sectionToEdit === 'parcelSection'">
+          <div class="form-group">
+            <label>Package ID:</label>
+            <p>{{ order.parcel.id }}</p>
+          </div>
+          <div class="form-group">
+            <label>Package Status:</label>
+            <select [(ngModel)]="order.parcel.status">
+              <option *ngFor="let elem of packageStatuses.values()" [value]="elem">{{ transform(elem) | titlecase }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Weight:</label>
+            <p>{{ order.parcel.weight }}</p>
+          </div>
+          <div class="form-group">
+            <label>Dimensions:</label>
+            <p>{{ order.parcel.dimensions }}</p>
+          </div>
+          <div class="form-group">
+            <label>Contents:</label>
+            <input [(ngModel)]="order.parcel.contents">
+          </div>
+          <div class="form-group">
+            <label>Tracking Number:</label>
+            <p>{{ order.parcel.trackingNumber }}</p>
+          </div>
+          <div class="button-group">
+            <button (click)="saveSection('parcelSection')" class="btn save-btn">Save</button>
+            <button (click)="cancelSection()" class="btn cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="sectionToEdit != 'parcelSection'">
+          <div class="info-group">
+            <label>Package ID:</label>
+            <p>{{ order.parcel.id }}</p>
+          </div>
+          <div class="info-group">
+            <label>Package Status:</label>
+            <p>{{ transform(order.parcel.status) | titlecase}}</p>
+          </div>
+          <div class="info-group">
+            <label>Weight:</label>
+            <p>{{ order.parcel.weight }}</p>
+          </div>
+          <div class="info-group">
+            <label>Dimensions:</label>
+            <p>{{ order.parcel.dimensions }}</p>
+          </div>
+          <div class="info-group">
+            <label>Contents:</label>
+            <p>{{ order.parcel.contents }}</p>
+          </div>
+          <div class="info-group">
+            <label>Tracking Number:</label>
+            <p>{{ order.parcel.trackingNumber }}</p>
+          </div>
+          <button (click)="toggleEditButton('parcelSection')" class="btn edit-btn">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- sender -->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>Sender Address</h4>
+        <div *ngIf="sectionToEdit === 'senderSection'">
+          <div class="form-group">
+            <label>Name:</label>
+            <input [(ngModel)]="order.sender.name">
+          </div>
+          <div class="form-group">
+            <label>Street:</label>
+            <input [(ngModel)]="order.sender.street">
+          </div>
+          <div class="form-group">
+            <label>House Number:</label>
+            <input [(ngModel)]="order.sender.houseNumber">
+          </div>
+          <div class="form-group">
+            <label>City:</label>
+            <input [(ngModel)]="order.sender.city">
+          </div>
+          <div class="form-group">
+            <label>Post Code:</label>
+            <input [(ngModel)]="order.sender.postCode">
+          </div>
+          <div class="form-group">
+            <label>Phone Number:</label>
+            <input [(ngModel)]="order.sender.phoneNumber">
+          </div>
+          <div class="form-group">
+            <label>Flat Number:</label>
+            <input [(ngModel)]="order.sender.flatNumber">
+          </div>
+          <div class="button-group">
+            <button (click)="saveSection('senderSection')" class="btn save-btn">Save</button>
+            <button (click)="cancelSection()" class="btn cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="sectionToEdit != 'senderSection'">
+          <div class="info-group">
+            <label>Name:</label>
+            <p>{{ order.sender.name || 'N/A' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Street:</label>
+            <p>{{ order.sender.street }}</p>
+          </div>
+          <div class="info-group">
+            <label>House Number:</label>
+            <p>{{ order.sender.houseNumber }}</p>
+          </div>
+          <div class="info-group">
+            <label>City:</label>
+            <p>{{ order.sender.city }}</p>
+          </div>
+          <div class="info-group">
+            <label>Post Code:</label>
+            <p>{{ order.sender.postCode }}</p>
+          </div>
+          <div class="info-group">
+            <label>Phone Number:</label>
+            <p>{{ order.sender.phoneNumber }}</p>
+          </div>
+          <div class="info-group">
+            <label>Flat Number:</label>
+            <p>{{ order.sender.flatNumber || 'N/A' }}</p>
+          </div>
+          <button (click)="toggleEditButton('senderSection')" class="btn edit-btn">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- recipient -->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>Recipient Address</h4>
+        <div *ngIf="sectionToEdit === 'recipientSection'">
+          <div class="form-group">
+            <label>Name:</label>
+            <input [(ngModel)]="order.recipient.name">
+          </div>
+          <div class="form-group">
+            <label>Street:</label>
+            <input [(ngModel)]="order.recipient.street">
+          </div>
+          <div class="form-group">
+            <label>House Number:</label>
+            <input [(ngModel)]="order.recipient.houseNumber">
+          </div>
+          <div class="form-group">
+            <label>City:</label>
+            <input [(ngModel)]="order.recipient.city">
+          </div>
+          <div class="form-group">
+            <label>Post Code:</label>
+            <input [(ngModel)]="order.recipient.postCode">
+          </div>
+          <div class="form-group">
+            <label>Phone Number:</label>
+            <input [(ngModel)]="order.recipient.phoneNumber">
+          </div>
+          <div class="form-group">
+            <label>Flat Number:</label>
+            <input [(ngModel)]="order.recipient.flatNumber">
+          </div>
+          <div class="button-group">
+            <button (click)="saveSection('recipientSection')" class="btn save-btn">Save</button>
+            <button (click)="cancelSection()" class="btn cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="sectionToEdit != 'recipientSection'">
+          <div class="info-group">
+            <label>Name:</label>
+            <p>{{ order.recipient.name || 'N/A' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Street:</label>
+            <p>{{ order.recipient.street }}</p>
+          </div>
+          <div class="info-group">
+            <label>House Number:</label>
+            <p>{{ order.recipient.houseNumber }}</p>
+          </div>
+          <div class="info-group">
+            <label>City:</label>
+            <p>{{ order.recipient.city }}</p>
+          </div>
+          <div class="info-group">
+            <label>Post Code:</label>
+            <p>{{ order.recipient.postCode }}</p>
+          </div>
+          <div class="info-group">
+            <label>Phone Number:</label>
+            <p>{{ order.recipient.phoneNumber }}</p>
+          </div>
+          <div class="info-group">
+            <label>Flat Number:</label>
+            <p>{{ order.recipient.flatNumber || 'N/A' }}</p>
+          </div>
+          <button (click)="toggleEditButton('recipientSection')" class="btn edit-btn">Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- user -->
+    <div class="grid-item">
+      <div class="section-card">
+        <h4>User Details</h4>
+        <div class="info-group">
+          <label>User ID:</label>
+          <p>{{ order.user.id }}</p>
+        </div>
+        <div class="info-group">
+          <label>Name:</label>
+          <p>{{ order.user.name }}</p>
+        </div>
+        <div class="info-group">
+          <label>Email:</label>
+          <p>{{ order.user.email }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!order" class="no-data-message">
+  <p>No order details available.</p>
+</div>

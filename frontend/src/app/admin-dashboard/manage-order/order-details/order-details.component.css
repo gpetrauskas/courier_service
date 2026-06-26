@@ -1,0 +1,178 @@
+.details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-gap: 16px;
+}
+
+.section-card {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+h4 {
+  color: #3e3e3e;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.form-group, .info-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #2f2f2f;
+  padding: 6px 0;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.92rem;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #8b7a6b;
+}
+
+.btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 8px;
+}
+
+.edit-btn {
+  background-color: #8b7a6b;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #6a4c37;
+}
+
+.save-btn {
+  background-color: #446c47;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #2f4e32;
+}
+
+.cancel-btn {
+  background-color: #dcdcdc;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #cfcfcf;
+}
+
+.button-group {
+  margin-top: 16px;
+}
+
+.no-data-message {
+  text-align: center;
+  font-size: 1rem;
+  color: #777;
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-gap: 12px;
+  }
+
+  .section-card {
+    padding: 12px;
+    margin-bottom: 0;
+  }
+
+  h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+  }
+
+  .form-group, .info-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  label {
+    flex: 0 0 120px;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  p, input, select {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 6px 0;
+  }
+
+  input, select {
+    padding: 6px;
+    min-width: 0;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+  }
+
+  .form-group {
+    align-items: flex-start;
+  }
+
+  .form-group label {
+    padding-top: 6px;
+  }
+}

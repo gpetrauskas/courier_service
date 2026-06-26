@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History</title>
+</head>
+
+<app-filter
+  [showAdminNotificationFilter]="true"
+  (filterChange)="onFilterChange($event)"
+></app-filter>
+
+<header>
+  <nav>
+
+<app-pagination
+  [currentPage]="page"
+  [pageSize]="size"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+></app-pagination>
+
+</nav>
+</header>
+
+<div class="card-container">
+  @for (notification of notifications; track notification.id) {
+      <mat-card
+        appearance="outlined"
+        class="notification-card"
+        (click)="selectNotification(notification.id)"
+        [ngClass]="{ 'xx': selectedId === notification.id }"
+      >
+
+        <mat-card-header>
+          <mat-card-title>{{ notification.title }}</mat-card-title>
+          <mat-card-subtitle>{{ notification.createdAt | date: 'short' }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+        @if (selectedId == notification.id) {
+          {{ notification.message }}
+        } @else {
+          {{ notification.message.slice(0, 120) }}
+        }
+        </mat-card-content>
+        <button class="delete-btn" (click)="delete(notification.id, $event)">Delete</button>
+      </mat-card>
+  }
+</div>
+</html>

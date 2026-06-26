@@ -1,0 +1,36 @@
+.notification-card {
+  margin-bottom: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.notification-card:hover {
+  background-color: #fff8dc;
+  cursor: pointer;
+}
+
+.xx,
+.xx:hover {
+  background-color: wheat;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  margin: 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  align-self: flex-end;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.card-container {
+  padding: 16px;
+}

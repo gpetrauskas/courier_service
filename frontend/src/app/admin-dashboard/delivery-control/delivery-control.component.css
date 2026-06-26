@@ -1,0 +1,17 @@
+.delivery-control-nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.delivery-control-nav ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.delivery-control-nav ul li a.active {
+  font-weight: bold;
+  color: #007bff;
+}
+

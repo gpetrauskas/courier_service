@@ -1,0 +1,36 @@
+<div class="delivery-options">
+  <h3>Pricing Options</h3>
+
+  <form [formGroup]="deliveryOptionsForm" (ngSubmit)="enterSenderAddress()">
+
+  <label for="weight">Weight</label>
+  <select id="weight" formControlName="weight" required>
+    <option *ngFor="let option of weightOptions" [ngValue]="option">{{ option.description }} - €{{ option.price }}</option>
+  </select>
+    <div *ngIf="(deliveryOptionsForm.get('weight')?.invalid && deliveryOptionsForm.get('weight')?.touched)">
+      <span class="error">Weight is required</span>
+    </div>
+
+  <label for="size">Dimensions</label>
+  <select id="size" formControlName="size" required>
+    <option *ngFor="let option of sizeOptions" [ngValue]="option">{{ option.description }} - €{{ option.price }}</option>
+  </select>
+    <div *ngIf="deliveryOptionsForm.get('size')?.invalid && deliveryOptionsForm.get('size')?.touched">
+      <span class="error">Dimensions is required</span>
+    </div>
+
+  <label for="description">Description</label>
+  <textarea id="description" formControlName="description"></textarea>
+
+  <label for="preference">Delivery Preference</label>
+  <select id="preference" formControlName="preference" required>
+    <option *ngFor="let option of preferenceOptions" [ngValue]="option">{{ option.description }} - €{{ option.price }}</option>
+  </select>
+    <div *ngIf="deliveryOptionsForm.get('preference')?.invalid && deliveryOptionsForm.get('preference')?.touched">
+      <span class="error">Delivery preference is required</span>
+    </div>
+
+  <button type="submit">Enter Address</button>
+
+  </form>
+</div>

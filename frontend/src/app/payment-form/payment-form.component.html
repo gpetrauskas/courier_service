@@ -1,0 +1,89 @@
+<div class="payment-form">
+  <h2>Payment Information</h2>
+  <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+    <div class="payment-methods">
+      <div class="radio-option">
+        <input type="radio" formControlName="paymentMethod" id="newCard" value="new" (change)="onPaymentMethodChange('new')">
+        <label for="newCard">
+          <span class="radio-custom"></span> New Card
+        </label>
+      </div>
+
+      <div class="radio-option" *ngIf="savedPaymentMethods.length > 0">
+        <input type="radio" formControlName="paymentMethod" id="savedCard" value="saved" (change)="onPaymentMethodChange('saved')">
+        <label for="savedCard">
+          <span class="radio-custom"></span> Saved Cards
+        </label>
+      </div>
+    </div>
+
+    <div *ngIf="!showNewCardFields && savedPaymentMethods.length > 0" class="saved-cards-section">
+        <label for="savedPaymentMethods">Select a saved card:</label>
+        <select id="savedPaymentMethods" formControlName="savedPaymentMethodId">
+          <option value="" disabled>Select saved card</option>
+          <option *ngFor="let method of savedPaymentMethods" [value]="method.id">
+            @if (method.type === 'CREDIT_CARD') {
+              {{ asCreditCard(method).last4 }}
+            }
+          </option>
+        </select>
+        <div *ngIf="paymentForm.get('savedPaymentMethodId')?.errors?.['required'] && paymentForm.get('savedPaymentMethodId')?.touched" class="error-message">
+          Please select a saved card
+        </div>
+      <div class="form-group">
+        <label for="cvc">CVC:</label>
+        <input type="text" id="cvc" formControlName="cvc">
+        <div *ngIf="paymentForm.get('cvc')?.invalid && paymentForm.get('cvc')?.touched" class="error-message">
+          CVV must be 3 digits
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <div *ngIf="showNewCardFields" class="new-card-section">
+      <div class="form-group">
+        <label for="card-holder-name">Card Holder Name:</label>
+        <input type="text" id="card-holder-name" formControlName="cardHolderName">
+        <div class="error-message" *ngIf="paymentForm.get('cardHolderName')?.invalid && paymentForm.get('cardHolderName')?.touched">
+          Card holder name is required.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="card-number">Card Number:</label>
+        <input type="text" id="card-number" formControlName="cardNumber">
+        <div class="error-message" *ngIf="paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched">
+          Card number must be 16 digits.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="expiry-date">Expiry Date:</label>
+        <input type="text" id="expiry-date" formControlName="expiryDate">
+        <div class="error-message" *ngIf="paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched">
+          Expiry date must be in MM/YY format.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="cvc-new-card">CVC:</label>
+        <input type="text" id="cvc-new-card" formControlName="cvc">
+        <div class="error-message" *ngIf="paymentForm.get('cvc')?.invalid && paymentForm.get('cvc')?.touched">
+          CVV must be 3 digits.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="saveCard">
+          Save Card
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-button">Submit Payment</button>
+    <div class="payment-sum">Total to pay: {{ paymentInfo?.amount }} EUR</div>
+  </form>
+</div>

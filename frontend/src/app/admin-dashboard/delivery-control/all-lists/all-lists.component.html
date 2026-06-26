@@ -1,0 +1,53 @@
+<app-filter
+  [showTaskListFilter]="true"
+  (filterChange)="onFilterChange($event)"
+></app-filter>
+
+<div class="pagination-control">
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalItems]="totalItems"
+    [pageSize]="pageSize"
+    [totalPages]="totalPages"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+  ></app-pagination>
+</div>
+
+<div class="list-container" *ngIf="allLists.length > 0; else noLists">
+  <table class="styled-table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Assigned Courier</th>
+      <th>Created At</th>
+      <th>Completed At</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr *ngFor="let task of allLists">
+      <td data-label="ID"> {{ task.id }}</td>
+      <td data-label="TYPE"> {{ task.taskType }} </td>
+      <td data-label="STATUS"> {{ task.deliveryStatus }} </td>
+      <td data-label="COURIER"> {{ task.courierId }} </td>
+      <td data-label="CREATED_AT"> {{ task.createdAt | date:'short'}} </td>
+      <td data-label="COMPLETED_AT">{{ task.deliveryStatus === 'CANCELED'
+        ? 'Canceled'
+        : (task.completedAt ? (task.completedAt | date:'short') : 'Pending') }}
+      </td>
+      <td data-label="actions" class="action-buttons">
+        <button class="details-btn" (click)="viewDetails(task.id)">Details</button>
+        <button class="cancel-btn" [disabled]="task.deliveryStatus === 'CANCELED' || task.deliveryStatus === 'COMPLETED'" (click)="cancelTask(task.id)">Cancel</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #noLists>
+  <p>No Lists</p>
+</ng-template>

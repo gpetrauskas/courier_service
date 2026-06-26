@@ -1,0 +1,87 @@
+<div class="filters">
+  <ng-container *ngIf="showUserFilter">
+    <div class="filter-item">
+      <label for="roleFilter">Role: </label>
+      <select id="roleFilter" [(ngModel)]="userRole" (change)="emitUserFilter()">
+        <option *ngFor="let role of userRoles" [value]="role">{{ role || 'All' }}</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label for="search-keyword">Search: </label>
+      <input type="text" id="search-keyword" [(ngModel)]="keyword" placeholder="search by keyword">
+      <button id="search-button" (click)="emitUserFilter()">Search</button>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="showTicketFilter">
+    <div class="filter-item">
+      <label for="search-status">Status: </label>
+      <select id="search-status" [(ngModel)]="ticketStatus" (change)="emitTicketFilter()">
+        <option *ngFor="let status of ticketStatuses" [value]="status">{{ status || 'ALL' }}</option>
+      </select>
+    </div>
+    @if (isAdmin) {
+    <div class="filter-item">
+      <label for="search-by-person-id">Person ID</label>
+      <input type="text" id="search-by-person-id" [(ngModel)]="personIdTicket" placeholder="Person ID">
+      <button class="search-button" (click)="emitTicketFilter()">Search</button>
+    </div>
+    }
+  </ng-container>
+
+  <ng-container *ngIf="showNotificationFilter">
+    <div class="filter-item">
+      <label for="notification-status-filter">Status</label>
+      <select id="notification-status-filter" [(ngModel)]="notificationStatus" (change)="emitNotificationFilter()">
+        <option *ngFor="let status of notificationStatuses" [value]="status">{{ status || 'ALL' }}</option>
+      </select>
+    </div>
+  </ng-container>
+
+    <ng-container *ngIf="showAdminNotificationFilter">
+    <div class="filter-item">
+      <label for="notification-keyword-filter">Keyword</label>
+      <input type="text" id="notification-keyword-filter" [(ngModel)]="notificationKeyword" (change)="emitAdminNotificationFilter()" placeholder="keyword">
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="showOrderFilter">
+    <div class="filter-item">
+      <label for="orderFilter">Status: </label>
+      <select id="orderFilter" [(ngModel)]="orderStatus" (change)="emitOrderFilter()">
+        <option *ngFor="let status of orderStatuses" [value]="status">{{ status || 'All' }}</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label for="user-id">User ID: </label>
+      <input type="text" id="user-id" [(ngModel)]="userID" (input)="emitOrderFilter()">
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="showTaskListFilter">
+    <div class="filter-item">
+      <label for="is-canceled">Show Canceled?</label>
+      <input type="radio" id="is-canceled" [(ngModel)]="canceledTasks" (click)="toggleCanceledTasks()" (input)="emitTaskFilter()">
+    </div>
+    <div class="filter-item">
+      <label for="task-type">Task Type: </label>
+      <select id="task-type" [(ngModel)]="taskType" (change)="emitTaskFilter()">
+        <option *ngFor="let type of taskTypes" [value]="type">{{ type || 'All' }}</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label for="delivery-status">Delivery Status: </label>
+      <select id="delivery-status" [(ngModel)]="deliveryStatus" (change)="emitTaskFilter()">
+        <option *ngFor="let status of deliveryStatuses" [value]="status">{{ status || 'All' }}</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label for="courier-id">Courier ID: </label>
+      <input type="text" id="courier-id" [(ngModel)]="courierID" (change)="emitTaskFilter()">
+    </div>
+    <div class="filter-item">
+      <label for="task-id">Task ID: </label>
+      <input type="text" id="task-id" [(ngModel)]="taskID" (change)="emitTaskFilter()">
+    </div>
+  </ng-container>
+</div>

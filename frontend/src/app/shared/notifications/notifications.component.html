@@ -1,0 +1,70 @@
+<app-pagination
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+></app-pagination>
+<app-filter
+  [showNotificationFilter]="true"
+  (filterChange)="onNotificationFilterChange($event)"
+></app-filter>
+
+<mat-card class="notification-container">
+  <mat-card-header>
+    @if (notifications.length > 0) {
+    <div class="notification-main-control">
+      <mat-card-title>Notifications</mat-card-title>
+      <button mat-stroked-button (click)="openConfirmDialog()">Delete All</button>
+      <button [disabled]="!hasUnreadNotifications()" (click)="markAsRead()" mat-stroked-button>Mark All as Read</button>
+    </div>
+    } @else {
+      No notifications
+    }
+  </mat-card-header>
+
+  <mat-card-content>
+    <mat-accordion>
+      @for (notification of notifications; track notification.id) {
+      <mat-expansion-panel
+        [expanded]="notification.id === selectedId"
+        [class.unread]="!notification.isRead"
+        (opened)="markAsRead(notification.id)"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <div class="panel-header">
+              <mat-icon class="notification-icon">notifications</mat-icon>
+              <div class="header-text">
+                <div class="title">{{ notification.title }}</div>
+                <div class="date">{{ notification.createdAt | date: 'short' }}</div>
+              </div>
+            </div>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="expanded-content">
+          <p>{{ notification.message }}</p>
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="openConfirmDialog(notification.id)">
+              <mat-icon>delete</mat-icon> DELETE
+            </button>
+          </div>
+        </div>
+      </mat-expansion-panel>
+      }
+    </mat-accordion>
+
+    <mat-card-footer class="notification-card-footer"></mat-card-footer>
+  </mat-card-content>
+</mat-card>
+
+<app-confirmation-dialog
+  [isVisible]="showConfirmDialog"
+  itemType=""
+  [itemName]="dialogConfig.message"
+  actionType="DELETE"
+  (confirmed)="onDeleteAllConfirmed()"
+  (canceled)="onDeleteAllCanceled()">
+</app-confirmation-dialog>

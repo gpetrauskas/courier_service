@@ -1,0 +1,77 @@
+<div class="sender-address">
+  <h3>Sender Address</h3>
+
+  <form [formGroup]="addressForm">
+
+    <div id="saved-address-container">
+      <label>
+        <input type="radio" value="saved" name="senderAddressOption" (click)="toggleSenderAddressForm('saved')" [checked]="selectedOption === 'saved'" > Select Sender Address
+      </label>
+      <select id="saved-sender-address" [disabled]="selectedOption !== 'saved'" (change)="onAddressSelect($event)">
+        <option value="" disabled>Select an address</option>
+        <option *ngFor="let addr of savedAddresses" [value]="addr.id">{{ addr.street }} {{ addr.houseNumber }} {{ addr.city }}</option>
+      </select>
+      <div id="edit-sender-address-contacts" *ngIf="selectedOption === 'saved'">
+        <label for="senderName">Name</label>
+        <input type="text" id="senderName" formControlName="name" required>
+        <div *ngIf="addressForm.get('name')?.invalid && addressForm.get('name')?.touched">
+          <span class="error">Name required</span>
+        </div>
+        <label for="senderPhoneNumber">Phone</label>
+        <input type="text" id="senderPhoneNumber" formControlName="phoneNumber" required>
+        <div *ngIf="addressForm.get('phoneNumber')?.invalid && addressForm.get('phoneNumber')?.touched">
+          <span class="error">Phone number required</span>
+        </div>
+      </div>
+    </div>
+
+
+  <div id="new-address-container">
+    <label>
+      <input type="radio" value="new" name="senderAddressOption" (click)="toggleSenderAddressForm('new')" [checked]="selectedOption === 'new'"> Enter new sender address
+    </label>
+    <div id="new-sender-address" *ngIf="selectedOption === 'new'">
+      <label for="street">Street</label>
+      <input id="street" name="street" formControlName="street" required />
+      <div *ngIf="addressForm.get('street')?.invalid && addressForm.get('street')?.touched">
+        <span class="error">Street required</span>
+      </div>
+
+      <label for="houseNumber">House Number</label>
+      <input id="houseNumber" name="houseNumber" formControlName="houseNumber" required />
+      <div *ngIf="addressForm.get('houseNumber')?.invalid && addressForm.get('houseNumber')?.touched">
+        <span class="error">House Number required</span>
+      </div>
+
+      <label for="flatNumber">Flat Number</label>
+      <input id="flatNumber" name="flatNumber" formControlName="flatNumber" />
+
+      <label for="postCode">Post Code</label>
+      <input id="postCode" name="postCode" formControlName="postCode" required />
+      <div *ngIf="addressForm.get('postCode')?.invalid && addressForm.get('postCode')?.touched">
+        <span class="error">Post Code is required</span>
+      </div>
+
+      <label for="city">City</label>
+      <input id="city" name="city" formControlName="city" required />
+      <div *ngIf="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+        <span class="error">City is required</span>
+      </div>
+
+      <label for="name">Name</label>
+      <input id="name" name="name" formControlName="name" required />
+      <div *ngIf="addressForm.get('name')?.invalid && addressForm.get('name')?.touched">
+        <span class="error">Name is required</span>
+      </div>
+
+      <label for="phoneNumber">Phone Number</label>
+      <input id="phoneNumber" name="phoneNumber" formControlName="phoneNumber" required />
+      <div *ngIf="addressForm.get('phoneNumber')?.invalid && addressForm.get('phoneNumber')?.touched">
+        <span class="error">Phone number is required</span>
+      </div>
+    </div>
+  </div>
+
+  <button (click)="enterRecipientAddress()" [disabled]="selectedOption === ''">Enter Recipient Address</button>
+  </form>
+</div>
