@@ -28,9 +28,9 @@
 
 ### Menu by role
 <p>
-    <img src="docs/user.png" width="30%" />
-    <img src="docs/admin.png" width="30%" />
-    <img src="docs/courier.png" width="30%" />
+    <img src="docs/user.png" width="20%" />
+    <img src="docs/admin.png" width="20%" />
+    <img src="docs/courier.png" width="20%" />
 </p>
 
 #### Role-based UI navigation for different roles
@@ -49,19 +49,15 @@
 #### Payment selection using saved or new card methods
 
 ### Task Creation
-<p>
-    <img src="docs/task-start.png" width="32%" />
-    <img src="docs/task-select-item.png" width="32%" />
-    <img src="docs/task-details.png" width="32%" />
-</p>
-
+<p><img src="docs/task-start.png" width="30%" /></p>
+<p><img src="docs/task-select-item.png" width="90%" /></p>
+<p><img src="docs/task-details.png" width="90%" /></p>
 #### Task lifecycle covering creation, item selection with failure tracking and final assignment view
 
 ### Task (courier)
-<p>
-    <img src="docs/task-list-courier.png" width="45%" />
-    <img src="docs/task-details-courier.png" width="45%" />
-</p>
+
+<p><img src="docs/task-list-courier.png" width="90%" /> </p>
+<p><img src="docs/task-details-courier.png" width="90%" /> </p>
 
 #### Courier task view for assigned tasks and detailed view with item updates
 
@@ -136,8 +132,6 @@
 1. Copy '.env.example' to '.env'
 2. Fill the required environment variables
 3. Generate a minimum 32 characters 'JWT_SECRET';
-4. Build backend: 'mvn package -DskipTests'
-5. Build frontend: 'cd frontend" 'cd frontend && ng build''
 
 ### Start
 
