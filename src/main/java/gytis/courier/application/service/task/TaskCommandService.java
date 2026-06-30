@@ -98,7 +98,6 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
     @Override
     @Transactional
     public void addItemNote(AddItemNoteCommand command) {
-        System.out.println("cia cia " + command.note() + " " + command.taskId() + " " + command.itemId() + " " + command.myId());
         Task task = findWithItemsById(command.taskId());
 
         task.validateCourierOwnership(command.myId());

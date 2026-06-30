@@ -1,5 +1,6 @@
 package gytis.courier;
 
+import gytis.courier.application.command.AddItemNoteCommand;
 import gytis.courier.application.command.CreateTaskCommand;
 import gytis.courier.application.port.in.task.ParcelAssignmentFacade;
 import gytis.courier.application.port.out.DomainEventPublisher;
@@ -7,12 +8,10 @@ import gytis.courier.application.port.out.order.OrderQueryPort;
 import gytis.courier.application.port.out.task.TaskCommandPort;
 import gytis.courier.application.service.person.CourierCommandService;
 import gytis.courier.application.service.task.TaskCommandService;
+import gytis.courier.application.service.task.UpdateItemStatusCommand;
 import gytis.courier.domain.event.CourierChangeEvent;
 import gytis.courier.domain.order.ParcelStatus;
-import gytis.courier.domain.task.Task;
-import gytis.courier.domain.task.TaskAssignmentPolicy;
-import gytis.courier.domain.task.TaskItemCreationSnapshot;
-import gytis.courier.domain.task.TaskType;
+import gytis.courier.domain.task.*;
 
 import gytis.courier.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -40,6 +39,7 @@ public class TaskCommandServiceTest {
     private final String parcelContents = "books";
     private final String deliveryMethodName = "overnight";
 
+    private final Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
     private final List<TaskItemCreationSnapshot> snapshots = List.of(new TaskItemCreationSnapshot(
             parcelId, ParcelStatus.PICKING_UP, senderAddressId, recipientAddressId, parcelContents, deliveryMethodName
     ));
@@ -80,8 +80,6 @@ public class TaskCommandServiceTest {
 
     @Test
     void successOnAddItems() {
-        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
-
         when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task));
         when(orderQueryPort.findOrdersByParcelIds(parcelsIds)).thenReturn(snapshots);
 
@@ -103,8 +101,6 @@ public class TaskCommandServiceTest {
 
     @Test
     void throwOnAddItemsOrdersNotFound() {
-        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
-
         when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task));
         when(orderQueryPort.findOrdersByParcelIds(parcelsIds)).thenThrow(ResourceNotFoundException.class);
 
@@ -116,8 +112,6 @@ public class TaskCommandServiceTest {
 
     @Test
     void successOnChangeCourier() {
-        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
-
         when(taskCommandPort.getById(taskId)).thenReturn(Optional.of(task));
 
         Long newCourierId = 7L;
@@ -128,6 +122,78 @@ public class TaskCommandServiceTest {
         verify(eventPublisher).publish(any(CourierChangeEvent.class));
         verify(taskCommandPort).update(task);
     }
+
+    @Test
+    void successOnTaskCancel() {
+        when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task));
+
+        service.cancel(taskId, adminId);
+
+        verify(taskCommandPort).updateWithItems(task);
+        verify(eventPublisher).publish(anyList());
+    }
+
+    @Test
+    void successOnUpdateItemStatus() {
+        TaskItem taskItem = TaskItem.restore().id(55L).parcelStatus(ParcelStatus.PICKING_UP).build();
+        Task task1 = Task.restore().id(1L).items(List.of(taskItem)).courierId(2L).deliveryStatus(DeliveryStatus.IN_PROGRESS).build();
+        when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
+
+        service.updateItemStatus(new UpdateItemStatusCommand(task1.getCourierId(), task1.getId(), taskItem.getId(), ParcelStatus.PICKED_UP));
+
+        verify(taskCommandPort).updateWithItems(task1);
+    }
+
+    @Test
+    void successOnAddItemNote() {
+        TaskItem taskItem = TaskItem.restore().id(2L).parcelStatus(ParcelStatus.PICKING_UP).build();
+        Task task1 = Task.restore().id(1L).items(List.of(taskItem)).courierId(3L).deliveryStatus(DeliveryStatus.IN_PROGRESS).build();
+        when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
+
+        service.addItemNote(new AddItemNoteCommand(task1.getCourierId(), task1.getId(), taskItem.getId(), "note here"));
+
+        verify(taskCommandPort).updateWithItems(task1);
+    }
+
+    @Test
+    void successOnTaskComplete() {
+        TaskItem item = TaskItem.restore().id(1L).parcelStatus(ParcelStatus.PICKED_UP).build();
+        Task task1 = Task.restore().id(2L).deliveryStatus(DeliveryStatus.AT_CHECKPOINT).courierId(3L).items(List.of(item)).build();
+
+        when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
+
+        service.complete(task1.getId());
+
+        verify(taskCommandPort).updateWithItems(task1);
+        verify(eventPublisher).publish(anyList());
+    }
+
+    @Test
+    void successOnItemRemove() {
+        TaskItem taskItem = TaskItem.restore().id(99L).parcelStatus(ParcelStatus.PICKING_UP).parcelId(parcelId).build();
+        Task task1 = Task.restore().id(taskId).courierId(courierId).createdByAdminId(adminId).items(List.of(taskItem)).deliveryStatus(DeliveryStatus.IN_PROGRESS).build();
+
+        when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task1));
+
+        service.removeItem(taskId, 99L, adminId);
+
+        verify(parcelAssignmentFacade).unassignParcels(List.of(taskItem.getParcelId()));
+        verify(taskCommandPort).updateWithItems(task1);
+    }
+
+    @Test
+    void successOnCheckIn() {
+        TaskItem item = TaskItem.restore().id(99L).parcelId(parcelId).parcelStatus(ParcelStatus.PICKED_UP).build();
+        Task task1 = Task.restore().id(taskId).courierId(courierId).items(List.of(item)).deliveryStatus(DeliveryStatus.RETURNING_TO_STATION).build();
+
+        when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
+
+        service.checkIn(taskId, courierId);
+
+        verify(taskCommandPort).updateWithItems(task1);
+        verify(eventPublisher).publish(anyList());
+    }
+
 
 
 

@@ -25,7 +25,7 @@ public class Task {
     public Long getCourierId() { return courierId; }
     public Long getCreatedByAdminId() { return createdByAdminId; }
     public Long getCanceledByAdminId() { return canceledByAdminId; }
-    public List<TaskItem> getTaskItems() { return taskItems; }
+    public List<TaskItem> getTaskItems() { return Collections.unmodifiableList(this.taskItems); }
     public TaskType getTaskType() { return taskType; }
     public DeliveryStatus getDeliveryStatus() { return deliveryStatus; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -137,8 +137,6 @@ public class Task {
                 .collect(Collectors.groupingBy(
                 s -> s.getParcelStatus().isFailed()
         ));
-
-        System.out.println("size sorted " + sortedItems.size());
 
         this.deliveryStatus = DeliveryStatus.COMPLETED;
         this.completedAt = LocalDateTime.now();

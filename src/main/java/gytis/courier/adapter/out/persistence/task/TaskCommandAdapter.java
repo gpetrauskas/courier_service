@@ -52,6 +52,12 @@ public class TaskCommandAdapter implements TaskCommandPort {
                 managed.getItems().stream()
                         .filter(e -> e.getId().equals(domainItem.getId()))
                         .findFirst()
-                        .ifPresent(e -> itemMapper.update(domainItem, e)));
+                        .ifPresentOrElse(e -> itemMapper.update(domainItem, e),
+                                () -> {
+                            TaskItemJpaEntity itemJpa = itemMapper.toEntity(domainItem);
+                            itemJpa.setTask(managed);
+                            managed.getItems().add(itemJpa);
+                        })
+        );
     }
 }
