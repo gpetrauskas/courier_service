@@ -42,8 +42,6 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
     @Override
     @Transactional
     public void createTask(CreateTaskCommand command) {
-        System.out.println("cia cia " + command.taskType() + " " + command.parcelIds());
-
         assignmentPolicy.ensureCourierIsAvailable(command.courierId());
 
         List<TaskItemCreationSnapshot> taskItemCreationSnapshots = orderQueryPort.findOrdersByParcelIds(command.parcelIds());
@@ -137,8 +135,6 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
     @Transactional
     public void changeCourier(Long taskId, Long courierId) {
         Task task = findBasicById(taskId);
-
-        System.out.println("task courier id " + task.getCourierId());
 
         courierService.deactivate(task.getCourierId());
         courierService.activate(courierId);

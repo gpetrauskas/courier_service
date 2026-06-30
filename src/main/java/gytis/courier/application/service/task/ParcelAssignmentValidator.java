@@ -25,19 +25,15 @@ public class ParcelAssignmentValidator {
                 .map(TaskItemCreationSnapshot::parcelId)
                 .collect(Collectors.toSet());
 
-        System.out.println("cia fetched isd " + fetchedSet.size());
-
         if (requestedSet.size() != requestedIds.size()) {
             throw new IllegalStateException("Duplicate parcel IDS in request");
         }
-        System.out.println("cia fetched isd 2 " + fetchedSet.size());
 
         if (!fetchedSet.equals(requestedSet)) {
             Set<Long> missing = new HashSet<>(requestedIds);
             missing.removeAll(fetchedSet);
             throw new IllegalStateException("Missing parcels: " + missing);
         }
-        System.out.println("cia fetched isd 3 " + fetchedSet.size());
 
         for (TaskItemCreationSnapshot snapshot : snapshotList) {
             for (int i = 0; i < snapshotList.size(); i++) {
@@ -48,7 +44,5 @@ public class ParcelAssignmentValidator {
                 throw new IllegalStateException("Check parcels: invalid statuses");
             }
         }
-        System.out.println("cia fetched isd 4 " + fetchedSet.size());
-
     }
 }

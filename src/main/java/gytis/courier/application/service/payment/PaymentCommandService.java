@@ -50,7 +50,6 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         Payment payment = paymentPort.findByOrderId(command.orderId());
 
         PaymentMethod method = determinePaymentMethod(command, user);
-        System.out.println("koks method " + method.providerType());
         PaymentAttempt attempt = payment.startAttempt(method.providerType());
 
         var result = processorFactory.getProcessor(method).process(method, command.cvc());

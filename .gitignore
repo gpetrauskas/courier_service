@@ -8,8 +8,6 @@ package.json
 package-lock.json
 node_modules/
 
-src/test
-
 # Ignore resources directory
 src/main/resources/static/
 src/main/resources/templates/

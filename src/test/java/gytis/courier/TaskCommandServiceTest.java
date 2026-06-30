@@ -1,24 +1,20 @@
-/*
-package com.example.courier;
+package gytis.courier;
 
-import person.domain.gytis.courier.Admin;
-import person.domain.gytis.courier.Courier;
-import order.domain.gytis.courier.ParcelStatus;
-import com.example.courier.domain.*;
-import com.example.courier.dto.CreateTaskDTO;
-import com.example.courier.dto.mapper.DeliveryTaskMapper;
-import com.example.courier.repository.TaskRepository;
-import com.example.courier.service.order.query.OrderQueryService;
-import com.example.courier.service.person.query.PersonLookupService;
-import com.example.courier.adapter.in.security.CurrentPersonUseCase;
-import com.example.courier.service.task.TaskItemService;
-import com.example.courier.service.task.TaskCommandService;
-import com.example.courier.service.task.TaskQueryService;
-import com.example.courier.specification.task.TaskSpecificationBuilder;
-import com.example.courier.testutil.OrderTestBuilder;
-import com.example.courier.testutil.ParcelTestBuilder;
-import com.example.courier.testutil.TaskItemTestBuilder;
-import com.example.courier.validation.task.TaskValidator;
+import gytis.courier.application.command.CreateTaskCommand;
+import gytis.courier.application.port.in.task.ParcelAssignmentFacade;
+import gytis.courier.application.port.out.DomainEventPublisher;
+import gytis.courier.application.port.out.order.OrderQueryPort;
+import gytis.courier.application.port.out.task.TaskCommandPort;
+import gytis.courier.application.service.person.CourierCommandService;
+import gytis.courier.application.service.task.TaskCommandService;
+import gytis.courier.domain.event.CourierChangeEvent;
+import gytis.courier.domain.order.ParcelStatus;
+import gytis.courier.domain.task.Task;
+import gytis.courier.domain.task.TaskAssignmentPolicy;
+import gytis.courier.domain.task.TaskItemCreationSnapshot;
+import gytis.courier.domain.task.TaskType;
+
+import gytis.courier.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,130 +30,105 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TaskCommandServiceTest {
+    private final Long taskId = 3L;
+    private final Long adminId = 5L;
+    private final Long courierId = 6L;
+    private final Long parcelId = 8L;
+    private final Long senderAddressId = 9L;
+    private final Long recipientAddressId = 10L;
+    private final List<Long> parcelsIds = List.of(8L);
+    private final String parcelContents = "books";
+    private final String deliveryMethodName = "overnight";
 
-    @Mock private PersonLookupService personLookupService;
-    @Mock private final TaskValidator taskValidator = new TaskValidator();
-    @Mock private TaskRepository taskRepository;
-    @Mock private TaskSpecificationBuilder specificationBuilder;
-    @Mock private TaskItemService taskItemService;
-    @Mock private DeliveryTaskMapper deliveryTaskMapper;
-    @Mock private CurrentPersonUseCase currentPersonService;
-    @Mock private OrderQueryService orderQueryService;
-    @Mock private TaskQueryService taskQueryService;
+    private final List<TaskItemCreationSnapshot> snapshots = List.of(new TaskItemCreationSnapshot(
+            parcelId, ParcelStatus.PICKING_UP, senderAddressId, recipientAddressId, parcelContents, deliveryMethodName
+    ));
 
-    @InjectMocks private TaskCommandService taskCommandService;
+    @Mock private TaskCommandPort taskCommandPort;
+    @Mock private OrderQueryPort orderQueryPort;
+    @Mock private ParcelAssignmentFacade parcelAssignmentFacade;
+    @Mock private DomainEventPublisher eventPublisher;
+    @Mock private TaskAssignmentPolicy taskAssignmentPolicy;
+    @Mock private CourierCommandService courierCommandService;
 
+    @InjectMocks private TaskCommandService service;
 
-    private void mockCommonServices(Courier courier, Admin admin, Order order, CreateTaskDTO dto, TaskItem item) {
-        when(personLookupService.fetchPersonByIdAndType(dto.courierId(), Courier.class)).thenReturn(courier);
-        when(currentPersonService.getCurrentPersonAs(Admin.class)).thenReturn(admin);
-        when(orderQueryService.getAllOrdersWithParcelByParcelIds(dto.parcelsIds())).thenReturn(List.of(order));
-        when(taskItemService.createTaskItems(anyList(), any(Task.class))).thenReturn(List.of(item));
-    }
 
 
     @Test
-    void createNewDeliveryTask_pickupTask_Success() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, 2L, List.of(99L), "PICKUP");
-        Courier courier = new Courier();
-        Admin admin = new Admin();
+    void successOnCreateTask() {
+        CreateTaskCommand createTaskCommand = new CreateTaskCommand(adminId, courierId, TaskType.PICKUP, parcelsIds);
 
-        Parcel parcel = ParcelTestBuilder.parcelTestBuilder()
-                .withStatus(ParcelStatus.PICKING_UP)
-                .build();
+        when(orderQueryPort.findOrdersByParcelIds(createTaskCommand.parcelIds())).thenReturn(snapshots);
 
-        Order order = OrderTestBuilder.orderTestBuilder()
-                .withParcel(parcel)
-                .build();
+        service.createTask(createTaskCommand);
 
-        TaskItem item = TaskItemTestBuilder.taskItemTestBuilder()
-                .withOrder(order)
-                .build();
-
-        mockCommonServices(courier, admin, order, dto, item);
-
-        taskCommandService.initiateNewTask(dto);
-
-        assertTrue(courier.hasActiveTask());
-        verify(taskRepository).save(any(Task.class));
+        verify(taskCommandPort).create(any(Task.class));
+        verify(eventPublisher).publish(anyList());
     }
 
     @Test
-    void createNewDeliveryTask_deliveryTask_SuccessWithParcelStatusTransition() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, 2L, List.of(99L), "DELIVERY");
-        Courier courier = new Courier();
-        Admin admin = new Admin();
+    void throwsWhenCourierNtAvailable() {
+        doThrow(IllegalStateException.class).when(taskAssignmentPolicy).ensureCourierIsAvailable(courierId);
+        CreateTaskCommand createTaskCommand = new CreateTaskCommand(adminId, courierId, TaskType.PICKUP, parcelsIds);
 
-        Parcel parcel = ParcelTestBuilder.parcelTestBuilder()
-                .withStatus(ParcelStatus.PICKED_UP)
-                .build();
-        Order order = new OrderTestBuilder()
-                .withParcel(parcel)
-                .build();
-        TaskItem item = new TaskItemTestBuilder()
-                .withOrder(order)
-                .withTask(Task.create("DELIVERY", courier, admin))
-                .build();
+        assertThrows(IllegalStateException.class, () -> service.createTask(createTaskCommand));
 
-        mockCommonServices(courier, admin, order, dto, item);
-
-        taskCommandService.initiateNewTask(dto);
-
-        assertTrue(courier.hasActiveTask());
-        assertEquals(ParcelStatus.DELIVERING, parcel.getStatus());
-        verify(taskRepository).save(any(Task.class));
+        verify(eventPublisher, never()).publish(anyList());
+        verifyNoInteractions(taskCommandPort);
     }
 
     @Test
-    void getAllTaskLists_AdminView_ReturnsPaginatedResults() {
+    void successOnAddItems() {
+        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
 
+        when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task));
+        when(orderQueryPort.findOrdersByParcelIds(parcelsIds)).thenReturn(snapshots);
+
+        service.addItems(taskId, parcelsIds);
+
+        verify(parcelAssignmentFacade).assignParcels(parcelsIds);
+        verify(taskCommandPort).updateWithItems(task);
     }
 
     @Test
-    void validateCreation_validInput_passes() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, null, List.of(101L), "DELIVERY");
-        Courier courier = new Courier();
-        Parcel parcel = new Parcel();
-        parcel.setId(101L);
+    void throwsOnAddItemsTaskNotFound() {
+        when(taskCommandPort.getWithItemsById(taskId)).thenThrow(ResourceNotFoundException.class);
 
-        assertDoesNotThrow(() -> taskValidator.validateCreation(dto, courier, List.of(parcel)));
+        assertThrows(ResourceNotFoundException.class, () -> service.addItems(taskId, parcelsIds));
+
+        verify(taskCommandPort, never()).updateWithItems(any());
+        verify(parcelAssignmentFacade, never()).assignParcels(anyList());
     }
 
     @Test
-    void validateCreation_ParcelCountMismatch_Throws() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, null, List.of(101L), "DELIVERY");
+    void throwOnAddItemsOrdersNotFound() {
+        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
 
-        Courier courier = new Courier();
+        when(taskCommandPort.getWithItemsById(taskId)).thenReturn(Optional.of(task));
+        when(orderQueryPort.findOrdersByParcelIds(parcelsIds)).thenThrow(ResourceNotFoundException.class);
 
-        List<Parcel> emptyList = List.of();
+        assertThrows(ResourceNotFoundException.class, () -> service.addItems(taskId, parcelsIds));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new TaskValidator().validateCreation(dto, courier, emptyList));
+        verify(taskCommandPort, never()).update(task);
+        verify(parcelAssignmentFacade, never()).assignParcels(anyList());
     }
 
     @Test
-    void validateCreation_ParcelAlreadyAssigned_Throws() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, null, List.of(101L), "DELIVERY");
+    void successOnChangeCourier() {
+        Task task = Task.create(List.of(), courierId, adminId, TaskType.PICKUP);
 
-        Courier courier = new Courier();
+        when(taskCommandPort.getById(taskId)).thenReturn(Optional.of(task));
 
-        Parcel parcel = new Parcel();
-        parcel.assign();
+        Long newCourierId = 7L;
+        service.changeCourier(taskId, newCourierId);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new TaskValidator().validateCreation(dto, courier, List.of(parcel)));
+        verify(courierCommandService).deactivate(courierId);
+        verify(courierCommandService).activate(newCourierId);
+        verify(eventPublisher).publish(any(CourierChangeEvent.class));
+        verify(taskCommandPort).update(task);
     }
 
-    @Test
-    void validateCreation_CourierAlreadyHasActiveTask_Throws() {
-        CreateTaskDTO dto = new CreateTaskDTO(1L, null, List.of(101L), "DELIVERY");
 
-        Courier courier = new Courier();
-        courier.activateTask();
 
-        Parcel parcel = new Parcel();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> new TaskValidator().validateCreation(dto, courier, List.of(parcel)));
-    }
-}*/
+}
