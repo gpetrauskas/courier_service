@@ -69,7 +69,7 @@ public class LoginTest {
     }
 
     @Test
-    void successFullyLogsIn() {
+    void successfullyLogIn() {
         when(personCommandPort.findByEmail(command.email()))
                 .thenReturn(Optional.of(user));
         when(passwordHashingPort.matches(command.password(), user.getPassword()))
