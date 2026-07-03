@@ -162,6 +162,6 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
     private Task findBasicById(Long id) {
         return commandPort.getById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tak not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
     }
 }
