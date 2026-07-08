@@ -53,8 +53,6 @@ public class TaskCommandServiceTest {
 
     @InjectMocks private TaskCommandService service;
 
-
-
     @Test
     void successOnCreateTask() {
         CreateTaskCommand createTaskCommand = new CreateTaskCommand(adminId, courierId, TaskType.PICKUP, parcelsIds);
