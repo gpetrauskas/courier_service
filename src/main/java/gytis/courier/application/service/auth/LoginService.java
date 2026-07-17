@@ -1,5 +1,6 @@
 package gytis.courier.application.service.auth;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.auth.LoginCommand;
 import gytis.courier.application.port.in.auth.LoginResult;
 import gytis.courier.application.port.in.auth.LoginUseCase;
@@ -16,11 +17,13 @@ public class LoginService implements LoginUseCase {
     private final PasswordHashingPort passwordHashingPort;
     private final PersonCommandPort personCommandPort;
     private final TokenGeneratorPort tokenGeneratorPort;
+    private final ActivityLogUseCase logUseCase;
 
-    public LoginService(PasswordHashingPort passwordHashingPort, PersonCommandPort personCommandPort, TokenGeneratorPort tokenGeneratorPort) {
+    public LoginService(PasswordHashingPort passwordHashingPort, PersonCommandPort personCommandPort, TokenGeneratorPort tokenGeneratorPort, ActivityLogUseCase logUseCase) {
         this.passwordHashingPort = passwordHashingPort;
         this.personCommandPort = personCommandPort;
         this.tokenGeneratorPort = tokenGeneratorPort;
+        this.logUseCase = logUseCase;
     }
 
     @Override
@@ -45,6 +48,8 @@ public class LoginService implements LoginUseCase {
         );
 
         String refresh = tokenGeneratorPort.generateRefreshToken(person.getId());
+
+        logUseCase.saveLog(person.getEmail().email(), person.getRole(), "Logged In", "Person logs in");
 
         return new LoginResult(jwt, refresh);
     }

@@ -67,10 +67,12 @@ public class TicketAdapter implements TicketQueryPort, TicketCommandPort {
 
     @Override
     @Transactional
-    public void create(Ticket ticket) {
+    public Ticket create(Ticket ticket) {
         TicketJpaEntity entity = mapper.toEntity(ticket);
 
         repository.save(entity);
+
+        return mapper.toDomain(entity);
     }
 
     @Override

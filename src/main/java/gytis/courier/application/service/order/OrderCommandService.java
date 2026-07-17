@@ -1,5 +1,6 @@
 package gytis.courier.application.service.order;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.order.CancelOrderUseCase;
 import gytis.courier.application.port.in.order.PlaceOrderUseCase;
 import gytis.courier.application.port.in.payment.CreatePaymentUseCase;
@@ -24,13 +25,15 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
     private final OrderCommandPort commandPort;
     private final CreatePaymentUseCase createPaymentUseCase;
     private final DomainEventPublisher publisher;
+    private final ActivityLogUseCase logUseCase;
 
-    public OrderCommandService(AddressResolver addressResolver, DeliveryOptionCommandPort deliveryPort, OrderCommandPort commandPort, CreatePaymentUseCase createPaymentUseCase, DomainEventPublisher publisher) {
+    public OrderCommandService(AddressResolver addressResolver, DeliveryOptionCommandPort deliveryPort, OrderCommandPort commandPort, CreatePaymentUseCase createPaymentUseCase, DomainEventPublisher publisher, ActivityLogUseCase logUseCase) {
         this.addressResolver = addressResolver;
         this.deliveryPort = deliveryPort;
         this.commandPort = commandPort;
         this.createPaymentUseCase = createPaymentUseCase;
         this.publisher = publisher;
+        this.logUseCase = logUseCase;
     }
 
     @Override
@@ -49,6 +52,10 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
         order = commandPort.insert(order);
 
         createPaymentUseCase.create(order.getId(), order.calculateShippingCost());
+
+        logUseCase.saveLog("USER", "order created", "Order #" + order.getId() + " - " + order.getDeliveryMethodName() + " delivery, " +
+                order.getParcel().getWeightDisplayName() + " weight, " + order.getParcel().getDimensionsDisplayName() + " size");
+
         return order.getId();
     }
 
@@ -61,5 +68,7 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
         commandPort.save(order);
 
         publisher.publish(canceledEvent);
+
+        logUseCase.saveLog("USER", "order canceled", "Order #" + order.getId() + " was canceled");
     }
 }

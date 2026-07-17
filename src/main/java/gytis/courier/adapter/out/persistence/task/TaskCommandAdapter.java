@@ -30,9 +30,11 @@ public class TaskCommandAdapter implements TaskCommandPort {
     }
 
     @Override
-    public void create(Task task) {
+    public Task create(Task task) {
         TaskJpaEntity taskEntity = taskMapper.toEntity(task);
         taskRepository.save(taskEntity);
+
+        return taskMapper.toDomain(taskEntity);
     }
 
     @Transactional

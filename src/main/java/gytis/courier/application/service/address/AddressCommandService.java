@@ -1,6 +1,7 @@
 package gytis.courier.application.service.address;
 
 import gytis.courier.application.command.PartialAddressUpdateCommand;
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.address.DeleteAddressUseCase;
 import gytis.courier.application.port.in.address.UpdateAddressUseCase;
 import gytis.courier.application.port.out.address.AddressPersistencePort;
@@ -15,9 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AddressCommandService implements UpdateAddressUseCase, DeleteAddressUseCase {
     private static final Logger logger = LoggerFactory.getLogger(AddressCommandService.class);
     private final AddressPersistencePort port;
+    private final ActivityLogUseCase logUseCase;
 
-    public AddressCommandService(AddressPersistencePort port) {
+    public AddressCommandService(AddressPersistencePort port, ActivityLogUseCase logUseCase) {
         this.port = port;
+        this.logUseCase = logUseCase;
     }
 
     @Override
@@ -28,6 +31,7 @@ public class AddressCommandService implements UpdateAddressUseCase, DeleteAddres
 
         port.save(address);
         logger.info("updated address with id: {}", addressId);
+        logUseCase.saveLog("USER", "address update", "Address #" + address.getId() + " was updated");
     }
 
     @Override
@@ -36,6 +40,8 @@ public class AddressCommandService implements UpdateAddressUseCase, DeleteAddres
         findAddressForCurrentPerson(addressId, userId);
         port.deleteById(addressId);
         logger.info("Deleted address with id: {}", addressId);
+        logUseCase.saveLog("USER", "address delete", "Address #" + addressId + " was deleted");
+
     }
 
     /* Helper methods

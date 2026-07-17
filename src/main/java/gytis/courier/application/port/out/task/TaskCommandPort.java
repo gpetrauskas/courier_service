@@ -9,5 +9,5 @@ public interface TaskCommandPort {
     Optional<Task> getWithItemsById(Long id);
     void update(Task task);
     void updateWithItems(Task task);
-    void create(Task task);
+    Task create(Task task);
 }

@@ -95,6 +95,14 @@ public class Parcel {
         return this.events.size();
     }
 
+    public String getWeightDisplayName() {
+        return this.weightName.replace("_weight", "");
+    }
+
+    public String getDimensionsDisplayName() {
+        return this.dimensionsName.replace("_size", "");
+    }
+
     public void cancel() { this.status = ParcelStatus.CANCELED; }
 
     public void markAsPickingUp() {

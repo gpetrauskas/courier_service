@@ -2,6 +2,7 @@ package gytis.courier.application.service.payment;
 
 import gytis.courier.application.command.PaymentCommand;
 import gytis.courier.application.command.PaymentSectionUpdateCommand;
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.payment.CancelPaymentUseCase;
 import gytis.courier.application.port.in.payment.CreatePaymentUseCase;
 import gytis.courier.application.port.in.payment.PayUseCase;
@@ -27,14 +28,16 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
     private final PaymentProcessorFactory processorFactory;
     private final DomainEventPublisher eventPublisher;
     private final PaymentMethodFactory methodFactory;
+    private final ActivityLogUseCase logUseCase;
 
     public PaymentCommandService(PaymentCommandPort paymentPort, UserCommandPort userPort,
-                                 PaymentProcessorFactory processorFactory, DomainEventPublisher eventPublisher, PaymentMethodFactory methodFactory) {
+                                 PaymentProcessorFactory processorFactory, DomainEventPublisher eventPublisher, PaymentMethodFactory methodFactory, ActivityLogUseCase logUseCase) {
         this.paymentPort = paymentPort;
         this.userPort = userPort;
         this.processorFactory = processorFactory;
         this.eventPublisher = eventPublisher;
         this.methodFactory = methodFactory;
+        this.logUseCase = logUseCase;
     }
 
     public void create(Long orderId, BigDecimal amount) {
@@ -64,6 +67,12 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
 
         paymentPort.update(payment);
         maybeEvent.ifPresent(eventPublisher::publish);
+
+        if (result.success()) {
+            logUseCase.saveLog("USER", "payment succeeded", "Payment #" + payment.getId() + " amount: " + payment.getAmount() + " succeed using " + result.providerType().name());
+        } else {
+            logUseCase.saveLog("USER", "payment failed", "Payment #" + payment.getId() + "failed - " + result.failureReason());
+        }
 
         return new PayReadModel(
                 result.providerType().name(),

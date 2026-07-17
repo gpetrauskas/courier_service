@@ -191,8 +191,4 @@ public class TaskCommandServiceTest {
         verify(taskCommandPort).updateWithItems(task1);
         verify(eventPublisher).publish(anyList());
     }
-
-
-
-
 }

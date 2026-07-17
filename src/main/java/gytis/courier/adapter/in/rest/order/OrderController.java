@@ -57,9 +57,7 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Long> addOrder(@RequestBody @Valid PlaceOrderRequest request, @AuthenticationPrincipal AuthenticatedPerson person) {
         var command = mapper.toPlaceOrderCommand(request, person.id());
-        Long orderId = placeOrderUseCase.placeOrder(command);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(placeOrderUseCase.placeOrder(command));
     }
 
     @PostMapping("/cancelOrder/{orderId}")

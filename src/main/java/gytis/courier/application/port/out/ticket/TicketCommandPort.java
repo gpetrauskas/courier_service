@@ -9,7 +9,7 @@ public interface TicketCommandPort {
     Optional<Ticket> findById(Long ticketId);
 
     void save(Ticket ticket);
-    void create(Ticket ticket);
+    Ticket create(Ticket ticket);
 
     void updateTimestamp(Long ticketId, LocalDateTime timestamp);
 }

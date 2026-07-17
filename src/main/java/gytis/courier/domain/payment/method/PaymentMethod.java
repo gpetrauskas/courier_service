@@ -16,11 +16,9 @@ public abstract class PaymentMethod {
     public void clearSensitive() {}
 
     void setSaves(boolean saved) { this.saved = saved; }
-    //public void setUser(Long userId) { this.userId = userId; }
     public void setToken(String token) { this.token = token; }
 
     public Long getId() { return id; }
-    //public Long getUser() { return userId; }
     public boolean isSaved() { return saved; }
     public abstract ProviderType providerType();
     public abstract void validate(String cvc);

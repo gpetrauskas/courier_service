@@ -8,6 +8,7 @@ import gytis.courier.application.port.in.task.ParcelAssignmentFacade;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.order.OrderQueryPort;
 import gytis.courier.application.port.out.task.TaskCommandPort;
+import gytis.courier.application.service.activitylog.ActivityLogService;
 import gytis.courier.application.service.person.CourierCommandService;
 import gytis.courier.domain.task.TaskItemCreationSnapshot;
 import gytis.courier.domain.task.Task;
@@ -27,16 +28,18 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
     private final DomainEventPublisher publisher;
     private final TaskAssignmentPolicy assignmentPolicy;
     private final CourierCommandService courierService;
+    private final ActivityLogService logService;
 
     public TaskCommandService(TaskCommandPort commandPort, OrderQueryPort orderQueryPort,
                               DomainEventPublisher publisher, TaskAssignmentPolicy assignmentPolicy,
-                              ParcelAssignmentFacade parcelAssignmentFacade, CourierCommandService courierService) {
+                              ParcelAssignmentFacade parcelAssignmentFacade, CourierCommandService courierService, ActivityLogService logService) {
         this.commandPort = commandPort;
         this.orderQueryPort = orderQueryPort;
         this.parcelAssignmentFacade = parcelAssignmentFacade;
         this.publisher = publisher;
         this.assignmentPolicy = assignmentPolicy;
         this.courierService = courierService;
+        this.logService = logService;
     }
 
     @Override
@@ -55,8 +58,10 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
                 .toList()
         );
 
-        commandPort.create(task);
+        Task taskWithId = commandPort.create(task);
         publisher.publish(task.pullEvents());
+
+        logService.saveLog("ADMIN", "task created", "Task #" + taskWithId.getId() + " with " + task.getTaskItems().size() + " items, created and assigned to courier #" + taskWithId.getCourierId());
     }
 
     @Override
@@ -81,6 +86,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
+
+        logService.saveLog("ADMIN", "cancel", "Task #" + task.getId() + " canceled");
     }
 
     @Override
@@ -93,6 +100,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
+
+        logService.saveLog("COURIER", "update item", "Task Item #" + command.taskItemId() + " status in Task #" + task.getId() + " was updated to " + command.status());
     }
 
     @Override
@@ -104,6 +113,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         task.addTaskItemNote(command.itemId(), command.note());
 
         commandPort.updateWithItems(task);
+
+        logService.saveLog("COURIER", "note add", "Courier #" + task.getCourierId() + " added note for item " + command.itemId() + " in Task #" + task.getId());
     }
 
     @Override
@@ -115,6 +126,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
+
+        logService.saveLog("ADMIN", "task complete", "Task #" + task.getId() + " was completed");
     }
 
 
@@ -141,6 +154,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         task.changeCourier(courierId).ifPresent(publisher::publish);
 
         commandPort.update(task);
+
+        logService.saveLog("ADMIN", "courier change", "Task #" + task.getId() + " new courier assigned");
     }
 
     @Override
@@ -153,6 +168,8 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
+
+        logService.saveLog("COURIER", "check-in", "Courier #" + task.getCourierId() + " checked in with Task #" + task.getId() + " size of " + task.getTaskItems().size());
     }
 
     private Task findWithItemsById(Long id) {
