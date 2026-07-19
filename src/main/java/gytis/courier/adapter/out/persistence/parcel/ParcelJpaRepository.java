@@ -29,5 +29,5 @@ public interface ParcelJpaRepository extends JpaRepository<ParcelJpaEntity, Long
 
     @Modifying
     @Query("UPDATE ParcelJpaEntity p SET p.status = :status WHERE p.id IN :ids")
-    void updateStatusByIds(@Param("status") ParcelStatus status, @Param("ids") List<Long> ids);
+    int updateStatusByIds(@Param("status") ParcelStatus status, @Param("ids") List<Long> ids);
 }

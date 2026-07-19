@@ -29,8 +29,7 @@ public class ParcelCommandAdapter implements ParcelCommandPort {
     @Override
     @Transactional
     public Parcel update(Parcel parcel) {
-        System.out.println("prie update " + parcel.getFailuresCount());
-        ParcelJpaEntity managedEntity = repository.findById(parcel.getId()).orElseThrow();
+            ParcelJpaEntity managedEntity = repository.findById(parcel.getId()).orElseThrow();
         mapper.updateEntity(parcel, managedEntity);
 
         return parcel;
@@ -38,8 +37,12 @@ public class ParcelCommandAdapter implements ParcelCommandPort {
 
     @Transactional
     @Override
-    public void changeStatuses(Map<ParcelStatus, List<Long>> groupedIdsByStatuses) {
-        groupedIdsByStatuses.forEach(repository::updateStatusByIds);
+    public int changeStatuses(Map<ParcelStatus, List<Long>> groupedIdsByStatuses) {
+        int total = 0;
+        for (Map.Entry<ParcelStatus, List<Long>> entry : groupedIdsByStatuses.entrySet()) {
+            total += repository.updateStatusByIds(entry.getKey(), entry.getValue());
+        }
+        return total;
     }
 
     @Transactional

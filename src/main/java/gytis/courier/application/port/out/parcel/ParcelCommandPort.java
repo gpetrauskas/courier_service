@@ -14,5 +14,5 @@ public interface ParcelCommandPort {
 
     Optional<Parcel> find(Long id);
     Parcel update(Parcel parcel);
-    void changeStatuses(Map<ParcelStatus, List<Long>> groupedIdsByStatuses);
+    int changeStatuses(Map<ParcelStatus, List<Long>> groupedIdsByStatuses);
 }

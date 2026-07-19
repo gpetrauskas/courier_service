@@ -59,7 +59,7 @@ public class Task {
         task.events.add(new TaskAssignedEvent(courierId));
 
         for (TaskItemCreationSnapshot snapshot : snapshots) {
-            TaskItem taskItem = TaskItem.create(snapshot);
+            TaskItem taskItem = TaskItem.create(snapshot, taskType);
             task.taskItems.add(taskItem);
         }
 
@@ -77,7 +77,7 @@ public class Task {
             if (taskItems.stream().anyMatch(p -> p.getId().equals(i.parcelId()))) {
                 throw new IllegalStateException("Item with ID " + i.parcelId() + " already in the list");
             }
-            taskItems.add(TaskItem.create(i));
+            taskItems.add(TaskItem.create(i, taskType));
         });
     }
 

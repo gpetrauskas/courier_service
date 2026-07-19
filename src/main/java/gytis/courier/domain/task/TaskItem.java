@@ -29,15 +29,20 @@ public class TaskItem {
         return new Builder();
     }
 
-    public static TaskItem create(TaskItemCreationSnapshot snapshot) {
+    public static TaskItem create(TaskItemCreationSnapshot snapshot, TaskType taskType) {
         Objects.requireNonNull(snapshot);
-        if (snapshot.status().availableForTask()) {
-            throw new IllegalStateException("Parcel with ID: " + snapshot.parcelId() + " and status: " + snapshot.status() + " is in final state and cannot be added");
+        if (!snapshot.status().canBeAddedToTask(taskType)) {
+            throw new IllegalStateException("Parcel with ID: " + snapshot.parcelId() + " and status: " + snapshot.status() + " is invalid for this task type");
         }
 
         TaskItem taskItem = new TaskItem();
         taskItem.parcelId = Objects.requireNonNull(snapshot.parcelId());
-        taskItem.parcelStatus = Objects.requireNonNull(snapshot.status());
+        taskItem.parcelStatus = Objects.requireNonNull(
+                taskType == TaskType.PICKUP ?
+                        ParcelStatus.PICKING_UP
+                        :
+                        ParcelStatus.DELIVERING
+        );
         taskItem.senderAddressId = Objects.requireNonNull(snapshot.senderAddressId());
         taskItem.recipientAddressId = Objects.requireNonNull(snapshot.recipientAddressId());
         taskItem.deliveryMethodName = Objects.requireNonNull(snapshot.deliveryMethodName());
@@ -63,7 +68,7 @@ public class TaskItem {
     }
 
     public void updateStatus(ParcelStatus status) {
-        if (!this.parcelStatus.isValidTransition(status)) {
+        if (!this.parcelStatus.isValidTaskItemTransition(status)) {
             throw new IllegalStateException("Item status " + this.parcelStatus + " cannot be changed to : " + status);
         }
 

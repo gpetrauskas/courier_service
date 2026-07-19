@@ -10,10 +10,7 @@ import gytis.courier.application.port.out.order.OrderQueryPort;
 import gytis.courier.application.port.out.task.TaskCommandPort;
 import gytis.courier.application.service.activitylog.ActivityLogService;
 import gytis.courier.application.service.person.CourierCommandService;
-import gytis.courier.domain.task.TaskItemCreationSnapshot;
-import gytis.courier.domain.task.Task;
-import gytis.courier.domain.task.TaskAssignmentPolicy;
-import gytis.courier.domain.task.TaskItem;
+import gytis.courier.domain.task.*;
 import gytis.courier.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +45,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         assignmentPolicy.ensureCourierIsAvailable(command.courierId());
 
         List<TaskItemCreationSnapshot> taskItemCreationSnapshots = orderQueryPort.findOrdersByParcelIds(command.parcelIds());
-        ParcelAssignmentValidator.validate(command.parcelIds(), taskItemCreationSnapshots);
+        ParcelAssignmentValidator.validate(command.parcelIds(), taskItemCreationSnapshots, command.taskType());
 
         Task task = Task.create(taskItemCreationSnapshots, command.courierId(), command.adminId(), command.taskType());
 
@@ -57,6 +54,12 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
                 .map(TaskItem::getParcelId)
                 .toList()
         );
+
+        if (command.taskType() == TaskType.DELIVERY) {
+            parcelAssignmentFacade.markParcelsDelivering(task.getTaskItems().stream()
+                    .map(TaskItem::getParcelId)
+                    .toList());
+        }
 
         Task taskWithId = commandPort.create(task);
         publisher.publish(task.pullEvents());

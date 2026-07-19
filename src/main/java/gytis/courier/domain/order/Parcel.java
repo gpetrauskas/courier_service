@@ -1,6 +1,5 @@
 package gytis.courier.domain.order;
 
-import gytis.courier.domain.task.TaskType;
 import gytis.courier.domain.delivery.DeliveryOption;
 import gytis.courier.domain.event.DomainEvent;
 import gytis.courier.domain.event.ParcelMaxFailuresReachedEvent;
@@ -106,11 +105,7 @@ public class Parcel {
     public void cancel() { this.status = ParcelStatus.CANCELED; }
 
     public void markAsPickingUp() {
-        if (status != ParcelStatus.WAITING_FOR_PAYMENT) {
-            throw new IllegalStateException("parcel cannot be picked up yet");
-        }
-
-        status = ParcelStatus.PICKING_UP;
+        changeStatus(ParcelStatus.PICKING_UP);
     }
 
     public void unassign() {
@@ -131,25 +126,13 @@ public class Parcel {
     }
 
     public void transitionToDelivery() {
-        if (!ParcelStatus.PICKED_UP.equals(this.status)) {
-            throw new IllegalStateException(
-                    String.format("Cannot transition to DELIVERY from %s", this.status)
-            );
-        }
-
-        this.status = ParcelStatus.DELIVERING;
+        changeStatus(ParcelStatus.DELIVERING);
     }
 
     public void failedDeliveryAttemptAdd() {
         this.failuresCount++;
         if (this.failuresCount >= MAX_FAILURE_COUNT) {
             events.add(new ParcelMaxFailuresReachedEvent(this.id, this.failuresCount));
-        }
-    }
-
-    public void transitionIfNeeded(TaskType taskType) {
-        if (!taskType.equals(TaskType.PICKUP)) {
-            transitionToDelivery();
         }
     }
 
@@ -162,11 +145,15 @@ public class Parcel {
             throw new IllegalStateException("Status cannot be changed");
         }
 
-        if (!this.status.isValidTransition(status)) {
+        if (!this.status.isValidLifeCycleTransition(status)) {
             throw new ValidationException("invalid status transition: " + this.status + " -> " + status);
         }
 
         this.status = status;
+
+        if (this.status == ParcelStatus.PICKED_UP) {
+            this.failuresCount = 0;
+        }
     }
 
     public void changeContents(String newContent) {
