@@ -125,10 +125,6 @@ public class Parcel {
         this.isAssigned = true;
     }
 
-    public void transitionToDelivery() {
-        changeStatus(ParcelStatus.DELIVERING);
-    }
-
     public void failedDeliveryAttemptAdd() {
         this.failuresCount++;
         if (this.failuresCount >= MAX_FAILURE_COUNT) {
@@ -173,8 +169,8 @@ public class Parcel {
     }
 
     public void isAddressEditable() {
-        if (this.status.isFinalState()) {
-            throw new IllegalStateException("Parcel is not editable");
+        if (this.status.isAddressLocked()) {
+            throw new ValidationException("Address is not editable");
         }
     }
 }

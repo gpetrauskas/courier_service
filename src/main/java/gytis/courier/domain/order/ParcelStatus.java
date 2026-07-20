@@ -38,7 +38,9 @@ public enum ParcelStatus {
     CANCELED,
     REMOVED_FROM_THE_LIST;
 
-    private static final Set<ParcelStatus> FINAL_STATES = Set.of(PICKED_UP, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY, REMOVED_FROM_THE_LIST);
+    private static final Set<ParcelStatus> FINAL_STATES = Set.of(DELIVERED, CANCELED);
+
+    private static final Set<ParcelStatus> ADDRESS_LOCKED = Set.of(PICKING_UP, PICKED_UP, DELIVERING, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY, REMOVED_FROM_THE_LIST);
 
     private static final Set<ParcelStatus> CAN_BE_ADDED_TO_LIST = Set.of(PICKING_UP, DELIVERING);
 
@@ -118,11 +120,22 @@ public enum ParcelStatus {
         };
     }
 
+    public boolean isFinalForTaskType(TaskType taskType) {
+        return switch (taskType) {
+            case PICKUP -> this == PICKED_UP || this == FAILED_PICKUP || this == CANCELED;
+            case DELIVERY -> this == DELIVERED || this == FAILED_DELIVERY || this == CANCELED;
+        };
+    }
+
     public boolean canBeAddedToTask(TaskType taskType) {
         return switch (taskType) {
             case PICKUP -> this == PICKING_UP;
             case DELIVERY -> this == PICKED_UP;
         };
+    }
+
+    public boolean isAddressLocked() {
+        return ADDRESS_LOCKED.contains(this);
     }
 
 }

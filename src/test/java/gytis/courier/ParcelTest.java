@@ -1,6 +1,7 @@
 package gytis.courier;
 
 import gytis.courier.domain.order.*;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,14 +31,14 @@ public class ParcelTest {
     void throwOnMarkAsPickingUpWhenStatusIsNotValid() {
         parcel.markAsPickingUp();
 
-        assertThrows(IllegalStateException.class, () -> parcel.markAsPickingUp());
+        assertThrows(ValidationException.class, () -> parcel.markAsPickingUp());
     }
 
     @Test
     void successTransitionToDelivery() {
         parcel.markAsPickingUp();
         parcel.changeStatus(ParcelStatus.PICKED_UP);
-        parcel.transitionToDelivery();
+        parcel.changeStatus(ParcelStatus.DELIVERING);
 
         assertEquals(ParcelStatus.DELIVERING, parcel.getStatus());
     }
@@ -68,7 +69,7 @@ public class ParcelTest {
     void throwsOnParcelUpdateStatusChangeWhenTransitionNotAllowed() {
         ParcelSectionUpdateCommand command = new ParcelSectionUpdateCommand(ParcelStatus.PICKED_UP, null);
 
-        assertThrows(IllegalArgumentException.class, () -> parcel.updateSection(command));
+        assertThrows(ValidationException.class, () -> parcel.updateSection(command));
     }
 
     @Test
@@ -76,14 +77,14 @@ public class ParcelTest {
         parcel.markAsPickingUp();
         parcel.changeStatus(ParcelStatus.PICKED_UP);
 
-        assertThrows(IllegalStateException.class, () -> parcel.isAddressEditable());
+        assertThrows(ValidationException.class, () -> parcel.isAddressEditable());
     }
 
     @Test
     void successOnFullParcelLifeCycleFlow() {
         parcel.markAsPickingUp();
         parcel.changeStatus(ParcelStatus.PICKED_UP);
-        parcel.transitionToDelivery();
+        parcel.changeStatus(ParcelStatus.DELIVERING);
         parcel.changeStatus(ParcelStatus.DELIVERED);
 
         assertEquals(ParcelStatus.DELIVERED, parcel.getStatus());
