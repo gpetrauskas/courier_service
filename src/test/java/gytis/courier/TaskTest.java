@@ -102,7 +102,7 @@ public class TaskTest {
         TaskItem secondItem = TaskItem.restore().id(86L).parcelId(85L).parcelStatus(ParcelStatus.PICKED_UP).build();
         List<TaskItem> items = List.of(item, secondItem);
 
-        Task task1 = Task.restore().id(1L).deliveryStatus(DeliveryStatus.AT_CHECKPOINT).items(items).canceledByAdminId(2L).courierId(3L).build();
+        Task task1 = Task.restore().id(1L).taskType(TaskType.PICKUP).deliveryStatus(DeliveryStatus.AT_CHECKPOINT).items(items).canceledByAdminId(2L).courierId(3L).build();
 
         task1.complete();
         List<DomainEvent> event = task1.pullEvents();

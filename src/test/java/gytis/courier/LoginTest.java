@@ -1,5 +1,6 @@
 package gytis.courier;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.auth.LoginCommand;
 import gytis.courier.application.port.in.auth.LoginResult;
 import gytis.courier.application.port.out.auth.PasswordHashingPort;
@@ -30,6 +31,8 @@ public class LoginTest {
     PersonCommandPort personCommandPort;
     @Mock
     TokenGeneratorPort tokenGeneratorPort;
+    @Mock
+    ActivityLogUseCase logUseCase;
     @InjectMocks
     LoginService loginService;
 

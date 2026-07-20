@@ -1,5 +1,6 @@
 package gytis.courier;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.payment.CreatePaymentUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.delivery.DeliveryOptionCommandPort;
@@ -49,6 +50,8 @@ public class OrderCommandServiceTest {
     private CreatePaymentUseCase createPaymentUseCase;
     @Mock
     private DomainEventPublisher eventPublisher;
+    @Mock
+    private ActivityLogUseCase logUseCase;
 
     @InjectMocks
     private OrderCommandService orderCommandService;

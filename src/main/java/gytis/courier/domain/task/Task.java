@@ -191,7 +191,7 @@ public class Task {
     }
 
     private void validateIfAllItemsInFinalState() {
-        if (!taskItems.stream().allMatch(i -> i.getParcelStatus().isFinalState())) {
+        if (!taskItems.stream().allMatch(i -> i.getParcelStatus().isFinalForTaskType(this.taskType))) {
             throw new IllegalStateException("One or more item is not in the final state");
         }
     }
@@ -209,7 +209,7 @@ public class Task {
     }
 
     private void updateStatusIfAllItemsFinal() {
-        if (this.taskItems.stream().allMatch(taskItem -> taskItem.getParcelStatus().isFinalState())) {
+        if (this.taskItems.stream().allMatch(taskItem -> taskItem.getParcelStatus().itemIsInFinalState())) {
             this.deliveryStatus = DeliveryStatus.RETURNING_TO_STATION;
 
             events.add(new CourierReturningEvent(id, courierId));

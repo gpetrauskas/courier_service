@@ -2,6 +2,7 @@ package gytis.courier;
 
 import gytis.courier.application.command.CreditCardCommand;
 import gytis.courier.application.command.PaymentCommand;
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.PaymentProcessorGateway;
 import gytis.courier.application.port.out.payment.PaymentCommandPort;
@@ -49,6 +50,8 @@ public class PaymentCommandServiceTest {
     private PaymentMethodFactory paymentMethodFactory;
     @Mock
     private PaymentProcessorGateway paymentProcessorGateway;
+    @Mock
+    private ActivityLogUseCase logUseCase;
 
     @InjectMocks
     private PaymentCommandService paymentCommandService;

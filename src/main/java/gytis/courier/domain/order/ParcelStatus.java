@@ -38,11 +38,11 @@ public enum ParcelStatus {
     CANCELED,
     REMOVED_FROM_THE_LIST;
 
-    private static final Set<ParcelStatus> FINAL_STATES = Set.of(DELIVERED, CANCELED);
+    private static final Set<ParcelStatus> PARCEL_FINAL_STATES = Set.of(DELIVERED, CANCELED);
 
-    private static final Set<ParcelStatus> ADDRESS_LOCKED = Set.of(PICKING_UP, PICKED_UP, DELIVERING, DELIVERED, CANCELED, FAILED_PICKUP, FAILED_DELIVERY, REMOVED_FROM_THE_LIST);
+    private static final Set<ParcelStatus> ITEM_FINAL_STATE = Set.of(PICKED_UP, DELIVERED, CANCELED, REMOVED_FROM_THE_LIST, FAILED_PICKUP, FAILED_DELIVERY);
 
-    private static final Set<ParcelStatus> CAN_BE_ADDED_TO_LIST = Set.of(PICKING_UP, DELIVERING);
+    private static final Set<ParcelStatus> ADDRESS_LOCKED = Set.of(PICKING_UP, PICKED_UP, DELIVERING, DELIVERED, CANCELED);
 
     private static final Set<ParcelStatus> PREVENT_TASK_FROM_CANCEL = Set.of(PICKED_UP, DELIVERED);
 
@@ -51,26 +51,12 @@ public enum ParcelStatus {
     private static final Set<ParcelStatus> FAILED_STATUS = Set.of(ParcelStatus.FAILED_PICKUP, FAILED_DELIVERY);
 
     /**
-     * Checks if given status is considered final (cannot be modified)
-     *
-     * @param status status of the parcel
-     * @return true if its in final state and cannot be modified and false otherwise
-     */
-    public static boolean cannotBeModified(ParcelStatus status) {
-        return FINAL_STATES.contains(status);
-    }
-
-    /**
      * Checks if this status is in final state.
      *
      * @return true if its in final state and false otherwise
      */
     public boolean isFinalState() {
-        return FINAL_STATES.contains(this);
-    }
-
-    public boolean availableForTask() {
-        return !CAN_BE_ADDED_TO_LIST.contains(this);
+        return PARCEL_FINAL_STATES.contains(this);
     }
 
     public boolean isFailed() {
@@ -138,4 +124,7 @@ public enum ParcelStatus {
         return ADDRESS_LOCKED.contains(this);
     }
 
+    public boolean itemIsInFinalState() {
+        return ITEM_FINAL_STATE.contains(this);
+    }
 }

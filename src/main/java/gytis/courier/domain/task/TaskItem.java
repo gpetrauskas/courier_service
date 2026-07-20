@@ -88,7 +88,7 @@ public class TaskItem {
     }
 
     private void validateIfItemIsNotInFinalState() {
-        if (parcelStatus.isFinalState()) {
+        if (parcelStatus.itemIsInFinalState()) {
             throw new IllegalStateException("Item is in final state");
         }
     }

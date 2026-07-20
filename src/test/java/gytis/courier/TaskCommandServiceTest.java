@@ -6,6 +6,7 @@ import gytis.courier.application.port.in.task.ParcelAssignmentFacade;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.order.OrderQueryPort;
 import gytis.courier.application.port.out.task.TaskCommandPort;
+import gytis.courier.application.service.activitylog.ActivityLogService;
 import gytis.courier.application.service.person.CourierCommandService;
 import gytis.courier.application.service.task.TaskCommandService;
 import gytis.courier.application.service.task.UpdateItemStatusCommand;
@@ -50,14 +51,17 @@ public class TaskCommandServiceTest {
     @Mock private DomainEventPublisher eventPublisher;
     @Mock private TaskAssignmentPolicy taskAssignmentPolicy;
     @Mock private CourierCommandService courierCommandService;
+    @Mock private ActivityLogService logService;
 
     @InjectMocks private TaskCommandService service;
 
     @Test
     void successOnCreateTask() {
         CreateTaskCommand createTaskCommand = new CreateTaskCommand(adminId, courierId, TaskType.PICKUP, parcelsIds);
+        Task taskWithId = Task.restore().id(taskId).courierId(courierId).taskType(TaskType.PICKUP).build();
 
         when(orderQueryPort.findOrdersByParcelIds(createTaskCommand.parcelIds())).thenReturn(snapshots);
+        when(taskCommandPort.create(any(Task.class))).thenReturn(taskWithId);
 
         service.createTask(createTaskCommand);
 
@@ -156,7 +160,7 @@ public class TaskCommandServiceTest {
     @Test
     void successOnTaskComplete() {
         TaskItem item = TaskItem.restore().id(1L).parcelStatus(ParcelStatus.PICKED_UP).build();
-        Task task1 = Task.restore().id(2L).deliveryStatus(DeliveryStatus.AT_CHECKPOINT).courierId(3L).items(List.of(item)).build();
+        Task task1 = Task.restore().id(2L).taskType(TaskType.PICKUP).deliveryStatus(DeliveryStatus.AT_CHECKPOINT).courierId(3L).items(List.of(item)).build();
 
         when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
 
@@ -182,7 +186,7 @@ public class TaskCommandServiceTest {
     @Test
     void successOnCheckIn() {
         TaskItem item = TaskItem.restore().id(99L).parcelId(parcelId).parcelStatus(ParcelStatus.PICKED_UP).build();
-        Task task1 = Task.restore().id(taskId).courierId(courierId).items(List.of(item)).deliveryStatus(DeliveryStatus.RETURNING_TO_STATION).build();
+        Task task1 = Task.restore().id(taskId).courierId(courierId).items(List.of(item)).taskType(TaskType.PICKUP).deliveryStatus(DeliveryStatus.RETURNING_TO_STATION).build();
 
         when(taskCommandPort.getWithItemsById(task1.getId())).thenReturn(Optional.of(task1));
 
