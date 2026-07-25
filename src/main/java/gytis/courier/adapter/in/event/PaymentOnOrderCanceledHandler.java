@@ -1,10 +1,9 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.port.in.payment.CancelPaymentUseCase;
 import gytis.courier.domain.event.OrderCanceledEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 public class PaymentOnOrderCanceledHandler {
@@ -14,7 +13,7 @@ public class PaymentOnOrderCanceledHandler {
         this.useCase = useCase;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handle(OrderCanceledEvent event) {
         useCase.cancelByOrderId(event.orderId());
     }

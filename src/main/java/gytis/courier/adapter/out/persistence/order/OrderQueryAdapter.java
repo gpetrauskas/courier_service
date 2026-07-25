@@ -15,7 +15,9 @@ import gytis.courier.application.readmodel.order.UserOrderListReadModel;
 import gytis.courier.application.readmodel.order.OrderAdminDetailReadModel;
 import gytis.courier.application.readmodel.order.OrderForTaskReadModel;
 import gytis.courier.domain.address.AddressType;
+import gytis.courier.domain.order.OrderStatus;
 import gytis.courier.domain.order.ParcelStatus;
+import gytis.courier.domain.payment.PaymentStatus;
 import gytis.courier.domain.task.TaskItemCreationSnapshot;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -99,6 +101,11 @@ public class OrderQueryAdapter implements OrderQueryPort {
 
     public boolean existsByIdAndUserId(Long orderId, Long userId) {
         return repository.existsByIdAndUserId(orderId, userId);
+    }
+
+    @Override
+    public List<Long> findOrderIdsByStatusAndPaymentStatus(OrderStatus orderStatus, PaymentStatus paymentStatus) {
+        return repository.findOrderIdsByStatusAndPaymentStatus(orderStatus, paymentStatus);
     }
 
     @Override

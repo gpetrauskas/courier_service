@@ -1,4 +1,4 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.command.CreateNotificationCommand;
 import gytis.courier.application.port.in.notification.NotificationCommandUseCase;
@@ -6,8 +6,6 @@ import gytis.courier.application.port.in.task.TaskQueryUseCase;
 import gytis.courier.domain.event.OrderAddressUpdatedEvent;
 import gytis.courier.domain.notification.NotificationTarget;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -22,7 +20,6 @@ public class OrderAddressUpdatedHandler {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onOrderAddressUpdate(OrderAddressUpdatedEvent event) {
         taskUseCase.findCourierInfoByParcelId(event.parcelId())
                 .ifPresent(info -> notificationUseCase.create(

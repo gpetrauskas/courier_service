@@ -1,10 +1,9 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.port.in.order.AdminOrderUpdateUseCase;
 import gytis.courier.domain.event.PaymentConfirmedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 public class OrderOnPaymentConfirmedHandler {
@@ -14,7 +13,7 @@ public class OrderOnPaymentConfirmedHandler {
         this.useCase = useCase;
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @EventListener
     public void handle(PaymentConfirmedEvent event) {
         useCase.markAsPaid(event.orderId());
     }

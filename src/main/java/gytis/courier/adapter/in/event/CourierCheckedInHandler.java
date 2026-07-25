@@ -1,4 +1,4 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.command.CreateNotificationCommand;
 import gytis.courier.application.port.in.notification.NotificationCommandUseCase;
@@ -6,10 +6,8 @@ import gytis.courier.application.port.in.person.CourierCommandUseCase;
 import gytis.courier.domain.notification.NotificationTargetType;
 import gytis.courier.domain.event.CourierCheckedInEvent;
 import gytis.courier.domain.notification.NotificationTarget;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 public class CourierCheckedInHandler {
@@ -21,8 +19,7 @@ public class CourierCheckedInHandler {
         this.courierUseCase = courierUseCase;
     }
 
-    @Async("notificationExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void onCourierCheckIn(CourierCheckedInEvent event) {
         courierUseCase.deactivate(event.courierId());
         notificationUseCase.create(new CreateNotificationCommand(

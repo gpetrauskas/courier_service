@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { Observable, BehaviorSubject, EMPTY } from 'rxjs';
+import { Observable, BehaviorSubject, EMPTY, of, finalize } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 
 @Injectable({
@@ -10,14 +10,32 @@ import { catchError, tap, map } from 'rxjs/operators';
 })
 export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private authCheckedSubject = new BehaviorSubject<boolean>(false);
   private userRoleSubject = new BehaviorSubject<string | null>(null);
   private userNameSubject = new BehaviorSubject<string | null>(null);
 
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   userRole$ = this.userRoleSubject.asObservable();
   userName$ = this.userNameSubject.asObservable();
+  authChecked$ = this.authCheckedSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
+    Promise.resolve().then(() => this.initAuth().subscribe());
+  }
+
+  initAuth() {
+    return this.getMe().pipe(
+      tap(user => {
+        this.isAuthenticatedSubject.next(true);
+        this.userRoleSubject.next(user.role);
+        this.userNameSubject.next(user.name);
+      }),
+      catchError((err) => {
+        this.clearAuthState();
+        return of(null);
+      }),
+      finalize(() => this.authCheckedSubject.next(true))
+    );
   }
 
   checkAuthToken(): void {

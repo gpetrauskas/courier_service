@@ -5,7 +5,9 @@ import gytis.courier.adapter.out.persistence.order.projection.OrderDetailProject
 import gytis.courier.adapter.out.persistence.order.projection.OrderListProjection;
 import gytis.courier.adapter.out.persistence.order.projection.TaskItemCreationProjection;
 import gytis.courier.adapter.out.persistence.task.OrderAddressIdsProjection;
+import gytis.courier.domain.order.OrderStatus;
 import gytis.courier.domain.order.ParcelStatus;
+import gytis.courier.domain.payment.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -106,6 +108,8 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
 """)
     Page<OrderForTaskProjection> findAllForDelivery(Set<ParcelStatus> statuses, Pageable pageable);
 
+    @Query("SELECT o.id FROM OrderJpaEntity o JOIN PaymentJpaEntity p ON o.id = p.orderId WHERE o.status = :orderStatus AND p.status = :paymentStatus")
+    List<Long> findOrderIdsByStatusAndPaymentStatus(@Param("orderStatus") OrderStatus orderStatus, @Param("paymentStatus") PaymentStatus paymentStatus);
 
     //Page<OrderForTaskProjection> findAllForTaskBy(Specification<OrderJpaEntity> spec, Pageable pageable);
 

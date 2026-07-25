@@ -1,4 +1,4 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.port.in.parcel.ParcelCommandUseCase;
 import gytis.courier.domain.event.TaskCompletedEvent;
@@ -21,7 +21,6 @@ public class TaskCompletedEventHandler {
     public void onCompletedTask(TaskCompletedEvent event) {
         useCase.handleTaskCompleted(event.success(), event.failed());
     }
-
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void logCompletedTask(TaskCompletedEvent event) {

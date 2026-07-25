@@ -1,14 +1,12 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.command.CreateNotificationCommand;
 import gytis.courier.application.port.in.notification.NotificationCommandUseCase;
 import gytis.courier.application.port.in.person.CourierCommandUseCase;
 import gytis.courier.domain.event.TaskAssignedEvent;
 import gytis.courier.domain.notification.NotificationTarget;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 public class TaskAssignedHandler {
@@ -20,8 +18,7 @@ public class TaskAssignedHandler {
         this.courierUseCase = courierUseCase;
     }
 
-    @Async("notificationExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void onTaskAssigned(TaskAssignedEvent event) {
         courierUseCase.activate(event.courierId());
         notificationUseCase.create(

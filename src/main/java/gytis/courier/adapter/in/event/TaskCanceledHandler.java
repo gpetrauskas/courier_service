@@ -1,4 +1,4 @@
-package gytis.courier.application.event;
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.command.CreateNotificationCommand;
 import gytis.courier.application.port.in.notification.NotificationCommandUseCase;

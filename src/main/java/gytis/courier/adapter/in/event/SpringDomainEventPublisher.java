@@ -1,4 +1,5 @@
-package gytis.courier.application.event;
+/*
+package gytis.courier.adapter.in.event;
 
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.domain.event.DomainEvent;
@@ -27,3 +28,4 @@ public class SpringDomainEventPublisher  implements DomainEventPublisher {
         }
     }
 }
+*/

@@ -11,12 +11,15 @@ import gytis.courier.application.readmodel.order.UserOrderListReadModel;
 import gytis.courier.application.readmodel.order.OrderAdminDetailReadModel;
 import gytis.courier.application.readmodel.order.OrderForTaskReadModel;
 import gytis.courier.domain.address.AddressType;
+import gytis.courier.domain.order.OrderStatus;
 import gytis.courier.domain.order.ParcelStatus;
+import gytis.courier.domain.payment.PaymentStatus;
 import gytis.courier.domain.task.TaskType;
 import gytis.courier.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -69,9 +72,13 @@ public class OrderQueryService implements OrderQueryUseCase {
     }
 
     @Override
+    public List<Long> findOrderIdsByStatusAndPaymentStatus(OrderStatus orderStatus, PaymentStatus paymentStatus) {
+        return queryPort.findOrderIdsByStatusAndPaymentStatus(orderStatus, paymentStatus);
+    }
+
+
+    @Override
     public PageResult<AdminOrderListReadModel> getAdminOrderList(PageQuery pageQuery, OrderQuery orderQuery) {
-        System.out.println(pageQuery.direction() + " " + pageQuery.sortField());
-        System.out.println(orderQuery.orderStatus() + " " + orderQuery.id());
         return queryPort.findAdminOrders(pageQuery, orderQuery);
     }
 }

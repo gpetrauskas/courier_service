@@ -9,7 +9,9 @@ import gytis.courier.application.readmodel.order.UserOrderListReadModel;
 import gytis.courier.application.readmodel.order.OrderAdminDetailReadModel;
 import gytis.courier.application.readmodel.order.OrderForTaskReadModel;
 import gytis.courier.domain.address.AddressType;
+import gytis.courier.domain.order.OrderStatus;
 import gytis.courier.domain.order.ParcelStatus;
+import gytis.courier.domain.payment.PaymentStatus;
 import gytis.courier.domain.task.TaskItemCreationSnapshot;
 
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.Set;
 public interface OrderQueryPort {
     //OrderAddressIdsProjection findOrderAddressIdByParcelId(Long parcelId);
     //boolean existsByIdAndUserId(Long orderId, Long userId);
+
+    List<Long> findOrderIdsByStatusAndPaymentStatus(OrderStatus orderStatus, PaymentStatus paymentStatus);
 
     //command
     List<TaskItemCreationSnapshot> findOrdersByParcelIds(List<Long> parcelIds);
