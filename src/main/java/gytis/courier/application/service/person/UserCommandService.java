@@ -27,8 +27,6 @@ public class UserCommandService implements DeletePaymentMethodUseCase, EditMyInf
         User me = userPort.findById(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        System.out.println("edit method cia: " + command.defaultAddressId());
-
         if (command.defaultAddressId() != null) {
             if (!addressPort.addressIdOwnedByUserId(command.defaultAddressId(), command.userId())) {
                 throw new UnauthorizedAccessException("Invalid address id");

@@ -1,5 +1,6 @@
 package gytis.courier.application.service.order;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.order.AdminOrderUpdateUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.delivery.DeliveryOptionCommandPort;
@@ -17,20 +18,20 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
     private final OrderCommandPort commandPort;
     private final DeliveryOptionCommandPort deliveryPort;
     private final DomainEventPublisher eventPublisher;
+    private final ActivityLogUseCase logUseCase;
 
-    public AdminOrderUpdateService(OrderCommandPort commandPort, DeliveryOptionCommandPort deliveryPort, DomainEventPublisher eventPublisher
+    public AdminOrderUpdateService(OrderCommandPort commandPort, DeliveryOptionCommandPort deliveryPort, DomainEventPublisher eventPublisher, ActivityLogUseCase logUseCase
     ) {
         this.commandPort = commandPort;
         this.deliveryPort = deliveryPort;
         this.eventPublisher = eventPublisher;
+        this.logUseCase = logUseCase;
     }
 
     @Override
     public void updateOrderSection(Long id, OrderSectionUpdateCommand command) {
         Order order = commandPort.getBasicById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        System.out.println(command.status() + " " + command.deliveryMethodName());
 
         if (command.status() != null) {
             order.updateStatus(command.status());
@@ -44,6 +45,8 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         }
 
         commandPort.save(order);
+
+        logUseCase.saveLog("ADMIN", "order update", "Order#" + id + " updated");
     }
 
     @Override
@@ -53,6 +56,8 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
 
         order.updateParcelSection(command);
         commandPort.save(order);
+
+        logUseCase.saveLog("ADMIN", "parcel update", "Order#" + id + " parcel data updated");
     }
 
     @Override
@@ -60,16 +65,12 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         Order order = commandPort.getWithParcelAndAddresses(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        System.out.println("flat " + order.getSenderAddress().getDetails().getFlatNumber());
-
-        System.out.println(command.id() + " " + command.flatNumber() + " " + command.selectedAddress());
-
         var maybeEvent = order.updateAddress(command);
         maybeEvent.ifPresent(eventPublisher::publish);
 
-        System.out.println("updated flat " + order.getSenderAddress().getDetails().getFlatNumber());
-
         commandPort.save(order);
+
+        logUseCase.saveLog("ADMIN", "order address update", "Order#" + id + " address updated");
     }
 
     @Override
@@ -79,6 +80,8 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
 
         order.markConfirmed();
         commandPort.save(order);
+
+        logUseCase.saveLog("SYSTEM", "pay", "Order#" + orderId + " was marked as paid by event handler");
     }
 
     @Override
@@ -88,5 +91,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
 
         order.cancel();
         commandPort.save(order);
+
+        logUseCase.saveLog("SYSTEM", "pay", "Order# " + orderId + " was canceled by event handler");
     }
 }

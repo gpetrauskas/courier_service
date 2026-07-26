@@ -23,9 +23,6 @@ public class PersonCommandCommandService implements PersonCommandUseCase {
         Person person = managementPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No person found"));
 
-        System.out.println(person.getId() + " "+ person.getRole() + person.isAdmin() +
-               person.getEmail());
-
         person.update(command);
 
         managementPort.save(person);

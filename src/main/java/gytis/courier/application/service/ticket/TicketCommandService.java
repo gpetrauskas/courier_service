@@ -26,8 +26,6 @@ public class TicketCommandService implements TicketCommandUseCase {
 
     @Override
     public void create(CreateTicketCommand command) {
-        System.out.println(command.ticketPriority() + " " + command.description() + " " + command.personId() +
-                " " + command.title());
         Ticket ticket = Ticket.create(command);
         Ticket withIdTicket = port.create(ticket);
 

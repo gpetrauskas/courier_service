@@ -1,5 +1,6 @@
 package gytis.courier.application.service.parcel;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.parcel.ParcelCommandUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.parcel.ParcelCommandPort;
@@ -19,10 +20,12 @@ import java.util.stream.Collectors;
 public class ParcelCommandService implements ParcelCommandUseCase {
     private final ParcelCommandPort port;
     private final DomainEventPublisher eventPublisher;
+    private final ActivityLogUseCase logUseCase;
 
-    public ParcelCommandService(ParcelCommandPort port, DomainEventPublisher eventPublisher) {
+    public ParcelCommandService(ParcelCommandPort port, DomainEventPublisher eventPublisher, ActivityLogUseCase logUseCase) {
         this.port = port;
         this.eventPublisher = eventPublisher;
+        this.logUseCase = logUseCase;
     }
 
 
@@ -41,10 +44,11 @@ public class ParcelCommandService implements ParcelCommandUseCase {
 
         parcels.forEach(p ->  {
             eventPublisher.publish(p.pullEvents());
-            System.out.println("cia handle task completed kiek event: " + p.getEventSize());
-
         });
+
         port.changeStatuses(groupParcels(successes));
+
+        logUseCase.saveLog("SYSTEM", "task completed", parcelIds.size() + " parcels was unassigned. Failed parcels: " + failures.size());
     }
 
     private Map<ParcelStatus, List<Long>> groupParcels(List<ParcelStatusUpdate> parcelStatusUpdates) {
@@ -59,7 +63,8 @@ public class ParcelCommandService implements ParcelCommandUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Parcel not found"));
 
         parcel.failedDeliveryAttemptAdd();
-        System.out.println("coa increment failures kiek event: " + parcel.getEventSize());
+
+        logUseCase.saveLog("SYSTEM", "task completed", "Parcel#" + parcelId + " pickup/delivery failed " + parcel.getFailuresCount() + " times");
         return port.update(parcel);
     }
 }

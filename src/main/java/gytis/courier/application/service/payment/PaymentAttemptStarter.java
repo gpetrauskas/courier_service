@@ -1,5 +1,6 @@
 package gytis.courier.application.service.payment;
 
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.out.payment.PaymentCommandPort;
 import gytis.courier.domain.payment.Payment;
 import gytis.courier.domain.payment.ProviderType;
@@ -10,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentAttemptStarter {
+    private final ActivityLogUseCase logUseCase;
     private final PaymentCommandPort port;
 
-    public PaymentAttemptStarter(PaymentCommandPort port) {
+    public PaymentAttemptStarter(ActivityLogUseCase logUseCase, PaymentCommandPort port) {
+        this.logUseCase = logUseCase;
         this.port = port;
     }
 
@@ -21,6 +24,8 @@ public class PaymentAttemptStarter {
         Payment payment = port.findByOrderIdLocked(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
         payment.startAttempt(providerType);
+
+        logUseCase.saveLog("USER", "pay", "Payment attempt started for order#" + orderId);
         return port.update(payment);
     }
 }

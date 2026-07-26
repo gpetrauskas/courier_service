@@ -69,6 +69,6 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
 
         publisher.publish(canceledEvent);
 
-        logUseCase.saveLog("USER", "order canceled", "Order #" + order.getId() + " was canceled");
+        logUseCase.saveLog("USER", "order cancel", "Order #" + order.getId() + " was canceled");
     }
 }

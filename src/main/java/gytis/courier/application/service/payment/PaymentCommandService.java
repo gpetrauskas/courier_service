@@ -78,9 +78,9 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         maybeSaveNewMethod(command, method, result);
 
         if (result.success()) {
-            logUseCase.saveLog("USER", "payment succeeded", "Payment #" + payment.getId() + " amount: " + payment.getAmount() + " succeed using " + result.providerType().name());
+            logUseCase.saveLog("USER", "pay", "Payment #" + payment.getId() + " amount: " + payment.getAmount() + " succeed using " + result.providerType().name());
         } else {
-            logUseCase.saveLog("USER", "payment failed", "Payment #" + payment.getId() + "failed - " + result.failureReason());
+            logUseCase.saveLog("USER", "pay", "Payment #" + payment.getId() + "failed - " + result.failureReason());
         }
 
         return new PayReadModel(
@@ -98,6 +98,8 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         payment.changeStatus(command.status());
 
         paymentPort.update(payment);
+
+        logUseCase.saveLog("ADMIN", "payment update", "Payment#" + payment.getId() + " was updated");
     }
 
     @Override
@@ -106,6 +108,8 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         Payment payment = paymentPort.findByOrderIdLocked(orderId).orElseThrow();
         payment.cancel();
         paymentPort.update(payment);
+
+        logUseCase.saveLog("USER", "order cancel", "Payment#" + payment.getId() + " canceled by event handler (order#" + orderId + " cancel)");
     }
 
     private Optional<DomainEvent> completeAttempt(Payment payment, PaymentResult result) {
@@ -152,7 +156,7 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
             try {
                 newPaymentMethodUseCase.save(command.userId(), method, result.token());
             } catch (Exception e) {
-                logUseCase.saveLog("SYSTEM", "Payment method save", "Payment method save failed...");
+                logUseCase.saveLog("USER", "pay", "Payment method save failed...");
             }
         }
     }

@@ -1,6 +1,7 @@
 package gytis.courier.application.service.notification;
 
 import gytis.courier.application.command.CreateNotificationCommand;
+import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.notification.NotificationCommandUseCase;
 import gytis.courier.application.port.out.notification.NotificationDeliveryPort;
 import gytis.courier.application.port.out.notification.NotificationCommandPort;
@@ -14,11 +15,13 @@ public class NotificationCommandService implements NotificationCommandUseCase {
     private final NotificationCommandPort port;
     private final NotificationDeliveryPort deliveryPort;
     private final PersonNotificationCommandPort pnPort;
+    private final ActivityLogUseCase logUseCase;
 
-    public NotificationCommandService(NotificationCommandPort port, NotificationDeliveryPort deliveryPort, PersonNotificationCommandPort pnPort) {
+    public NotificationCommandService(NotificationCommandPort port, NotificationDeliveryPort deliveryPort, PersonNotificationCommandPort pnPort, ActivityLogUseCase logUseCase) {
         this.port = port;
         this.deliveryPort = deliveryPort;
         this.pnPort = pnPort;
+        this.logUseCase = logUseCase;
     }
 
     @Override
@@ -27,6 +30,8 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         Notification notification = new Notification(command.title(), command.message(), command.target());
         Notification saved = port.create(notification);
         deliveryPort.deliver(saved);
+
+        logUseCase.saveLog("ADMIN", "create notification", "Notification was delivered to " + command.target());
     }
 
     @Override
@@ -35,6 +40,7 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         int deleted = pnPort.deleteAsAdmin(id);
         port.delete(id);
 
+        logUseCase.saveLog("ADMIN", "delete notification", "Notification #" + id + " deleted for " + deleted + " recipients");
         return deleted;
     }
 }
