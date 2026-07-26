@@ -10,6 +10,7 @@ import gytis.courier.application.port.out.payment.PaymentCommandPort;
 import gytis.courier.application.port.out.paymentmethod.PaymentMethodCommandPort;
 import gytis.courier.application.readmodel.payment.PayReadModel;
 import gytis.courier.application.result.PaymentResult;
+import gytis.courier.application.service.payment.PaymentAttemptStarter;
 import gytis.courier.application.service.payment.PaymentCommandService;
 import gytis.courier.application.service.payment.PaymentMethodFactory;
 import gytis.courier.application.service.payment.PaymentProcessorFactory;
@@ -23,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +54,8 @@ public class PaymentCommandServiceTest {
     @Mock
     private PaymentProcessorGateway paymentProcessorGateway;
     @Mock
+    private PaymentAttemptStarter attemptStarter;
+    @Mock
     private ActivityLogUseCase logUseCase;
 
     @InjectMocks
@@ -59,12 +63,14 @@ public class PaymentCommandServiceTest {
 
     @Test
     void successPay_existingMethod() {
-        Payment payment = Payment.restore(2L, 3L, BigDecimal.valueOf(21), PaymentStatus.NOT_PAID, List.of());
+        Payment payment = Payment.restore(2L, 3L, BigDecimal.valueOf(21), PaymentStatus.PROCESSING, List.of(
+                PaymentAttempt.restore(101L, PaymentAttemptStatus.PENDING, ProviderType.CREDIT_CARD, "", "", LocalDateTime.now()))
+        );
         CreditCard ccMethod = CreditCard.recover(4L, true, "tok_123123", "1234", "12/29", "me");
         PaymentResult result = new PaymentResult(ProviderType.CREDIT_CARD, "tx_id_123", true, null, true, "tok_321");
 
-        when(paymentCommandPort.findByOrderId(paymentCommandExisting.orderId())).thenReturn(Optional.of(payment));
         when(methodCommandPort.findByIdAndUserId(paymentCommandExisting.existingMethodId(), paymentCommandExisting.userId())).thenReturn(Optional.of(ccMethod));
+        when(attemptStarter.start(paymentCommandExisting.orderId(), ccMethod.providerType())).thenReturn(payment);
         when(processorFactory.getProcessor(ccMethod)).thenReturn(paymentProcessorGateway);
         when(paymentProcessorGateway.process(ccMethod, paymentCommandExisting.cvc())).thenReturn(result);
 
@@ -75,18 +81,21 @@ public class PaymentCommandServiceTest {
         verify(eventPublisher).publish(any(PaymentConfirmedEvent.class));
         verify(methodCommandPort).findByIdAndUserId(paymentCommandExisting.existingMethodId(), paymentCommandExisting.userId());
         verify(newPaymentMethodUseCase, never()).save(anyLong(), any(), anyString());
+        verify(paymentMethodFactory, never()).from(paymentCommand.command());
 
         assertEquals(result.transactionId(), payReadModel.transactionId());
     }
 
     @Test
     void successPay_newMethod() {
-        Payment payment = Payment.restore(2L, 3L, BigDecimal.valueOf(21), PaymentStatus.NOT_PAID, List.of());
+        Payment payment = Payment.restore(2L, 3L, BigDecimal.valueOf(21), PaymentStatus.PROCESSING, List.of(
+                PaymentAttempt.restore(101L, PaymentAttemptStatus.PENDING, ProviderType.CREDIT_CARD, "", "", LocalDateTime.now()))
+        );
         CreditCard ccMethod = CreditCard.recover(null, true, "tok_123123", "1234", "12/29", "me");
         PaymentResult result = new PaymentResult(ProviderType.CREDIT_CARD, "tx_id_123", true, null, true, "tok_321");
 
-        when(paymentCommandPort.findByOrderId(paymentCommand.orderId())).thenReturn(Optional.of(payment));
         when(paymentMethodFactory.from(paymentCommand.command())).thenReturn(ccMethod);
+        when(attemptStarter.start(paymentCommand.orderId(), ccMethod.providerType())).thenReturn(payment);
         when(processorFactory.getProcessor(ccMethod)).thenReturn(paymentProcessorGateway);
         when(paymentProcessorGateway.process(ccMethod, paymentCommand.cvc())).thenReturn(result);
 
@@ -96,6 +105,7 @@ public class PaymentCommandServiceTest {
         verify(paymentCommandPort).update(payment);;
         verify(eventPublisher).publish(any(PaymentConfirmedEvent.class));
         verify(newPaymentMethodUseCase).save(paymentCommand.userId(), ccMethod, result.token());
+        verify(methodCommandPort, never()).findByIdAndUserId(anyLong(), anyLong());
 
         assertEquals(result.transactionId(), payReadModel.transactionId());
     }

@@ -1,6 +1,7 @@
 package gytis.courier;
 
 import gytis.courier.application.result.PaymentResult;
+import gytis.courier.domain.event.DomainEvent;
 import gytis.courier.domain.event.PaymentConfirmedEvent;
 import gytis.courier.domain.payment.*;
 import gytis.courier.exception.InvalidStateTransitionException;
@@ -50,7 +51,7 @@ public class PaymentTest {
         PaymentAttempt attempt = payment.startAttempt(ProviderType.CREDIT_CARD);
         PaymentResult result = new PaymentResult(attempt.getProvider(), "tx_id_123", true, "", true, "token_123");
 
-        Optional<PaymentConfirmedEvent> event = payment.completeAttempt(attempt, result);
+        Optional<DomainEvent> event = payment.completeAttempt(attempt, result);
 
         assertEquals(PaymentAttemptStatus.SUCCESS, attempt.getStatus());
         assertTrue(event.isPresent());

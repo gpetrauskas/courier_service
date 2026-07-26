@@ -109,19 +109,25 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
     }
 
     private Optional<DomainEvent> completeAttempt(Payment payment, PaymentResult result) {
-        PaymentAttempt attempt = payment.getPaymentAttempts().stream()
-                .filter(pa -> pa.getStatus().equals(PaymentAttemptStatus.PENDING))
-                .findFirst().orElseThrow(() -> new ResourceNotFoundException("Attempt not found"));
         try {
-            return payment.completeAttempt(attempt, result);
-        } catch (Exception e) {
-            if (result.success()) {
-                attempt.markSuccess(result.transactionId());
-            } else {
-                attempt.markFailure(result.failureReason());
-            }
+            PaymentAttempt attempt = payment.getPaymentAttempts().stream()
+                    .filter(pa -> pa.getStatus().equals(PaymentAttemptStatus.PENDING))
+                    .findFirst().orElseThrow(() -> new ResourceNotFoundException("Attempt not found"));
+            try {
+                return payment.completeAttempt(attempt, result);
+            } catch (Exception e) {
+                if (result.success()) {
+                    attempt.markSuccess(result.transactionId());
+                } else {
+                    attempt.markFailure(result.failureReason());
+                }
 
-            paymentPort.update(payment);
+                paymentPort.update(payment);
+                throw e;
+            }
+        } catch (Exception e) {
+            logger.error("CRITICAL: charge result could not be saved. Payment #{}, orderId {}, provider {}, transactionId {}, success {} ",
+                    payment.getId(), payment.getOrderId(), result.providerType(), result.transactionId(), result.success(), e);
             throw e;
         }
     }
