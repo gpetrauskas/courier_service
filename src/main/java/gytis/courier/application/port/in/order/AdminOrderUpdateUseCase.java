@@ -9,4 +9,5 @@ public interface AdminOrderUpdateUseCase {
     void parcelSectionUpdate(Long id, ParcelSectionUpdateCommand command);
     void orderAddressSectionUpdate(Long id, OrderAddressSectionUpdateCommand command);
     void markAsPaid(Long orderId);
+    void markAsCanceled(Long orderId);
 }

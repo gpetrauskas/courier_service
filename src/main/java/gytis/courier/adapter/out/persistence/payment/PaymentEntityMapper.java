@@ -44,5 +44,9 @@ public interface PaymentEntityMapper {
     @Mapping(target = "providerType", source = "provider")
     PaymentAttemptJpaEntity toAttemptEntity(PaymentAttempt domain);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "payment", ignore = true)
+    void updateExistingAttempt(PaymentAttempt attempt, @MappingTarget PaymentAttemptJpaEntity entity);
+
     UserPaymentSummaryReadModel toUserPaymentInfoReadModel(PaymentUserProjection projection);
 }

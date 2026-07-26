@@ -14,6 +14,7 @@ import java.util.Set;
  * </ul>*/
 public enum PaymentStatus {
     NOT_PAID,
+    PROCESSING,
     FAILED,
     PAID,
     CANCELED;
@@ -22,5 +23,13 @@ public enum PaymentStatus {
 
     public boolean isFinalState() {
         return FINAL_STATE.contains(this);
+    }
+
+    public boolean canTransit(PaymentStatus status) {
+        return switch (this) {
+            case NOT_PAID -> status == PROCESSING || status == CANCELED;
+            case PROCESSING -> status == PAID || status == NOT_PAID || status == FAILED;
+            default -> false;
+        };
     }
 }

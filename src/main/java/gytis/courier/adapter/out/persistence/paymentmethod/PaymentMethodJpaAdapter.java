@@ -1,14 +1,16 @@
 package gytis.courier.adapter.out.persistence.paymentmethod;
 
+import gytis.courier.application.port.out.paymentmethod.PaymentMethodCommandPort;
 import gytis.courier.application.port.out.paymentmethod.PaymentMethodQueryPort;
 import gytis.courier.application.readmodel.paymentmethod.UserPaymentMethodReadModel;
+import gytis.courier.domain.payment.method.PaymentMethod;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
-public class PaymentMethodJpaAdapter implements PaymentMethodQueryPort {
+public class PaymentMethodJpaAdapter implements PaymentMethodQueryPort, PaymentMethodCommandPort {
     private final PaymentMethodJpaRepository repository;
     private final PaymentMethodMapper mapper;
 
@@ -16,11 +18,6 @@ public class PaymentMethodJpaAdapter implements PaymentMethodQueryPort {
         this.repository = repository;
         this.mapper = mapper;
     }
-
-/*    @Override
-    public Optional<PaymentMethod> find(Long id, Long userId) {
-        return repository.findByIdAndUserId(id, userId).map(mapper::toSpecificDomain);
-    }*/
 
     @Override
     public Optional<UserPaymentMethodReadModel> findProjection(Long id, Long userId) {
@@ -39,5 +36,11 @@ public class PaymentMethodJpaAdapter implements PaymentMethodQueryPort {
         return repository.findAllByUserIdAndSavedTrue(userId).stream()
                 .map(mapper::toReadModel)
                 .toList();
+    }
+
+    @Override
+    public Optional<PaymentMethod> findByIdAndUserId(Long id, Long userId) {
+        return repository.findByIdAndUserId(id, userId)
+                .map(mapper::toSpecificDomain);
     }
 }

@@ -16,6 +16,8 @@ public interface PaymentMethodJpaRepository extends JpaRepository<PaymentMethodJ
     int deleteByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 */
 
+    Optional<PaymentMethodJpaEntity> findByIdAndUserId(Long id, Long userId);
+
     @Modifying
     @Query("DELETE FROM PaymentMethodJpaEntity p WHERE p.id = :methodId AND p.userId = :userId")
     void deleteByIdAndUserId(@Param("methodId") Long methodId, @Param("userId") Long userId);

@@ -14,7 +14,7 @@ public class PaymentAttemptJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PaymentAttemptStatus status;
 
@@ -22,10 +22,10 @@ public class PaymentAttemptJpaEntity {
     @Enumerated(EnumType.STRING)
     private ProviderType providerType;
 
-    @Column(updatable = false)
+    @Column
     private String transactionId;
 
-    @Column(updatable = false)
+    @Column
     private String failureReason;
 
     @Column(nullable = false, updatable = false, columnDefinition = "DATETIME(0)")

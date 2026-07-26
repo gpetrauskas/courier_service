@@ -80,4 +80,13 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         order.markConfirmed();
         commandPort.save(order);
     }
+
+    @Override
+    public void markAsCanceled(Long orderId) {
+        Order order = commandPort.getWithParcel(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        order.cancel();
+        commandPort.save(order);
+    }
 }

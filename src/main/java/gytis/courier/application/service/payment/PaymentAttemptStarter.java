@@ -1,4 +1,26 @@
 package gytis.courier.application.service.payment;
 
+import gytis.courier.application.port.out.payment.PaymentCommandPort;
+import gytis.courier.domain.payment.Payment;
+import gytis.courier.domain.payment.ProviderType;
+import gytis.courier.exception.ResourceNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
 public class PaymentAttemptStarter {
+    private final PaymentCommandPort port;
+
+    public PaymentAttemptStarter(PaymentCommandPort port) {
+        this.port = port;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Payment start(Long orderId, ProviderType providerType) {
+        Payment payment = port.findByOrderIdLocked(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        payment.startAttempt(providerType);
+        return port.update(payment);
+    }
 }

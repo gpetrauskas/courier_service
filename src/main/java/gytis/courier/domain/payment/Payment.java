@@ -1,7 +1,9 @@
 package gytis.courier.domain.payment;
 
 import gytis.courier.application.result.PaymentResult;
+import gytis.courier.domain.event.DomainEvent;
 import gytis.courier.domain.event.PaymentConfirmedEvent;
+import gytis.courier.domain.event.PaymentFailedEvent;
 import gytis.courier.exception.InvalidStateTransitionException;
 
 import java.math.BigDecimal;
@@ -55,9 +57,7 @@ public class Payment {
     public List<PaymentAttempt> getPaymentAttempts() { return Collections.unmodifiableList(paymentAttempts); }
 
     public PaymentAttempt startAttempt(ProviderType providerType) {
-        if (this.status != PaymentStatus.NOT_PAID) {
-            throw new IllegalStateException("Payment already processed");
-        }
+        markAsProcessing();
 
         PaymentAttempt attempt = PaymentAttempt.pending(providerType);
         this.addAttempt(attempt);
@@ -65,7 +65,7 @@ public class Payment {
         return attempt;
     }
 
-    public Optional<PaymentConfirmedEvent> completeAttempt(PaymentAttempt attempt, PaymentResult result) {
+    public Optional<DomainEvent> completeAttempt(PaymentAttempt attempt, PaymentResult result) {
         Objects.requireNonNull(attempt);
         Objects.requireNonNull(result);
 
@@ -74,6 +74,10 @@ public class Payment {
             return Optional.of(markAsPaid());
         } else {
             attempt.markFailure(result.failureReason());
+            if (this.getPaymentAttempts().size() >= 5) {
+                return Optional.of(markAsFailed());
+            }
+            revertToNotPaid();
             return Optional.empty();
         }
     }
@@ -95,7 +99,7 @@ public class Payment {
     }
 
     public PaymentConfirmedEvent markAsPaid() {
-        if (status != PaymentStatus.NOT_PAID) throw new IllegalStateException("Final state");
+        if (!this.status.canTransit(PaymentStatus.PAID)) throw new IllegalStateException("Cannot transition to PAID");
         this.status = PaymentStatus.PAID;
 
         return new PaymentConfirmedEvent(orderId);
@@ -104,5 +108,26 @@ public class Payment {
     private void addAttempt(PaymentAttempt attempt) {
         Objects.requireNonNull(attempt);
         this.paymentAttempts.add(attempt);
+    }
+
+    private PaymentFailedEvent markAsFailed() {
+        if (!this.status.canTransit(PaymentStatus.FAILED)) throw new IllegalStateException("Cannot transition to FAILED");
+        this.status = PaymentStatus.FAILED;
+        return new PaymentFailedEvent(orderId);
+    }
+
+    private void markAsProcessing() {
+        if (!status.canTransit(PaymentStatus.PROCESSING)) {
+            throw new IllegalStateException("Cannot pay: current status: " + this.status);
+        }
+        this.status = PaymentStatus.PROCESSING;
+    }
+
+    private void revertToNotPaid() {
+        if (!status.canTransit(PaymentStatus.NOT_PAID)) {
+            throw new IllegalStateException("Cannot revert to NOT_PAID from " + status);
+        }
+
+        this.status = PaymentStatus.NOT_PAID;
     }
 }

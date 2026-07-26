@@ -15,7 +15,8 @@ import gytis.courier.domain.event.*;
         @JsonSubTypes.Type(value = ParcelMaxFailuresReachedEvent.class, name = "ParcelMaxFailuresReachedEvent"),
         @JsonSubTypes.Type(value = TaskAssignedEvent.class, name = "TaskAssignedEvent"),
         @JsonSubTypes.Type(value = TaskCanceledEvent.class, name = "TaskCanceledEvent"),
-        @JsonSubTypes.Type(value = TaskCompletedEvent.class, name = "TaskCompletedEvent")
+        @JsonSubTypes.Type(value = TaskCompletedEvent.class, name = "TaskCompletedEvent"),
+        @JsonSubTypes.Type(value = PaymentFailedEvent.class, name = "PaymentFailedEvent")
 })
 public interface DomainEventJacksonMapping {
 }
