@@ -28,11 +28,13 @@ import { DeliveryHistoryComponent } from './courier-dashboard/delivery-history/d
 import { NotificationsComponent } from './shared/notifications/notifications.component';
 import { TicketComponent } from './dashboard/ticket/ticket.component';
 import { CreateTicketComponent } from './dashboard/ticket/create-ticket/create-ticket.component';
+import { ActivityLogComponent } from "./activity-log/activity-log.component";
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'login', component: LoginComponent, canActivate: [authGuard] },
     { path: 'register', component: RegisterComponent },
+    { path: 'activity', component: ActivityLogComponent },
     {
       path: 'make-order',
       component: MakeOrderComponent,

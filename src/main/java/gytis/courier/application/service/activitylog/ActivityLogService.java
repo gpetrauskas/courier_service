@@ -28,6 +28,4 @@ public class ActivityLogService implements ActivityLogUseCase {
     public void saveLog(String user, String role, String action, String description) {
         port.save(new ActivityLog(user, role, action, description));
     }
-
-
 }

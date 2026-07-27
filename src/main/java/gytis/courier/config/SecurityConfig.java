@@ -72,7 +72,8 @@ public class SecurityConfig {
                 "/api/person/**",
                 "/api/paymentMethods/**",
                 "/api/auth/cc/*",
-                "/api/addresses/**"
+                "/api/addresses/**",
+                "/api/activity/**"
         };
     }
 
