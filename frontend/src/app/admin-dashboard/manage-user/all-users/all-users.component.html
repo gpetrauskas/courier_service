@@ -9,7 +9,6 @@
   [totalPages]="totalPages"
   [pageSize]="pageSize"
   (pageChange)="onPageChange($event)"
-  (pageSizeChange)="onPageSizeChange($event)"
 ></app-pagination>
 
 <div *ngIf="users.length > 0; else noUsers">

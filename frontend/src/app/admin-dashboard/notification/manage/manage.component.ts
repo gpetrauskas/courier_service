@@ -7,6 +7,8 @@ import { Notification } from '../../../models/person-notification/notification.m
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { ErrorHandlerService } from "../../../service/error-handler.service";
+import { PageEventModel } from "../../../models/page-event.model";
+import { FilterEventModel } from "../../../models/filter/filter-event.model";
 
 @Component({
   selector: 'app-manage',
@@ -70,21 +72,16 @@ export class ManageComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number) {
-    this.page = page;
+  onPageChange(event: PageEventModel) {
+    this.page = event.pageIndex;
+    this.size = event.pageSize;
     this.fetchNotifications(this.size, this.page);
   }
 
-  onPageSizeChange(size: number) {
-    this.size = size;
-    this.page = 0;
-    this.fetchNotifications(this.size, this.page);
-  }
-
-  onFilterChange(filter: any) {
+  onFilterChange(filter: FilterEventModel) {
+    if (filter.kind !== 'adminNotification') return;
     this.keyword = filter.keyword ?? '';
     this.page = 0;
     this.fetchNotifications(this.size, this.page);
   }
-
 }

@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { ErrorHandlerService } from "../../service/error-handler.service";
+import { PageEventModel } from "../../models/page-event.model";
 
 @Component({
   selector: 'app-delivery-history',
@@ -49,15 +50,10 @@ export class DeliveryHistoryComponent implements OnInit {
     });
   }
 
-  onPageChange(page: number) {
-      this.page = page;
+  onPageChange(event: PageEventModel) {
+      this.page = event.pageIndex;
+      this.size = event.pageSize;
       this.fetchHistoryTasks(this.page, this.size, this.sortBy, this.sortDirection);
-  }
-
-  onPageSizeChange(size: number) {
-    this.size = size;
-    this.currentPage = 0;
-    this.fetchHistoryTasks(this.page, this.size, this.sortBy, this.sortDirection);
   }
 
   isExpanded(task: CourierTask) {

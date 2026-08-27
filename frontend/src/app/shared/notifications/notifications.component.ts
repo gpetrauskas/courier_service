@@ -10,6 +10,8 @@ import { NotificationService } from '../../service/notification.service';
 import { Notification } from '../../models/person-notification/notification.model';
 import { FilterComponent } from '../filter/filter.component';
 import { ErrorHandlerService } from "../../service/error-handler.service";
+import { PageEventModel } from "../../models/page-event.model";
+import { FilterEventModel } from "../../models/filter/filter-event.model";
 
 @Component({
   selector: 'app-notifications',
@@ -84,8 +86,9 @@ export class NotificationsComponent implements OnInit {
     this.notificationService.loadNotificationsPage(this.pageSize, this.currentPage).subscribe();
   }
 
-  onNotificationFilterChange(event: { status: string }): void {
-    this.status = event.status || '';
+  onNotificationFilterChange(event: FilterEventModel) {
+    if (event.kind !== "notification") return;
+    this.status = event.status;
     console.log("test if changed ", this.status);
   }
 
@@ -125,18 +128,13 @@ export class NotificationsComponent implements OnInit {
     this.showConfirmDialog = false;
   }
 
-  onPageChange(newPage: number) {
-    this.currentPage = newPage;
+  onPageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.selectedId = null;
     this.loadNotifications();
     this.router.navigate([], {
       queryParams: { highlight: null }
     })
-  }
-
-  onPageSizeChange(newSize: number) {
-    this.pageSize = newSize;
-    this.currentPage = 0;
-    this.loadNotifications();
   }
 }

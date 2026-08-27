@@ -4,19 +4,18 @@ import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { Observable, BehaviorSubject, EMPTY, of, finalize } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
+import {AuthStateModel} from "../models/security/auth-state.model";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private isAuthenticatedSubject = new BehaviorSubject<AuthStateModel>({isAuthenticated: false, role: "guest", name: null});
   private authCheckedSubject = new BehaviorSubject<boolean>(false);
-  private userRoleSubject = new BehaviorSubject<string | null>(null);
-  private userNameSubject = new BehaviorSubject<string | null>(null);
 
-  isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-  userRole$ = this.userRoleSubject.asObservable();
-  userName$ = this.userNameSubject.asObservable();
+  isAuthenticated$ = this.isAuthenticatedSubject.asObservable().pipe(map(state => state.isAuthenticated));
+  userRole$ = this.isAuthenticatedSubject.asObservable().pipe(map(role => role.role));
+  userName$ = this.isAuthenticatedSubject.asObservable().pipe(map(n => n.name));
   authChecked$ = this.authCheckedSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
@@ -26,9 +25,7 @@ export class AuthService {
   initAuth() {
     return this.getMe().pipe(
       tap(user => {
-        this.isAuthenticatedSubject.next(true);
-        this.userRoleSubject.next(user.role);
-        this.userNameSubject.next(user.name);
+        this.isAuthenticatedSubject.next({isAuthenticated: true, role: user.role, name: user.name});
       }),
       catchError((err) => {
         this.clearAuthState();
@@ -41,9 +38,7 @@ export class AuthService {
   checkAuthToken(): void {
     this.getMe().subscribe({
       next: (user) => {
-        this.isAuthenticatedSubject.next(true);
-        this.userRoleSubject.next(user.role);
-        this.userNameSubject.next(user.name);
+        this.isAuthenticatedSubject.next({isAuthenticated: true, role: user.role, name: user.name});
       },
       error: () => this.clearAuthState()
     });
@@ -54,7 +49,6 @@ export class AuthService {
   }
 
   refresh() {
-    console.log("called");
     return this.http.post<any>(`${environment.apiUrl}/api/auth/refresh`, {});
   }
 
@@ -63,9 +57,7 @@ export class AuthService {
   }
 
   private clearAuthState(): void {
-    this.isAuthenticatedSubject.next(false);
-    this.userRoleSubject.next(null);
-    this.userNameSubject.next(null);
+    this.isAuthenticatedSubject.next({isAuthenticated: false, role: "guest", name: null});
   }
 
   getRole(): Observable<string | null> {
@@ -73,11 +65,11 @@ export class AuthService {
   }
 
   getRoleValue() {
-    return this.userRoleSubject.value;
+    return this.isAuthenticatedSubject.value.role;
   }
 
   getUserName(): string | null {
-    return this.userNameSubject.value;
+    return this.isAuthenticatedSubject.value.name;
   }
 
   isAdmin(): Observable<boolean> {
@@ -85,7 +77,7 @@ export class AuthService {
   }
 
   isAdminSync(): boolean {
-    return this.userRoleSubject.value === 'ADMIN';
+    return this.isAuthenticatedSubject.value.role === 'ADMIN';
   }
 
   logout(): Observable<any> {

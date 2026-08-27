@@ -1,3 +1,10 @@
+<app-pagination
+  [currentPage]="pageIndex"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="onPageChange($event)"
+></app-pagination>
 
 <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)" class="mat-shadow-2">
 
@@ -29,3 +36,23 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+
+<div class="mobile">
+@for (log of logs.data; track log.id) {
+  <div class="mobile-view">
+    <div class="first">
+      {{ log.createdAt | date: 'short' }}
+      -
+      {{ log.action }}
+    </div>
+    <div class="second">
+      {{ log.role }}
+      -
+      {{ log.userEmail }}
+    </div>
+    <div class="third">
+      {{ log.description }}
+    </div>
+  </div>
+}
+</div>

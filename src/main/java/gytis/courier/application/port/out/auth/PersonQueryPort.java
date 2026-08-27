@@ -13,7 +13,7 @@ public interface PersonQueryPort {
     Optional<MyInfoReadModel> getMyInfo(Long id, String role);
     PageResult<AdminPersonListReadModel> getAll(PersonQuery query, PageQuery pageQuery);
     Optional<Role> findPersonRole(Long id);
-
+    Optional<String> getEmailById(Long id);
 
     // admin detailed
     Optional<AdminUserDetailsReadModel> getAdminUserDetailed(Long id);

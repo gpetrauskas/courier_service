@@ -12,6 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../auth/auth.service';
 import { Router } from '@angular/router';
 import { ErrorHandlerService } from "../../service/error-handler.service";
+import { PageEventModel } from "../../models/page-event.model";
 
 @Component({
   selector: 'app-my-tickets',
@@ -71,14 +72,9 @@ export class MyTicketsComponent implements OnInit {
     });
   }
 
-  pageChange(event: any) {
-    this.currentPage = event;
-    this.loadAllTickets(this.currentPage, this.pageSize);
-  }
-
-  onPageSizeChange(event: any) {
-    this.pageSize = event;
-    this.currentPage = 0;
+  pageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadAllTickets(this.currentPage, this.pageSize);
   }
 

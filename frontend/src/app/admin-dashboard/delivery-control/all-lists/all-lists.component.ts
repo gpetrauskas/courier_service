@@ -8,6 +8,8 @@ import { PaginationComponent } from '../../../shared/pagination/pagination.compo
 import { AdminTaskSummary } from '../../../models/task/admin-task-summary.model';
 import { PaginatedResponse } from '../../../models/paginated-response.model';
 import { ErrorHandlerService } from "../../../service/error-handler.service";
+import { PageEventModel } from "../../../models/page-event.model";
+import { FilterEventModel } from "../../../models/filter/filter-event.model";
 
 @Component({
   selector: 'app-all-lists',
@@ -27,8 +29,8 @@ export class AllListsComponent implements OnInit {
   inputPageSize: number = this.pageSize;
   tType: string = '';
   deliveryStatus: string = '';
-  courierId: number | undefined = undefined;
-  taskListId: number | undefined = undefined;
+  courierId: number | null = null;
+  taskListId: number | null = null;
 
   constructor(
     private taskService: AdminTaskService,
@@ -76,24 +78,19 @@ export class AllListsComponent implements OnInit {
     }
   }
 
-  onFilterChange(event: any) {
-   this.tType = event.taskType;
-   this.deliveryStatus = event.deliveryStatus;
-   this.taskListId = event.taskId;
-   this.courierId = event.courierId;
-   this.currentPage = 0;
-   this.loadAllLists(this.currentPage, this.pageSize);
-  }
-
-  onPageChange(event: any) {
-    this.currentPage = event;
+  onFilterChange(event: FilterEventModel) {
+    if (event.kind !== 'task') return;
+    this.tType = event.taskType;
+    this.deliveryStatus = event.deliveryStatus;
+    this.taskListId = event.taskId;
+    this.courierId = event.courierId;
+    this.currentPage = 0;
     this.loadAllLists(this.currentPage, this.pageSize);
   }
 
-  onPageSizeChange(event: number) {
-    const parsedSize = Number(event);
-    this.pageSize = parsedSize;
-    this.currentPage = 0;
+  onPageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadAllLists(this.currentPage, this.pageSize);
   }
 }

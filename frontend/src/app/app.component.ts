@@ -4,6 +4,7 @@ import { HeaderComponent } from './header/header.component';
 import { NotificationService } from './service/notification.service';
 import { AuthService } from './auth/auth.service';
 import { AlertBannerComponent } from "./alert-banner/alert-banner.component";
+import {WebsocketService} from "./service/websocket.service";
 
 @Component({
   selector: 'app-root',
@@ -15,15 +16,17 @@ import { AlertBannerComponent } from "./alert-banner/alert-banner.component";
 export class AppComponent implements OnInit {
   title = 'gytis courier service';
 
-  constructor(private authService: AuthService, private notificationService: NotificationService) {
+  constructor(private authService: AuthService, private notificationService: NotificationService, private webSocket: WebsocketService) {
   }
 
   ngOnInit(): void {
     this.authService.isAuthenticated$.subscribe(status => {
       if (status) {
         this.notificationService.initializeNotifications();
+        this.webSocket.create();
       } else {
         this.notificationService.clearNotifications();
+        this.webSocket.deactivate();
       }
     });
   }

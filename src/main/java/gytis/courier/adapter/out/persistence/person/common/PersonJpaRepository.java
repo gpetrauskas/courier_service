@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -26,4 +27,7 @@ public interface PersonJpaRepository extends JpaRepository<PersonJpaEntity, Long
     WHERE p.id = :id
 """)
     Optional<String> findRoleById(Long id);
+
+    @Query("SELECT email FROM PersonJpaEntity p WHERE p.id = :id")
+    Optional<String> findEmailById(@Param("id") Long id);
 }

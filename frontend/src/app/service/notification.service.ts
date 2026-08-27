@@ -159,4 +159,8 @@ export class NotificationService {
     return this.http.get<PersonNotificationPageResponse>(`${this.baseURL}/indexed/${notificationId}?pageSize=${pageSize}`, { withCredentials: true })
       .pipe(tap(resp => this.notificationsSubject.next(resp)));
   }
+
+  addIncomingNotification(notification: AppNotification) {
+    this.headerNotificationsSubject.next([notification, ...this.headerNotificationsSubject.value].slice(0, 5));
+  }
 }

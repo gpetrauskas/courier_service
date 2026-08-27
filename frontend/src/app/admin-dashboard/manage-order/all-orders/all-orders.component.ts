@@ -6,6 +6,8 @@ import { FilterComponent } from '../../../shared/filter/filter.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
 import { AdminOrderList } from "../../../models/order/admin-order-list.model";
+import { PageEventModel } from "../../../models/page-event.model";
+import { FilterEventModel } from "../../../models/filter/filter-event.model";
 
 
 @Component({
@@ -47,20 +49,14 @@ export class AllOrdersComponent implements OnInit {
     this.router.navigate(['/admin-dashboard/manage-order/order-details', order.id]);
   }
 
-  onPageSizeChange(event: any): void {
-    const newSize = Number(event.target.value) > 0 ? Number(event.target.value) : 1;
-    this.pageSize = newSize;
-    this.currentPage = 0;
+  onPageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadOrders(this.currentPage, this.pageSize);
   }
 
-  onPageChange(event: any) {
-    this.currentPage = event;
-    this.loadOrders(this.currentPage, this.pageSize);
-  }
-
-  onFilterChange(filterData: any) {
-    console.log(filterData);
+  onFilterChange(filterData: FilterEventModel) {
+    if (filterData.kind !== 'order') return;
     this.status = filterData.orderStatus;
     this.userId = filterData.userId;
     this.currentPage = 0;

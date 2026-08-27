@@ -11,11 +11,13 @@ import { AdminTaskService } from "../../../service/task/admin-task.service";
 import { CreateTask } from "../../../models/task/create-task.model";
 import { AdminOrderTask } from "../../../models/order/admin-order-task.model";
 import { ErrorHandlerService } from "../../../service/error-handler.service";
+import { PaginationComponent } from "../../../shared/pagination/pagination.component";
+import { PageEventModel } from "../../../models/page-event.model";
 
 @Component({
   selector: 'app-create-new-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './create-new-list.component.html',
   styleUrl: './create-new-list.component.css'
 })
@@ -27,6 +29,7 @@ export class CreateNewListComponent implements OnInit {
   currentPage: number = 0;
   totalPages: number = 0;
   pageSize: number = 10;
+  totalItems: number = 0;
   inputPageSize: number = this.pageSize;
   selectedCourierId: number | null = null;
   items: AdminOrderTask[] = [];
@@ -70,6 +73,7 @@ export class CreateNewListComponent implements OnInit {
       next: (data) => {
         this.totalPages = data.totalPages;
         this.currentPage = data.currentPage;
+        this.totalItems = data.totalItems;
         this.items = data.data;
       },
       error: (err) => this.errorHandler.handleError(err)
@@ -107,30 +111,10 @@ export class CreateNewListComponent implements OnInit {
     }
   }
 
-  previousPage() {
-    if (this.currentPage > 0) {
-        this.currentPage -= 1;
-        this.loadItemsByTaskType();
-    }
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage += 1;
-      this.loadItemsByTaskType();
-    }
-  }
-
-  onPageSizeChange() {
-    const parsedSize = Number(this.inputPageSize);
-
-    if (!isNaN(parsedSize) && parsedSize > 0 && parsedSize <= (this.itemsToPickupCount || this.itemsToDeliverCount)) {
-      this.pageSize = parsedSize;
-      this.currentPage = 0;
-      this.loadItemsByTaskType();
-    } else {
-      this.inputPageSize = this.pageSize;
-    }
+  onPageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadItemsByTaskType();
   }
 
   validateKeyPress(event: KeyboardEvent): void {

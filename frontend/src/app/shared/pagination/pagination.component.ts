@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { PageEventModel } from "../../models/page-event.model";
 
 @Component({
   selector: 'app-pagination',
@@ -16,27 +17,41 @@ export class PaginationComponent {
   @Input() pageSize: number = 10;
   inputPageSize: number = this.pageSize;
 
-  @Output() pageChange = new EventEmitter<number>();
-  @Output() pageSizeChange = new EventEmitter<number>();
+  @Output() pageChange = new EventEmitter<PageEventModel>();
+
+  onPageSizeChange() {
+    const s = Number(this.inputPageSize);
+    console.log('testSize called', s)
+    if (!isNaN(s) && s > 0 && s <= this.totalItems) {
+      const e: PageEventModel = {
+        pageIndex: 0,
+        pageSize: s
+      };
+      this.pageChange.emit(e);
+    } else {
+      this.inputPageSize = 1;
+    }
+  }
 
   previousPage() {
     if (this.currentPage > 0) {
-      this.pageChange.emit(this.currentPage - 1);
+
+      const e: PageEventModel = {
+        pageIndex: this.currentPage - 1,
+        pageSize: this.pageSize
+      };
+      this.pageChange.emit(e);
     }
   }
 
   nextPage() {
     if (this.currentPage < this.totalPages) {
-      this.pageChange.emit(this.currentPage + 1);
-    }
-  }
-
-  onPageSizeChange() {
-    const parsedSize = Number(this.inputPageSize);
-    if (!isNaN(parsedSize) && parsedSize > 0 && parsedSize <= this.totalItems) {
-      this.pageSizeChange.emit(parsedSize);
-    } else {
-      this.inputPageSize = 1;
+      console.log('testNext called', this.currentPage)
+      const e: PageEventModel = {
+        pageIndex: this.currentPage + 1,
+        pageSize: this.pageSize
+      };
+      this.pageChange.emit(e);
     }
   }
 }

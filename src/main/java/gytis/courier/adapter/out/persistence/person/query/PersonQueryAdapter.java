@@ -67,6 +67,11 @@ public class PersonQueryAdapter implements PersonQueryPort {
     }
 
     @Override
+    public Optional<String> getEmailById(Long id) {
+        return personRepo.findEmailById(id);
+    }
+
+    @Override
     public Optional<AdminUserDetailsReadModel> getAdminUserDetailed(Long id) {
         return userRepo.getAdminUserDetailsById(id).map(mapper::toAdminDetailed);
     }

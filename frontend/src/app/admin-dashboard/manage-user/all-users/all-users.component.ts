@@ -11,6 +11,8 @@ import { FilterComponent } from '../../../shared/filter/filter.component';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { BanService } from "../../../service/person/ban.service";
 import { ErrorHandlerService } from "../../../service/error-handler.service";
+import { PageEventModel } from "../../../models/page-event.model";
+import { FilterEventModel } from "../../../models/filter/filter-event.model";
 
 type NoUserAction = {
   isUserActionPending: false;
@@ -90,22 +92,17 @@ export class AllUsersComponent implements OnInit {
     this.onConfirmAction();
   }
 
-  onFilterChange(filterData: any) {
-    console.log('Filter changed to role:', this.userRole);
+  onFilterChange(filterData: FilterEventModel) {
+    if (filterData.kind !== 'user') return;
     this.userRole = filterData.userRole;
     this.keyword = filterData.keyword;
     this.currentPage = 0;
     this.loadUsers(this.currentPage, this.pageSize);
   }
 
-  onPageSizeChange(pageSize: number) {
-    this.pageSize = pageSize;
-    this.currentPage = 0;
-    this.loadUsers(this.currentPage, this.pageSize);
-  }
-
-  onPageChange(page: number) {
-    this.currentPage = page;
+  onPageChange(eventModel: PageEventModel) {
+    this.currentPage = eventModel.pageIndex;
+    this.pageSize = eventModel.pageSize;
     this.loadUsers(this.currentPage, this.pageSize);
   }
 
