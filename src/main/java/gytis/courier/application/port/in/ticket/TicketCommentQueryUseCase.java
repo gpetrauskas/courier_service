@@ -6,4 +6,5 @@ import gytis.courier.application.readmodel.ticket.TicketCommentReadModel;
 
 public interface TicketCommentQueryUseCase {
     PageResult<TicketCommentReadModel> getComments(Long ticketId, Long personId, String isAdmin, PageQuery pageQuery);
+    boolean canAccessTicket(Long ticketId, Long personId, String role);
 }

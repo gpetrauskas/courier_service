@@ -6,10 +6,12 @@ import gytis.courier.application.command.UpdateTicketCommand;
 import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.ticket.TicketCommandUseCase;
 import gytis.courier.application.port.out.ticket.TicketCommandPort;
+import gytis.courier.application.port.out.ticket.TicketCommentBroadcastPort;
 import gytis.courier.application.port.out.ticket.TicketCommentCommandPort;
 import gytis.courier.domain.ticket.Ticket;
 import gytis.courier.domain.ticket.TicketComment;
 import gytis.courier.exception.ResourceNotFoundException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,11 +19,13 @@ public class TicketCommandService implements TicketCommandUseCase {
     private final TicketCommandPort port;
     private final TicketCommentCommandPort commentPort;
     private final ActivityLogUseCase logUseCase;
+    private final TicketCommentBroadcastPort broadCastCommentPort;
 
-    public TicketCommandService(TicketCommandPort port, TicketCommentCommandPort commentPort, ActivityLogUseCase logUseCase) {
+    public TicketCommandService(TicketCommandPort port, TicketCommentCommandPort commentPort, ActivityLogUseCase logUseCase, TicketCommentBroadcastPort broadCastCommentPort) {
         this.port = port;
         this.commentPort = commentPort;
         this.logUseCase = logUseCase;
+        this.broadCastCommentPort = broadCastCommentPort;
     }
 
     @Override
@@ -37,7 +41,9 @@ public class TicketCommandService implements TicketCommandUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
         boolean isAdmin = "ADMIN".equals(command.role());
-        TicketComment comment = ticket.addComment(command.personId(), isAdmin, command.message());
+        TicketComment comment = ticket.addComment(command.personId(), command.personName(), isAdmin, command.message());
+
+        broadCastCommentPort.broadcast(ticket.getId(), comment);
 
         commentPort.save(ticket.getId(), comment);
 

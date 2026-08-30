@@ -51,6 +51,7 @@ public interface TicketJpaMapper {
         return TicketComment.restore(
                 entity.getId(),
                 entity.getAuthorId(),
+                entity.getAuthorName(),
                 entity.getMessage(),
                 entity.getCreatedAt()
         );

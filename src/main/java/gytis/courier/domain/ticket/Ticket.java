@@ -90,14 +90,14 @@ public class Ticket {
         }
     }
 
-    public TicketComment addComment(Long userId, boolean isAdmin, String message) {
+    public TicketComment addComment(Long userId, String personName, boolean isAdmin, String message) {
         Objects.requireNonNull(userId);
         Objects.requireNonNull(message);
         assertNotClosed();
 
         validateIfCanAdd(userId, isAdmin);
 
-        TicketComment comment = TicketComment.create(userId, message);
+        TicketComment comment = TicketComment.create(userId, personName, message);
         comments.add(comment);
         updatedAt = LocalDateTime.now();
 

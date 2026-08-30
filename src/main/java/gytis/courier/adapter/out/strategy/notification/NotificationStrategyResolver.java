@@ -13,10 +13,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class NotificationStrategyResolver implements NotificationDeliveryPort {
+    public class NotificationStrategyResolver implements NotificationDeliveryPort {
     private final Map<Class<? extends NotificationTarget>, NotificationDeliveryStrategy> strategies;
     private final SimpMessagingTemplate template;
     private final PersonQueryPort personQueryPort;
+
+    private static final String NOTIFICATION_TOPIC_PREFIX = "/topic/notifications/";
+    private static final String NOTIFICATION_QUEUE_PREFIX = "/queue/notifications";
 
     public NotificationStrategyResolver(List<NotificationDeliveryStrategy> strategies, SimpMessagingTemplate template, PersonQueryPort personQueryPort) {
         this.strategies = strategies.stream()
@@ -33,8 +36,8 @@ public class NotificationStrategyResolver implements NotificationDeliveryPort {
         }
 
         switch (notification.getTarget()) {
-            case NotificationTarget.Broadcast b -> template.convertAndSend("/topic/notifications/" + b.type().name(), notification);
-            case NotificationTarget.Individual i -> template.convertAndSendToUser(getEmail(i.personId()), "/queue/notifications", notification);
+            case NotificationTarget.Broadcast b -> template.convertAndSend(NOTIFICATION_TOPIC_PREFIX + b.type().name(), notification);
+            case NotificationTarget.Individual i -> template.convertAndSendToUser(getEmail(i.personId()), NOTIFICATION_QUEUE_PREFIX, notification);
         }
 
         strategy.deliver(notification);

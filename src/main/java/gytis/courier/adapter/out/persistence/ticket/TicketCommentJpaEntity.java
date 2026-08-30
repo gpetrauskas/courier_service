@@ -14,6 +14,8 @@ public class TicketCommentJpaEntity {
 
     @Column(name = "author_id")
     private Long authorId;
+    @Column(name = "author_name")
+    private String authorName;
     @Column(name = "ticket_id")
     private Long ticketId;
     private String message;
@@ -29,12 +31,14 @@ public class TicketCommentJpaEntity {
 
     public Long getId() { return id; }
     public Long getAuthorId() { return authorId; }
+    public String getAuthorName() { return authorName; }
     public String getMessage() { return message; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Long getTicketId() { return this.ticketId; }
 
     public void setId(Long id) { this.id = id; }
     public void setAuthorId(Long authorId) { this.authorId = authorId; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
     public void setMessage(String message) { this.message = message; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setTicketId(Long ticketId) { this.ticketId = ticketId; }

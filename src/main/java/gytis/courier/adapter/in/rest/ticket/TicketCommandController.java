@@ -33,7 +33,7 @@ public class TicketCommandController {
 
     @PostMapping("/{ticketId}/comments")
     public ResponseEntity<ApiResponse> addComment(@PathVariable Long ticketId, @RequestBody AddCommentRequest request, @AuthenticationPrincipal AuthenticatedPerson person) {
-        useCase.addComment(requestMapper.toCommentAddCommand(ticketId, person.id(), person.role(), request));
+        useCase.addComment(requestMapper.toCommentAddCommand(ticketId, person.id(), person.name(), person.role(), request));
         return ResponseEntity.ok(new ApiResponse("success", "Comment was added successfully"));
     }
 

@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { RxStomp, RxStompConfig } from "@stomp/rx-stomp";
-import {NotificationService} from "./notification.service";
-import {AuthService} from "../auth/auth.service";
+import { NotificationService } from "./notification.service";
+import { AuthService } from "../auth/auth.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebsocketService {
-  private rxStomp: RxStomp | null = null;
+  private rxStomp: RxStomp = new RxStomp();
 
   constructor(private notificationService: NotificationService, private auth: AuthService) {
   }
@@ -41,11 +41,13 @@ export class WebsocketService {
       this.notificationService.addIncomingNotification(JSON.parse(msg.body));
     });
 
-    this.rxStomp.watch('/topic/notifications/ADMIN').subscribe(msg => console.log('ADMIN LEAK TEST:', msg.body));
+  }
+
+  watchTicket(ticketId: number) {
+    return this.rxStomp.watch(`/topic/tickets/` + ticketId);
   }
 
   deactivate() {
     this.rxStomp?.deactivate();
-    this.rxStomp = null;
   }
 }

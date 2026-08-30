@@ -22,7 +22,7 @@ public interface TicketRequestMapper {
         );
     }
 
-    AddTicketCommentCommand toCommentAddCommand(Long ticketId, Long personId, String role, AddCommentRequest request);
+    AddTicketCommentCommand toCommentAddCommand(Long ticketId, Long personId, String personName, String role, AddCommentRequest request);
 
     @Mapping(target = "priority", expression = "java(mapPriority(request.priority()))")
     @Mapping(target = "status", expression = "java(mapStatus(request.status()))")

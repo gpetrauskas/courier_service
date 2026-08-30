@@ -21,6 +21,8 @@ import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import { AddComment } from "../../../models/ticket/add-comment.model";
 import { TicketComment } from "../../../models/ticket/ticket-comment.model";
+import {WebsocketService} from "../../../service/websocket.service";
+import {IMessage} from "@stomp/rx-stomp";
 
 @Component({
   selector: 'app-ticket-details',
@@ -30,12 +32,13 @@ import { TicketComment } from "../../../models/ticket/ticket-comment.model";
   templateUrl: './ticket-details.component.html',
   styleUrl: './ticket-details.component.css'
 })
-export class TicketDetailsComponent implements OnInit{
+export class TicketDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ticketService = inject(TicketService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private wsService = inject(WebsocketService);
 
   ticket: Ticket | null = null;
   comments: TicketComment[] = [];
@@ -61,6 +64,8 @@ export class TicketDetailsComponent implements OnInit{
       this.tempStatus = ticket.status;
       this.tempPriority = ticket.priority;
       this.getTicketComments(ticketId);
+
+      this.wsService.watchTicket(ticketId).subscribe(msg => this.addIncomingComment(msg));
     });
   }
 
@@ -68,6 +73,10 @@ export class TicketDetailsComponent implements OnInit{
     void this.router.navigate(['../../../admin-dashboard/manage-user/user-details/', personId], {
       state: { personId: personId }
     });
+  }
+
+  addIncomingComment(msg: IMessage) {
+    this.comments.push(JSON.parse(msg.body));
   }
 
   getTicketComments(ticketId: number) {
@@ -113,7 +122,7 @@ export class TicketDetailsComponent implements OnInit{
         this.ticket!.updatedAt = data.timestamp;
         history.replaceState({ ticket: this.ticket }, '');
         this.commentForm.reset();
-        this.getTicketComments(ticket.id);
+        //this.getTicketComments(ticket.id);
       }
     });
   }

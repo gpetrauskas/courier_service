@@ -10,6 +10,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
+    private final MyChannelInterceptor myChannelInterceptor;
+
+    public WebSocketConfiguration(MyChannelInterceptor myChannelInterceptor) {
+        this.myChannelInterceptor = myChannelInterceptor;
+    }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -24,6 +29,6 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration channelRegistration) {
-        channelRegistration.interceptors(new MyChannelInterceptor());
+        channelRegistration.interceptors(myChannelInterceptor);
     }
 }

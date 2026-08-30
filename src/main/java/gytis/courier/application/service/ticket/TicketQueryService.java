@@ -33,10 +33,14 @@ public class TicketQueryService implements AdminTicketQueryUseCase, UserTicketQu
     }
 
     public PageResult<TicketCommentReadModel> getComments(Long ticketId, Long personId, String role, PageQuery pageQuery) {
-        if (!queryPort.existsByIdAndCreatedById(ticketId, personId) && !Role.ADMIN.equals(Role.valueOf(role))) {
+        if (!canAccessTicket(ticketId, personId, role)) {
             throw new ForbiddenException("Access denied");
         }
 
         return commentQueryPort.getComments(ticketId, pageQuery);
+    }
+
+    public boolean canAccessTicket(Long ticketId, Long personId, String role) {
+        return queryPort.existsByIdAndCreatedById(ticketId, personId) || Role.ADMIN.equals(Role.valueOf(role));
     }
 }
