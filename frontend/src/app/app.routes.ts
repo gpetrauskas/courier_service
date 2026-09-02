@@ -35,6 +35,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent, canActivate: [authGuard] },
     { path: 'register', component: RegisterComponent },
     { path: 'activity', component: ActivityLogComponent },
+    { path: 'logs', component: ActivityLogComponent },
     {
       path: 'make-order',
       component: MakeOrderComponent,

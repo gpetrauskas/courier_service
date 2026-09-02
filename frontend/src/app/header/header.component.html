@@ -71,6 +71,10 @@
     <button mat-button (click)="navigateTo('/register')">Register</button>
   </div>
 
+  <span class="toolbar-divider" *ngIf="!isAuthenticated"></span>
+
+  <button mat-icon-button id="logs" (click)="navigateTo('/logs')">Logs</button>
+
   <!-- links for all with logout for auth users -->
   <div class="nav-links">
     <button mat-button (click)="navigateTo('/track-order')">Track Order</button>
