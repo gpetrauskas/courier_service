@@ -1,6 +1,6 @@
 package gytis.courier.application.port.in.auth;
 
-public record LoginResult(
+public record AuthTokens(
         String jwt,
         String refresh
 ) {

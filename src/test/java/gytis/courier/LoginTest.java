@@ -2,10 +2,11 @@ package gytis.courier;
 
 import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.auth.LoginCommand;
-import gytis.courier.application.port.in.auth.LoginResult;
+import gytis.courier.application.port.in.auth.AuthTokens;
 import gytis.courier.application.port.out.auth.PasswordHashingPort;
 import gytis.courier.application.port.out.auth.TokenGeneratorPort;
 import gytis.courier.application.port.out.person.PersonCommandPort;
+import gytis.courier.application.service.auth.AuthTokenIssuer;
 import gytis.courier.application.service.auth.LoginService;
 import gytis.courier.domain.person.Email;
 import gytis.courier.domain.person.User;
@@ -30,9 +31,9 @@ public class LoginTest {
     @Mock
     PersonCommandPort personCommandPort;
     @Mock
-    TokenGeneratorPort tokenGeneratorPort;
-    @Mock
     ActivityLogUseCase logUseCase;
+    @Mock
+    AuthTokenIssuer authTokenIssuer;
     @InjectMocks
     LoginService loginService;
 
@@ -77,11 +78,11 @@ public class LoginTest {
                 .thenReturn(Optional.of(user));
         when(passwordHashingPort.matches(command.password(), user.getPassword()))
                 .thenReturn(true);
+        when(authTokenIssuer.issue(any(), any(), any(), any())).thenReturn(new AuthTokens("xx", "xxx"));
 
-        LoginResult result = loginService.login(command);
+        AuthTokens result = loginService.login(command);
 
-        verify(tokenGeneratorPort).generateToken(any(), any(), any(), any());
-        verify(tokenGeneratorPort).generateRefreshToken(any());
+        verify(authTokenIssuer).issue(any(), any(), any(), any());
 
         assertNotNull(result);
     }

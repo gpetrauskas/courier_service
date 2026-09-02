@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { Observable, BehaviorSubject, EMPTY, of, finalize } from 'rxjs';
+import {Observable, BehaviorSubject, EMPTY, of, finalize, share} from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import {AuthStateModel} from "../models/security/auth-state.model";
 
@@ -12,6 +12,8 @@ import {AuthStateModel} from "../models/security/auth-state.model";
 export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<AuthStateModel>({isAuthenticated: false, role: "guest", name: null});
   private authCheckedSubject = new BehaviorSubject<boolean>(false);
+
+  private refreshInProgress$: Observable<void> | null = null;
 
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable().pipe(map(state => state.isAuthenticated));
   userRole$ = this.isAuthenticatedSubject.asObservable().pipe(map(role => role.role));
@@ -49,7 +51,15 @@ export class AuthService {
   }
 
   refresh() {
-    return this.http.post<any>(`${environment.apiUrl}/api/auth/refresh`, {});
+    if (this.refreshInProgress$ !== null) {
+      return this.refreshInProgress$;
+    }
+
+    this.refreshInProgress$ = this.http.post<void>(`${environment.apiUrl}/api/auth/refresh`, {})
+      .pipe(share(),
+        finalize(() => this.refreshInProgress$ = null)
+      );
+    return this.refreshInProgress$;
   }
 
   private isJwtExpired(expirationDate: number): boolean {
