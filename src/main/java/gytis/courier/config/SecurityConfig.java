@@ -64,6 +64,8 @@ public class SecurityConfig {
 
     private String[] publicUrls() {
         return new String[] {
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
                 "/api/register",
                 "/api/auth/**",
                 "/api/parcel/**",

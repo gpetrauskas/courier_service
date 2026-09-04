@@ -30,7 +30,10 @@ public class RefreshService implements RefreshUseCase {
     @Transactional
     @Override
     public AuthTokens refresh(String token) {
-        System.out.println("as cia 2");
+        if (token == null || token.isBlank()) {
+            throw new BadCredentialsException("bad credentials");
+        }
+
         RefreshTokenValidationResult result = validatorPort.validateRefreshToken(token);
         Person person = personCommandPort.findById(result.personId())
                 .orElseThrow(() -> new ResourceNotFoundException("Not found"));
