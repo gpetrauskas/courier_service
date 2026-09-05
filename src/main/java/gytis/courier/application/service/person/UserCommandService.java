@@ -53,5 +53,7 @@ public class UserCommandService implements DeletePaymentMethodUseCase, EditMyInf
                 .orElseThrow(() -> new ResourceNotFoundException("User nto found"));
 
         user.maybeSaveMethod(method, token);
+
+        userPort.saveWithPaymentMethods(user);
     }
 }

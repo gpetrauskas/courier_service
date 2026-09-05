@@ -81,7 +81,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         order.markConfirmed();
         commandPort.save(order);
 
-        logUseCase.saveLog("SYSTEM", "pay", "Order#" + orderId + " was marked as paid by event handler");
+        logUseCase.saveLog("SYSTEM", "SYSTEM", "pay", "Order#" + orderId + " was marked as paid by event handler");
     }
 
     @Override

@@ -107,7 +107,7 @@ public class LoginIntegrationTest {
     }
 
     @Test
-    void throwsOnConcurrentRefreshCookieCall() throws Exception {
+    void onlyOneConcurrentRefreshSucceed() throws Exception {
         MvcResult loginResult = mockMvc.perform(post("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"admin@example.com\",\"password\":\"pass123\"}"))
