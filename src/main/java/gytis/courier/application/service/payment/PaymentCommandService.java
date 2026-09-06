@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -59,6 +60,8 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
     @Override
     @Transactional
     public PayReadModel pay(PaymentCommand command) {
+        System.out.println("Thread enters pay" + Thread.currentThread().getName());
+
         PaymentMethod method;
         if (command.existingMethodId() != null) {
             method = methodCommandPort.findByIdAndUserId(command.existingMethodId(), command.userId())
@@ -66,9 +69,14 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         } else {
             method = methodFactory.from(command.command());
         }
-
+        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
+        System.out.println("Thread before calling starter" + Thread.currentThread().getName());
         Payment payment = attemptStarter.start(command.orderId(), method.providerType());
+        System.out.println("Thread in pay after starter " + Thread.currentThread().getName() + " " + payment.getId() + " " + payment.getStatus());
+
         PaymentResult result = processorFactory.getProcessor(method).process(method, command.cvc());
+
+        System.out.println("Thread after precessor" + Thread.currentThread().getName() + " " + payment.getId() + " " + payment.getStatus());
 
         var maybeEvent = completeAttempt(payment, result);
 
@@ -83,6 +91,7 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
             logUseCase.saveLog("USER", "pay", "Payment #" + payment.getId() + "failed - " + result.failureReason());
         }
 
+        System.out.println(result.success() + " result");
         return new PayReadModel(
                 result.providerType().name(),
                 result.transactionId(),

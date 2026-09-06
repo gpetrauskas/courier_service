@@ -5,6 +5,7 @@ import gytis.courier.domain.event.DomainEvent;
 import gytis.courier.domain.event.PaymentConfirmedEvent;
 import gytis.courier.domain.event.PaymentFailedEvent;
 import gytis.courier.exception.InvalidStateTransitionException;
+import gytis.courier.exception.PaymentStateException;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -118,7 +119,7 @@ public class Payment {
 
     private void markAsProcessing() {
         if (!status.canTransit(PaymentStatus.PROCESSING)) {
-            throw new IllegalStateException("Cannot pay: current status: " + this.status);
+            throw new PaymentStateException("Cannot pay: current status: " + this.status);
         }
         this.status = PaymentStatus.PROCESSING;
     }

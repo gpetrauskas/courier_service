@@ -195,6 +195,11 @@ public class GlobalExceptionHandler {
         return errorResponse(ex.getMessage(), HttpStatus.CONFLICT, "error");
     }
 
+    @ExceptionHandler(PaymentStateException.class)
+    public ResponseEntity<ApiResponse> handlePaymentStateException(PaymentStateException ex) {
+        return errorResponse(ex.getMessage(), HttpStatus.CONFLICT, "error");
+    }
+
     private ResponseEntity<ApiResponse> errorResponse(String message, HttpStatus status, String messageStatus) {
         return ResponseEntity.status(status).body(new ApiResponse(messageStatus, message));
     }

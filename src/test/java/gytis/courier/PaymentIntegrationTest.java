@@ -1,6 +1,5 @@
 package gytis.courier;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gytis.courier.adapter.in.rest.payment.dto.CreditCardRequest;
 import gytis.courier.adapter.in.rest.payment.dto.PaymentMethodRequest;
@@ -8,16 +7,13 @@ import gytis.courier.adapter.in.rest.payment.dto.PaymentRequest;
 import gytis.courier.adapter.in.security.AuthenticatedPerson;
 import gytis.courier.application.port.out.order.OrderCommandPort;
 import gytis.courier.application.port.out.payment.PaymentCommandPort;
-import gytis.courier.application.port.out.paymentmethod.PaymentMethodCommandPort;
 import gytis.courier.application.port.out.person.UserCommandPort;
-import gytis.courier.application.result.PaymentResult;
 import gytis.courier.domain.address.AddressDetails;
 import gytis.courier.domain.delivery.DeliveryOption;
 import gytis.courier.domain.order.Order;
 import gytis.courier.domain.order.OrderAddress;
 import gytis.courier.domain.order.Parcel;
 import gytis.courier.domain.payment.Payment;
-import gytis.courier.domain.payment.PaymentAttempt;
 import gytis.courier.domain.payment.PaymentStatus;
 import gytis.courier.domain.payment.method.PaymentMethod;
 import gytis.courier.domain.person.Email;
@@ -37,7 +33,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,11 +61,10 @@ public class PaymentIntegrationTest {
     @Autowired
     PaymentCommandPort paymentCommandPort;
     @Autowired
-    PaymentMethodCommandPort paymentMethodCommandPort;
-    @Autowired
     ObjectMapper objectMapper;
     User user;
     Order order;
+    ExecutorService executorService;
 
     @BeforeEach
     public void setUp() {
@@ -135,8 +135,41 @@ public class PaymentIntegrationTest {
                 .andExpect(jsonPath("$.transactionId").isEmpty());
     }
 
+    @Test
+    void onlyOneConcurrentSucceed() throws Exception {
+        PaymentRequest request = creditCardPaymentRequest(true, "123");
+        Payment payment = Payment.create(order.getId(), order.calculateShippingCost());
+        paymentCommandPort.create(payment);
 
+        int numberOfTries = 2;
+        List<Integer> statuses = Collections.synchronizedList(new ArrayList<>());
+        executorService = Executors.newFixedThreadPool(2);
 
+        for (int i = 0; i < numberOfTries; i++) {
+            executorService.execute(() -> {
+                try {
+                    MvcResult result = mockMvc.perform(post("/api/payment/{orderId}/pay", order.getId())
+                            .with(authentication(authenticateAs(user)))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                            .andReturn();
+
+                    statuses.add(result.getResponse().getStatus());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
+
+        System.out.println(statuses.getLast() + " " + statuses.getFirst());
+
+        assertEquals(2, statuses.size());
+        assertTrue(statuses.contains(200));
+        assertTrue(statuses.contains(409));
+    }
 
 
     private User createUser() {

@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class PaymentAdapter implements PaymentCommandPort, PaymentQueryPort {
         repository.save(mapper.toEntity(payment));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     @Override
     public Payment update(Payment payment) {
         PaymentJpaEntity managed = repository.findByOrderId(payment.getOrderId())
@@ -46,11 +47,13 @@ public class PaymentAdapter implements PaymentCommandPort, PaymentQueryPort {
         return mapper.toDomain(managed);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     @Override
     public Optional<Payment> findByOrderIdLocked(Long orderId) {
+        System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
         return repository.findByOrderIdForUpdate(orderId)
                 .map(mapper::toDomain);
+
     }
 
     @Override
