@@ -17,6 +17,7 @@ public class OutboxJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String payload;
 
+    @Enumerated(EnumType.STRING)
     private OutboxEnum status;
     private LocalDateTime createdAt;
     private LocalDateTime processed_at;

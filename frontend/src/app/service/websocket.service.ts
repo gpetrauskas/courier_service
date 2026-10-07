@@ -41,6 +41,10 @@ export class WebsocketService {
       this.notificationService.addIncomingNotification(JSON.parse(msg.body));
     });
 
+/*
+    this.rxStomp.watch(`/topic/task-cards`).subscribe(msg => {console.log("cia " + msg)});
+*/
+
   }
 
   watchTicket(ticketId: number) {
@@ -49,5 +53,9 @@ export class WebsocketService {
 
   deactivate() {
     this.rxStomp?.deactivate();
+  }
+
+  watchTaskCards() {
+    return this.rxStomp.watch("/topic/task-cards");
   }
 }

@@ -23,6 +23,6 @@ public interface OrderQueryUseCase {
     PageResult<OrderForTaskReadModel> getAllByTaskType(PageQuery pageQuery, TaskType type);
 
     //user
-    PageResult<UserOrderListReadModel> getUserOrderList(PageQuery pageQuery, Long userId);
+    PageResult<UserOrderListReadModel> getUserOrderList(PageQuery pageQuery, OrderQuery orderQuery);
     OrderUserDetailReadModel getUserOrderDetail(Long id, Long userId);
 }

@@ -3,14 +3,20 @@
     <h2>My Orders</h2>
   </header>
 
+  <app-filter
+    [showOrderFilter]="true"
+    (filterChange)="onFilterChange($event)"
+  >
+
+  </app-filter>
+
   <div class="pagination-controls">
     <app-pagination
       [currentPage]="currentPage"
       [totalPages]="totalPages"
       [pageSize]="pageSize"
       [totalItems]="totalOrders"
-      (pageChange)="onPageChange($event)"
-      (pageSizeChange)="onPageSizeChange($event)">
+      (pageChange)="onPageChange($event)">
     </app-pagination>
   </div>
 
@@ -25,7 +31,7 @@
           <span class="order-status" [class]="'status-' + order.status.toLowerCase()">
             {{ order.status }}
           </span>
-          <span class="order-price">{{ order.total | currency }}</span>
+<!--          <span class="order-price">{{ order.total | currency }}</span>-->
         </div>
       </div>
     </div>

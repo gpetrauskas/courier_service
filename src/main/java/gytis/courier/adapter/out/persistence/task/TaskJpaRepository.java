@@ -31,6 +31,14 @@ public interface TaskJpaRepository extends JpaRepository<TaskJpaEntity, Long>, J
 
     Page<TaskListProjection> findByCourierIdAndDeliveryStatusIn(Long courierId, Set<DeliveryStatus> statuses, Pageable pageable);
 
+    @Query("""
+    SELECT
+        t.taskType AS taskType,
+        t.deliveryStatus AS deliveryStatus,
+        COUNT(t.id) AS count
+        FROM TaskJpaEntity t GROUP BY t.taskType, t.deliveryStatus
+""")
+    List<AdminTaskCardProjection> findCards();
 
     @Query("""
     SELECT

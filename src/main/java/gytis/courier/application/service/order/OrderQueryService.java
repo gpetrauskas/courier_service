@@ -32,8 +32,8 @@ public class OrderQueryService implements OrderQueryUseCase {
 
     // user
     @Override
-    public PageResult<UserOrderListReadModel> getUserOrderList(PageQuery pageQuery, Long userId) {
-        return queryPort.findUserOrders(pageQuery, userId);
+    public PageResult<UserOrderListReadModel> getUserOrderList(PageQuery pageQuery, OrderQuery orderQuery) {
+        return queryPort.findUserOrders(pageQuery, orderQuery);
     }
 
     @Override

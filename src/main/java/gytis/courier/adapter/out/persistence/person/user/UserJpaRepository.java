@@ -33,6 +33,7 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
            u.email AS email,
            u.subscribed AS subscribed,
            u.phoneNumber AS phoneNumber,
+           u.createdDate AS createdDate,
            (SELECT COUNT(o) FROM OrderJpaEntity o WHERE o.userId = :id) AS orderCount,
            a.details.street AS defaultAddress
     FROM UserJpaEntity u

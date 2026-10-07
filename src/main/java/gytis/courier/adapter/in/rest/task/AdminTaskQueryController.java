@@ -8,6 +8,7 @@ import gytis.courier.application.common.PageQuery;
 import gytis.courier.application.common.PageResult;
 import gytis.courier.application.port.in.task.AdminTaskQueryUseCase;
 import gytis.courier.application.query.filter.AdminTaskQueryFilter;
+import gytis.courier.application.readmodel.task.AdminTaskCardReadModel;
 import gytis.courier.application.readmodel.task.TaskListReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskReadModel;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,5 +37,10 @@ public class AdminTaskQueryController {
     @GetMapping("/{id}")
     public AdminTaskReadModel getDetailed(@PathVariable Long id) {
         return useCase.getDetailedTask(id);
+    }
+
+    @GetMapping("/cards")
+    public AdminTaskCardReadModel getCards() {
+        return useCase.getCards();
     }
 }

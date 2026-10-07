@@ -34,7 +34,7 @@ public interface OrderQueryPort {
     PageResult<OrderForTaskReadModel> findAllForTask(PageQuery pageQuery, Set<ParcelStatus> statuses, AddressType type);
 
     // user query
-    PageResult<UserOrderListReadModel> findUserOrders(PageQuery pageQuery, Long userId);
+    PageResult<UserOrderListReadModel> findUserOrders(PageQuery pageQuery, OrderQuery orderQuery);
     Optional<OrderUserDetailReadModel> findUserOrderDetail(Long orderId, Long userId);
 
 }

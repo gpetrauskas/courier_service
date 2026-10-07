@@ -7,6 +7,7 @@ import { CreateTask } from "../../models/task/create-task.model";
 import { PaginatedResponse } from "../../models/paginated-response.model";
 import { AdminTaskSummary } from "../../models/task/admin-task-summary.model";
 import { AdminTaskDetailed } from "../../models/task/admin-task-detailed.model";
+import {AdminTaskCardModel} from "../../models/task/admin-task-card.model";
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +45,10 @@ export class AdminTaskService {
     console.log(queryParams);
 
     return this.http.get<PaginatedResponse<AdminTaskSummary>>(`${this.taskUrl}?${queryParams.toString()}`, { withCredentials: true });
+  }
+
+  getCards(): Observable<AdminTaskCardModel> {
+    return this.http.get<AdminTaskCardModel>(`${this.taskUrl}/cards`);
   }
 
   getDetailedTask(taskId: number): Observable<AdminTaskDetailed> {

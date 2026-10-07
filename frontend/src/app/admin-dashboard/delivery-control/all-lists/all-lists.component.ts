@@ -10,6 +10,8 @@ import { PaginatedResponse } from '../../../models/paginated-response.model';
 import { ErrorHandlerService } from "../../../service/error-handler.service";
 import { PageEventModel } from "../../../models/page-event.model";
 import { FilterEventModel } from "../../../models/filter/filter-event.model";
+import {AdminTaskCardModel} from "../../../models/task/admin-task-card.model";
+import {WebsocketService} from "../../../service/websocket.service";
 
 @Component({
   selector: 'app-all-lists',
@@ -20,6 +22,7 @@ import { FilterEventModel } from "../../../models/filter/filter-event.model";
 })
 export class AllListsComponent implements OnInit {
   allLists: AdminTaskSummary[] = [];
+  cards: AdminTaskCardModel | null = null;
   pageSize: number = 10;
   currentPage: number = 0;
   totalPages: number = 0;
@@ -35,11 +38,14 @@ export class AllListsComponent implements OnInit {
   constructor(
     private taskService: AdminTaskService,
     private router: Router,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private ws: WebsocketService
   ) {}
 
   ngOnInit() {
     this.loadAllLists(this.currentPage, this.pageSize);
+    this.loadCards();
+    this.ws.watchTaskCards().subscribe(msg => this.loadCards());
   }
 
   private loadAllLists(page: number, size: number) {
@@ -59,6 +65,13 @@ export class AllListsComponent implements OnInit {
       this.totalItems = data.totalItems;
       this.totalPages = data.totalPages;
       },
+      error: (err) => this.errorHandler.handleError(err)
+    });
+  }
+
+  private loadCards() {
+    this.taskService.getCards().subscribe({
+      next: (data: AdminTaskCardModel) => {this.cards = data;     console.log(this.cards)},
       error: (err) => this.errorHandler.handleError(err)
     });
   }

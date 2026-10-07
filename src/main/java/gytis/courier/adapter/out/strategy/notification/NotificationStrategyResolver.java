@@ -2,10 +2,10 @@ package gytis.courier.adapter.out.strategy.notification;
 
 import gytis.courier.application.port.out.auth.PersonQueryPort;
 import gytis.courier.application.port.out.notification.NotificationDeliveryPort;
+import gytis.courier.application.port.out.websocket.WebSocketPublisherPort;
 import gytis.courier.domain.notification.Notification;
 import gytis.courier.domain.notification.NotificationTarget;
 import gytis.courier.exception.ResourceNotFoundException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,16 +15,16 @@ import java.util.stream.Collectors;
 @Component
     public class NotificationStrategyResolver implements NotificationDeliveryPort {
     private final Map<Class<? extends NotificationTarget>, NotificationDeliveryStrategy> strategies;
-    private final SimpMessagingTemplate template;
+    private final WebSocketPublisherPort webSocketPublisherPort;
     private final PersonQueryPort personQueryPort;
 
     private static final String NOTIFICATION_TOPIC_PREFIX = "/topic/notifications/";
     private static final String NOTIFICATION_QUEUE_PREFIX = "/queue/notifications";
 
-    public NotificationStrategyResolver(List<NotificationDeliveryStrategy> strategies, SimpMessagingTemplate template, PersonQueryPort personQueryPort) {
+    public NotificationStrategyResolver(List<NotificationDeliveryStrategy> strategies, WebSocketPublisherPort webSocketPublisherPort, PersonQueryPort personQueryPort) {
         this.strategies = strategies.stream()
                 .collect(Collectors.toMap(NotificationDeliveryStrategy::getSupportedType, s -> s));
-        this.template = template;
+        this.webSocketPublisherPort = webSocketPublisherPort;
         this.personQueryPort = personQueryPort;
     }
 
@@ -36,8 +36,8 @@ import java.util.stream.Collectors;
         }
 
         switch (notification.getTarget()) {
-            case NotificationTarget.Broadcast b -> template.convertAndSend(NOTIFICATION_TOPIC_PREFIX + b.type().name(), notification);
-            case NotificationTarget.Individual i -> template.convertAndSendToUser(getEmail(i.personId()), NOTIFICATION_QUEUE_PREFIX, notification);
+            case NotificationTarget.Broadcast b -> webSocketPublisherPort.broadcast(NOTIFICATION_TOPIC_PREFIX + b.type().name(), notification);
+            case NotificationTarget.Individual i -> webSocketPublisherPort.sendToUser(getEmail(i.personId()), NOTIFICATION_QUEUE_PREFIX, notification);
         }
 
         strategy.deliver(notification);

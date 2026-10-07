@@ -15,9 +15,6 @@ export class OrderReviewComponent {
 
   constructor(private errorHandler: ErrorHandlerService) {
   }
-/*
-  @Input() isSubmitting: boolean = false;
-*/
   alert$ = this.errorHandler.alert$;
   @Input() orderData!: OrderDTO;
   @Input() selectedWeightOption?: DeliveryOption;

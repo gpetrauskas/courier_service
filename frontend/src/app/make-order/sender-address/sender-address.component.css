@@ -1,5 +1,5 @@
 .sender-address {
-  max-width: 600px;
+  max-width: 400px;
   margin: 20px auto;
   padding: 20px;
   border: 1px solid #e0e0e0;
@@ -54,7 +54,7 @@ button {
   border-radius: 5px;
   font-size: 16px;
   color: #fff;
-  background-color: #007bff;
+  background-color: #4d7298;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -66,4 +66,10 @@ button:disabled {
 
 button:hover:not(:disabled) {
   background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  div.sender-address {
+    display: contents;
+  }
 }

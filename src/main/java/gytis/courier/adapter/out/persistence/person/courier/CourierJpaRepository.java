@@ -17,6 +17,7 @@ public interface CourierJpaRepository extends JpaRepository<CourierJpaEntity, Lo
     @Query("""
     SELECT c.name AS name,
            c.email AS email,
+           c.createdDate AS createdDate,
            c.hasActiveTask AS hasActiveTask
     FROM CourierJpaEntity c
     WHERE c.id = :id

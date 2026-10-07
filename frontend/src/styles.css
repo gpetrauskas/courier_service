@@ -1,13 +1,13 @@
 html {
-  background-color: #ffffff;
+  --mat-sidenav-content-background-color: var(--background-light-gray);
 }
 
 html, body {
  height: 100%;
  margin: 0;
  padding: 0;
+  font-size: 14px;
 }
-
 
 :host {
   display: flex;
@@ -39,6 +39,7 @@ app-root {
   --background-blocked-hover: #ffcccc;
 
   --border-light: #e0e0e0;
+  --border-dark-grey: #191919;
   --border-mobile: #ddd;
 
   --text-dark: #2f2f2f;

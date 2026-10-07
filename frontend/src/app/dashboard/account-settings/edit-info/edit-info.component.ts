@@ -19,6 +19,7 @@ import { MyInfoAdmin } from "../../../models/person/my-info-admin.model";
 import { MyInfoCourier } from "../../../models/person/my-info-courier.model";
 import { MyInfoUser } from "../../../models/person/my-info-user.model";
 import { ErrorHandlerService } from "../../../service/error-handler.service";
+import {CommonModule} from "@angular/common";
 
 @Component({
   selector: 'app-edit-info',
@@ -34,7 +35,8 @@ import { ErrorHandlerService } from "../../../service/error-handler.service";
     MatIconModule,
     MatSlideToggleModule,
     FormsModule,
-    MatButtonModule
+    MatButtonModule,
+    CommonModule
   ],
   templateUrl: './edit-info.component.html',
   styleUrl: './edit-info.component.css'

@@ -59,8 +59,6 @@ public class UserAdapter implements UserCommandPort {
     public void save(User user) {
         UserJpaEntity managed = repository.findById(user.getId()).orElseThrow();
         mapper.updateEntityFromDomain(user, managed);
-
-        System.out.println("adapter adddrs def " + user.getDefaultAddressId());
     }
 
     @Override

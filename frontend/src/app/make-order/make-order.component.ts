@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DeliveryOptionsComponent } from './delivery-options/delivery-options.component';
@@ -10,19 +10,22 @@ import { PackageDetails } from '../models/order/package-details.model';
 import { Address } from '../models/address/address.model';
 import { DeliveryOption } from '../models/delivery-option/delivery-option.model';
 import { ErrorHandlerService } from "../service/error-handler.service";
+import { MatStepper, MatStepperModule } from "@angular/material/stepper";
+import { MatFormField } from "@angular/material/input";
+import { ReactiveFormsModule } from "@angular/forms";
+import { MediaServiceService } from "../service/media-service.service";
 
 
 @Component({
   selector: 'app-make-order',
   standalone: true,
   imports: [RouterModule, CommonModule, DeliveryOptionsComponent,
-    SenderAddressComponent, RecipientAddressComponent, OrderReviewComponent],
+    SenderAddressComponent, RecipientAddressComponent, OrderReviewComponent, MatStepperModule, MatFormField, ReactiveFormsModule],
   templateUrl: './make-order.component.html',
   styleUrl: './make-order.component.css'
 })
 export class MakeOrderComponent {
-  activeTab: string = 'startOrder';
-  completedTabs = new Set<string>();
+  @ViewChild(MatStepper) stepper!: MatStepper;
 
   orderData = {
     parcelDetails: { weightId: null, dimensionsId: null, contents: '' } as PackageDetails,
@@ -36,25 +39,12 @@ export class MakeOrderComponent {
   selectedPreferenceOption?: DeliveryOption;
   savedAddresses: Address[] = [];
 
-  constructor (private orderService: OrderService, private router: Router, private errorHandler: ErrorHandlerService) {}
-
-  isTabEnabled(tab: string): boolean {
-    const tabOrder = ['deliveryOptions', 'senderAddress', 'recipientAddress', 'orderReview'];
-    const currentIndex = tabOrder.indexOf(this.activeTab);
-    const tabIndex = tabOrder.indexOf(tab);
-    return tabIndex <= currentIndex;
-  }
-
-  isTabVisible(tab: string): boolean {
-    return this.isTabEnabled(tab);
-  }
-
-  selectTab(event: Event, tab: string) {
-    event.preventDefault();
-    if (this.isTabEnabled(tab)) {
-      this.activeTab = tab;
-    }
-  }
+  constructor (
+    private orderService: OrderService,
+    private router: Router,
+    private errorHandler: ErrorHandlerService,
+    public screen: MediaServiceService
+  ) {}
 
   handleSenderAddressButtonClick(event: {
     parcelDetails: PackageDetails;
@@ -69,40 +59,26 @@ export class MakeOrderComponent {
     this.selectedSizeOption = event.selectedSizeOption;
     this.selectedPreferenceOption = event.selectedPreferenceOption;
 
-    this.completedTabs.add('deliveryOptions');
-    this.activeTab = 'senderAddress';
+    this.stepper.next();
   }
 
   handleRecipientAddressButtonClick(senderAddress: Address, savedAddresses: Address[]) {
     this.orderData.senderAddress = senderAddress;
     this.savedAddresses = savedAddresses;
 
-    this.completedTabs.add('senderAddress');
-    this.activeTab = 'recipientAddress';
+    this.stepper.next();
   }
 
   handleOrderReviewButtonClick(recipientAddress: Address) {
     this.orderData.recipientAddress = recipientAddress;
 
-    this.completedTabs.add('recipientAddress');
-    this.activeTab = 'orderReview';
-
-    console.log(this.orderData.senderAddress);
-    console.log(this.orderData.recipientAddress);
+    this.stepper.next();
   }
 
   handleConfirmOrderButtonClick() {
     this.orderService.submitOrder(this.orderData).subscribe({
-      next: (response) => {
-        this.router.navigate([`/dashboard/user-orders/`, response]);
-      },
-      error: (error) => {
-        this.errorHandler.showError(error);
-      }
+      next: value => this.router.navigate([`/dashboard/user-orders`, value]),
+      error: err => this.errorHandler.handleError(err)
     });
-  }
-
-  startOrder() {
-    this.activeTab = 'deliveryOptions';
   }
 }

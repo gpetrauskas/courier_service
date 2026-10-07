@@ -10,6 +10,7 @@ import gytis.courier.domain.order.ParcelStatus;
 import gytis.courier.domain.payment.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -40,7 +41,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
     // for query
     OrderAddressIdsProjection findByParcelId(Long parcelId);
     Optional<OrderDetailProjection> findOrderDetailById(Long orderId);
-    Page<OrderListProjection> findByUserId(Pageable pageable, Long userId);
+    Page<OrderListProjection> findByUserId(Specification<OrderJpaEntity> spec, Pageable pageable);
     Optional<OrderDetailProjection> findOrderDetailByIdAndUserId(Long orderId, Long userId);
 
     @Query("SELECT " +

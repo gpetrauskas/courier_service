@@ -1,50 +1,103 @@
-<app-filter
-  [showTaskListFilter]="true"
-  (filterChange)="onFilterChange($event)"
-></app-filter>
-
-<div class="pagination-control">
-  <app-pagination
-    [currentPage]="currentPage"
-    [totalItems]="totalItems"
-    [pageSize]="pageSize"
-    [totalPages]="totalPages"
-    (pageChange)="onPageChange($event)"
-  ></app-pagination>
+<div class="cards">
+  <div class="card picked">
+    <span class="label">Picked Up</span>
+    <span class="value">{{ cards?.pickedUp }}</span>
+  </div>
+  <div class="card delivered">
+    <span class="label">Delivered</span>
+    <span class="value">{{ cards?.delivered }}</span>
+  </div>
+  <div class="card picking">
+    <span class="label">Picking Up</span>
+    <span class="value">{{ cards?.pickingUp }}</span>
+  </div>
+  <div class="card delivering">
+    <span class="label">Delivering</span>
+    <span class="value">{{ cards?.delivering }}</span>
+  </div>
+  <div class="card returning">
+    <span class="label">Returning</span>
+    <span class="value">{{ cards?.returning }}</span>
+  </div>
+  <div class="card returned">
+    <span class="label">Awaiting confirmation</span>
+    <span class="value">{{ cards?.awaitingConfirmation }}</span>
+  </div>
 </div>
 
-<div class="list-container" *ngIf="allLists.length > 0; else noLists">
-  <table class="styled-table">
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Type</th>
-      <th>Status</th>
-      <th>Assigned Courier</th>
-      <th>Created At</th>
-      <th>Completed At</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
+<div class="main">
+  <div class="list-container">
+    <label class="all-orders-label">All orders</label>
+    <app-filter
+      [showTaskListFilter]="true"
+      (filterChange)="onFilterChange($event)"
+    ></app-filter>
 
-    <tbody>
-    <tr *ngFor="let task of allLists">
-      <td data-label="ID"> {{ task.id }}</td>
-      <td data-label="TYPE"> {{ task.taskType }} </td>
-      <td data-label="STATUS"> {{ task.deliveryStatus }} </td>
-      <td data-label="COURIER"> {{ task.courierId }} </td>
-      <td data-label="CREATED_AT"> {{ task.createdAt | date:'short'}} </td>
-      <td data-label="COMPLETED_AT">{{ task.deliveryStatus === 'CANCELED'
-        ? 'Canceled'
-        : (task.completedAt ? (task.completedAt | date:'short') : 'Pending') }}
-      </td>
-      <td data-label="actions" class="action-buttons">
-        <button class="details-btn" (click)="viewDetails(task.id)">Details</button>
-        <button class="cancel-btn" [disabled]="task.deliveryStatus === 'CANCELED' || task.deliveryStatus === 'COMPLETED'" (click)="cancelTask(task.id)">Cancel</button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+    <table class="styled-table" *ngIf="allLists.length > 0; else noLists">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Assigned Courier</th>
+        <th>Created At</th>
+        <th>Completed At</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr *ngFor="let task of allLists">
+        <td data-label="ID"> {{ task.id }}</td>
+        <td data-label="TYPE"> {{ task.taskType }} </td>
+        <td data-label="STATUS"> <span class="status {{task.deliveryStatus}}">{{ task.deliveryStatus }}</span></td>
+        <td data-label="COURIER"> {{ task.courierId }} </td>
+        <td data-label="CREATED_AT"> {{ task.createdAt | date:'short'}} </td>
+        <td data-label="COMPLETED_AT">{{ task.deliveryStatus === 'CANCELED'
+          ? 'Canceled'
+          : (task.completedAt ? (task.completedAt | date:'short') : 'Pending') }}
+        </td>
+        <td data-label="actions" class="action-buttons">
+          <button class="details-btn" (click)="viewDetails(task.id)">Details</button>
+          <button class="cancel-btn" [disabled]="task.deliveryStatus === 'CANCELED' || task.deliveryStatus === 'COMPLETED'" (click)="cancelTask(task.id)">Cancel</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <div class="pagination-control">
+      <app-pagination *ngIf="allLists.length > 0"
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [pageSize]="pageSize"
+        [totalPages]="totalPages"
+        (pageChange)="onPageChange($event)"
+      ></app-pagination>
+    </div>
+  </div>
+
+  <div class="sub-main">
+    <div class="activity">
+      <label class="sub-title">Activity</label>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+
+    </div>
+
+    <div class="stats">
+      <label class="sub-title">Statistics</label>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+      <p>test</p>
+
+    </div>
+  </div>
+
 </div>
 
 <ng-template #noLists>

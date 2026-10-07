@@ -57,6 +57,7 @@ public class Task {
         task.deliveryStatus = DeliveryStatus.IN_PROGRESS;
         task.createdAt = LocalDateTime.now();
         task.events.add(new TaskAssignedEvent(courierId));
+        task.events.add(new TaskStatusChangeEvent());
 
         for (TaskItemCreationSnapshot snapshot : snapshots) {
             TaskItem taskItem = TaskItem.create(snapshot, taskType);
@@ -108,6 +109,7 @@ public class Task {
 
         deliveryStatus = DeliveryStatus.CANCELED;
         events.add(new TaskCanceledEvent(this.id, adminId));
+        events.add(new TaskStatusChangeEvent());
 
         return parcelIds;
     }
@@ -149,6 +151,7 @@ public class Task {
                         sortedItems.getOrDefault(true, List.of()).stream().map(TaskItem::getParcelId).toList(),
                         sortedItems.getOrDefault(false, List.of()).stream().map(i -> new ParcelStatusUpdate(i.getParcelId(), i.getParcelStatus())).toList())
                 );
+        events.add(new TaskStatusChangeEvent());
     }
 
     public Long removeItem(Long itemId, Long adminId) {
@@ -171,6 +174,8 @@ public class Task {
         this.completedAt = LocalDateTime.now();
 
         events.add(new CourierCheckedInEvent(id, courierId));
+        events.add(new TaskStatusChangeEvent());
+
     }
 
     public void validateCourierOwnership(Long myId) {
@@ -187,6 +192,8 @@ public class Task {
             this.deliveryStatus = DeliveryStatus.CANCELED;
 
             events.add(new TaskCanceledEvent(this.id, adminId));
+            events.add(new TaskStatusChangeEvent());
+
         }
     }
 
@@ -213,6 +220,8 @@ public class Task {
             this.deliveryStatus = DeliveryStatus.RETURNING_TO_STATION;
 
             events.add(new CourierReturningEvent(id, courierId));
+            events.add(new TaskStatusChangeEvent());
+
         }
     }
 

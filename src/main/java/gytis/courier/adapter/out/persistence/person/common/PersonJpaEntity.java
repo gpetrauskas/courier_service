@@ -3,6 +3,7 @@ package gytis.courier.adapter.out.persistence.person.common;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -46,6 +47,10 @@ public abstract class PersonJpaEntity implements UserDetails {
     @Column(name = "deleted_date")
     private LocalDateTime deletedDate;
 
+    @Column(name = "created_date")
+    @CreationTimestamp
+    private LocalDateTime createdDate;
+
     protected PersonJpaEntity() {}
 
     public PersonJpaEntity(String name, String email, String password) {
@@ -63,6 +68,7 @@ public abstract class PersonJpaEntity implements UserDetails {
     public boolean isDeleted() { return deleted; }
     public LocalDateTime getDeletedDate() { return deletedDate; }
     public abstract String getRole();
+    public LocalDateTime getCreatedDate() { return createdDate; }
 
 
     @Override

@@ -1,20 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { OrderService } from '../../service/order/order.service';
-import { CommonModule } from '@angular/common';
-import { PaginationComponent } from '../../shared/pagination/pagination.component';
-import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { ErrorHandlerService } from "../../service/error-handler.service";
+import {Component, OnInit} from '@angular/core';
+import {OrderService} from '../../service/order/order.service';
+import {CommonModule} from '@angular/common';
+import {PaginationComponent} from '../../shared/pagination/pagination.component';
+import {Router} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+import {ErrorHandlerService} from "../../service/error-handler.service";
+import {PageEventModel} from "../../models/page-event.model";
+import {UserOrderList} from "../../models/order/user-order-list.model";
+import {PaginatedResponse} from "../../models/paginated-response.model";
+import {FilterComponent} from "../../shared/filter/filter.component";
+import {OrderStatus} from "../../enums/order-status.enum";
+import {FilterEventModel} from "../../models/filter/filter-event.model";
+import {OrderFilterModel} from "../../models/filter/order-filter.model";
 
 @Component({
   selector: 'app-user-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, FilterComponent],
   templateUrl: './user-orders.component.html',
   styleUrl: './user-orders.component.css'
 })
 export class UserOrdersComponent implements OnInit {
-  orders: any[] = [];
+  statusFilter: OrderStatus = OrderStatus.All;
+  orders: UserOrderList[] = [];
   totalOrders: number = 0;
   totalPages: number = 0;
   currentPage: number = 0;
@@ -26,11 +34,11 @@ export class UserOrdersComponent implements OnInit {
     this.fetchOrders(this.currentPage, this.pageSize);
   }
 
-  fetchOrders(page: number, size: number): void {
-    this.orderService.getMyOrders(page, size).subscribe({
-      next: (response: any) => {
+  fetchOrders(page: number, size: number, statusFilter?: OrderStatus): void {
+    this.orderService.getMyOrders(page, size, statusFilter).subscribe({
+      next: (response: PaginatedResponse<UserOrderList>) => {
         this.orders = response.data;
-        this.totalOrders = response.totalOrders;
+        this.totalOrders = response.totalItems
         this.totalPages = response.totalPages;
         this.currentPage = response.currentPage;
       },
@@ -49,16 +57,17 @@ export class UserOrdersComponent implements OnInit {
     }
   }
 
-  onPageChange(event: any) {
-    this.currentPage = event;
+  onPageChange(event: PageEventModel) {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.fetchOrders(this.currentPage, this.pageSize);
   }
 
-  onPageSizeChange(event: any): void {
-    let newSize = Number(event);
-    this.pageSize = newSize;
-    this.currentPage = 0;
-    this.fetchOrders(this.currentPage, this.pageSize);
+  onFilterChange(event: FilterEventModel) {
+    event = event as OrderFilterModel;
+    this.statusFilter = event.orderStatus;
+
+    this.fetchOrders(this.currentPage, this.pageSize, this.statusFilter);
   }
 
 }

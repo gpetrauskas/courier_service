@@ -13,6 +13,7 @@ public interface AdminJpaRepository extends JpaRepository<AdminJpaEntity, Long> 
     @Query("""
     SELECT a.name AS name,
            a.email AS email,
+           a.createdDate AS createdDate,
            (SELECT COUNT(t) FROM TaskJpaEntity t WHERE t.createdByAdminId = :id) AS createdTasks
     FROM AdminJpaEntity a
     WHERE a.id = :id

@@ -4,11 +4,13 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, FormGroup, FormBuilder, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Address } from '../../models/address/address.model';
 import { AddressService } from '../../service/person/address.service';
+import {MatInputModule} from "@angular/material/input";
+import {MatFormFieldModule} from "@angular/material/form-field";
 
 @Component({
   selector: 'app-sender-address',
   standalone: true,
-  imports: [RouterModule, FormsModule, CommonModule, ReactiveFormsModule],
+  imports: [RouterModule, FormsModule, CommonModule, ReactiveFormsModule, MatInputModule, MatFormFieldModule],
   templateUrl: './sender-address.component.html',
   styleUrl: './sender-address.component.css'
 })

@@ -98,9 +98,11 @@ public class OrderController {
     //user
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER')")
-    public PageResult<UserOrderListReadModel> getUserOrders(OrderUserSearchRequest request, @AuthenticationPrincipal AuthenticatedPerson person) {
+    public PageResult<UserOrderListReadModel> getUserOrders(@ModelAttribute OrderUserSearchRequest request, @AuthenticationPrincipal AuthenticatedPerson person) {
+        System.out.println("cccc " + request.status());
         PageQuery pageQuery = PageQueryAssembler.from(request.page(), request.size(), request.sortField(), request.direction(), OrderUserPagingPolicy.INSTANCE);
-        return queryUseCase.getUserOrderList(pageQuery, person.id());
+        OrderQuery orderQuery = new OrderQuery(request.status(), null, person.id());
+        return queryUseCase.getUserOrderList(pageQuery, orderQuery);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -113,7 +115,8 @@ public class OrderController {
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public PageResult<AdminOrderListReadModel> getAdminOrders(@ModelAttribute OrderAdminSearchRequest request) {
-        OrderQuery orderQuery = new OrderQuery(request.status(), request.id());
+        OrderQuery orderQuery = new OrderQuery(request.status(), request.id(), request.userId());
+        System.out.println(request.id() + " controller idd here");
         PageQuery pageQuery = PageQueryAssembler.from(request.page(), request.size(), request.sortField(), request.direction(), OrderAdminPagingPolicy.INSTANCE);
         return queryUseCase.getAdminOrderList(pageQuery, orderQuery);
     }

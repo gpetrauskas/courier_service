@@ -1,17 +1,17 @@
 package gytis.courier.application.service.ticket;
 
+import gytis.courier.adapter.webscoket.WebSocketDestinations;
 import gytis.courier.application.command.AddTicketCommentCommand;
 import gytis.courier.application.command.CreateTicketCommand;
 import gytis.courier.application.command.UpdateTicketCommand;
 import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.ticket.TicketCommandUseCase;
 import gytis.courier.application.port.out.ticket.TicketCommandPort;
-import gytis.courier.application.port.out.ticket.TicketCommentBroadcastPort;
 import gytis.courier.application.port.out.ticket.TicketCommentCommandPort;
+import gytis.courier.application.port.out.websocket.WebSocketPublisherPort;
 import gytis.courier.domain.ticket.Ticket;
 import gytis.courier.domain.ticket.TicketComment;
 import gytis.courier.exception.ResourceNotFoundException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,13 +19,13 @@ public class TicketCommandService implements TicketCommandUseCase {
     private final TicketCommandPort port;
     private final TicketCommentCommandPort commentPort;
     private final ActivityLogUseCase logUseCase;
-    private final TicketCommentBroadcastPort broadCastCommentPort;
+    private final WebSocketPublisherPort wsPort;
 
-    public TicketCommandService(TicketCommandPort port, TicketCommentCommandPort commentPort, ActivityLogUseCase logUseCase, TicketCommentBroadcastPort broadCastCommentPort) {
+    public TicketCommandService(TicketCommandPort port, TicketCommentCommandPort commentPort, ActivityLogUseCase logUseCase, WebSocketPublisherPort wsPort) {
         this.port = port;
         this.commentPort = commentPort;
         this.logUseCase = logUseCase;
-        this.broadCastCommentPort = broadCastCommentPort;
+        this.wsPort = wsPort;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class TicketCommandService implements TicketCommandUseCase {
         boolean isAdmin = "ADMIN".equals(command.role());
         TicketComment comment = ticket.addComment(command.personId(), command.personName(), isAdmin, command.message());
 
-        broadCastCommentPort.broadcast(ticket.getId(), comment);
+        wsPort.broadcast(WebSocketDestinations.TICKET + ticket.getId(), comment);
 
         commentPort.save(ticket.getId(), comment);
 

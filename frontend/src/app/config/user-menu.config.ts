@@ -3,7 +3,7 @@ import { MenuItem } from '../models/menu-item.model';
 export const userMenu: MenuItem[] = [
   {
     title: "Make Order",
-    path: `../make-order/`,
+    path: `../make-order`,
     roles: ['USER'],
   },
 

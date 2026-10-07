@@ -1,5 +1,5 @@
 .order-review {
-    max-width: 800px;
+    max-width: 600px;
     margin: 20px auto;
     padding: 25px;
     border: 1px solid #ccc;
@@ -71,7 +71,7 @@
     margin-top: 20px;
     font-size: 1.2rem;
     color: #fff;
-    background-color: #007bff;
+    background-color: #4d7298;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -81,4 +81,8 @@
 .order-review button:hover {
     background-color: #0056b3;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+
 }

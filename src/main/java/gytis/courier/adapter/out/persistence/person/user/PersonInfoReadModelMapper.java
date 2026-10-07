@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface PersonInfoReadModelMapper {
+    @Mapping(target = "createdDate", source = "createdDate")
     MyUserInfoReadModel toReadModel(UserInfoProjection projection);
     MyCourierInfoReadModel toReadModel(CourierInfoProjection projection);
     MyAdminInfoReadModel toReadModel(AdminInfoProjection projection);

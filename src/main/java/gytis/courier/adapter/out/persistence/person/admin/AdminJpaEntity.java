@@ -9,6 +9,12 @@ public class AdminJpaEntity extends PersonJpaEntity {
 /*    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TaskJpaEntity> createdTasks = new ArrayList<>();*/
 
+    protected AdminJpaEntity() {}
+
+    public AdminJpaEntity(String name, String email, String encodedPass) {
+        super(name, email, encodedPass);
+    }
+
     @Override
     public String getRole() { return "ADMIN"; }
 /*

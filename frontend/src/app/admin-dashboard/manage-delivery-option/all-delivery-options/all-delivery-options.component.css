@@ -9,10 +9,10 @@ table {
 }
 
 thead th {
-  background-color: #8b7a6b;
-  color: white;
+  background-color: #3e3e3e;
+  color: #ffffff;
   padding: 10px;
-  text-align: left;
+  text-align: center;
   border-bottom: 2px solid #dcdcdc;
 }
 
@@ -20,6 +20,7 @@ tbody td {
   padding: 10px;
   border-bottom: 2px solid #dcdcdc;
   color: #333333;
+  text-align: center;
 }
 
 tbody tr:nth-child(even) {
@@ -84,12 +85,10 @@ tbody tr:nth-child(even) {
   }
 
   td {
-
     justify-content: space-between;
     padding: 8px;
     border-bottom: 1px solid #eee;
     position: relative;
-    text-align: left;
   }
 
   td::before {

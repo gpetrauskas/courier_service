@@ -2,9 +2,9 @@ package gytis.courier;
 
 import gytis.courier.application.result.PaymentResult;
 import gytis.courier.domain.event.DomainEvent;
-import gytis.courier.domain.event.PaymentConfirmedEvent;
 import gytis.courier.domain.payment.*;
 import gytis.courier.exception.InvalidStateTransitionException;
+import gytis.courier.exception.PaymentStateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +41,7 @@ public class PaymentTest {
     void throwOnInitialAttemptCreation() {
         payment.changeStatus(PaymentStatus.PAID);
 
-        assertThrows(IllegalStateException.class, () -> payment.startAttempt(ProviderType.CREDIT_CARD));
+        assertThrows(PaymentStateException.class, () -> payment.startAttempt(ProviderType.CREDIT_CARD));
 
         assertTrue(payment.getPaymentAttempts().isEmpty());
     }

@@ -78,7 +78,7 @@ public class OrderQueryAdapter implements OrderQueryPort {
     @Override
     public PageResult<AdminOrderListReadModel> findAdminOrders(PageQuery pageQuery, OrderQuery orderQuery) {
         Pageable pageable = PageableFactory.from(pageQuery);
-        Specification<OrderJpaEntity> specification = OrderSpecificationBuilder.from(orderQuery);
+        Specification<OrderJpaEntity> specification = OrderSpecificationBuilder.forAdmin(orderQuery);
 
         Page<OrderListProjection> projections = repository.findBy(
                 specification,
@@ -88,9 +88,13 @@ public class OrderQueryAdapter implements OrderQueryPort {
     }
 
     @Override
-    public PageResult<UserOrderListReadModel> findUserOrders(PageQuery pageQuery, Long userId) {
+    public PageResult<UserOrderListReadModel> findUserOrders(PageQuery pageQuery, OrderQuery orderQuery) {
         Pageable pageable = PageableFactory.from(pageQuery);
-        Page<OrderListProjection> projections = repository.findByUserId(pageable, userId);
+        Specification<OrderJpaEntity> specification = OrderSpecificationBuilder.forUser(orderQuery);
+        Page<OrderListProjection> projections = repository.findBy(
+                specification,
+                q -> q.as(OrderListProjection.class).page(pageable)
+        );
 
         return PageResultMapper.from(projections, readModelMapper::toUserList);
     }
