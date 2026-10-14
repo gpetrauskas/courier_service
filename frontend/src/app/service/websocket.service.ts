@@ -51,6 +51,10 @@ export class WebsocketService {
     return this.rxStomp.watch(`/topic/tickets/` + ticketId);
   }
 
+  watchActivity(category: string) {
+    return this.rxStomp.watch(`/topic/activity/${category.toUpperCase()}`);
+  }
+
   deactivate() {
     this.rxStomp?.deactivate();
   }

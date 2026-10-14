@@ -8,4 +8,6 @@ public class WebSocketDestinations {
     public static final String NOTIFICATION_QUEUE_SUB = "/user/queue/notifications";
     public static final String NOTIFICATION_QUEUE_SEND = "/queue/notifications";
     public static final String TICKET = "/topic/tickets/";
+    public static final String TASK_STATS = "/topic/task-stats";
+    public static final String ACTIVITY = "/topic/activity";
 }
