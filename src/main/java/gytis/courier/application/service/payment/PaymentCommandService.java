@@ -13,6 +13,7 @@ import gytis.courier.application.port.out.payment.PaymentCommandPort;
 import gytis.courier.application.port.out.paymentmethod.PaymentMethodCommandPort;
 import gytis.courier.application.readmodel.payment.PayReadModel;
 import gytis.courier.application.result.PaymentResult;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.event.DomainEvent;
 import gytis.courier.domain.payment.Payment;
 import gytis.courier.domain.payment.PaymentAttempt;
@@ -86,9 +87,9 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         maybeSaveNewMethod(command, method, result);
 
         if (result.success()) {
-            logUseCase.saveLog("USER", "pay", "Payment #" + payment.getId() + " amount: " + payment.getAmount() + " succeed using " + result.providerType().name());
+            logUseCase.saveLog("USER", ActivityCategory.PAYMENT, "pay", "Payment #" + payment.getId() + " amount: " + payment.getAmount() + " succeed using " + result.providerType().name());
         } else {
-            logUseCase.saveLog("USER", "pay", "Payment #" + payment.getId() + "failed - " + result.failureReason());
+            logUseCase.saveLog("USER", ActivityCategory.PAYMENT, "pay", "Payment #" + payment.getId() + "failed - " + result.failureReason());
         }
 
         System.out.println(result.success() + " result");
@@ -108,7 +109,7 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
 
         paymentPort.update(payment);
 
-        logUseCase.saveLog("ADMIN", "payment update", "Payment#" + payment.getId() + " was updated");
+        logUseCase.saveLog("ADMIN", ActivityCategory.PAYMENT, "payment update", "Payment#" + payment.getId() + " was updated");
     }
 
     @Override
@@ -118,7 +119,7 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
         payment.cancel();
         paymentPort.update(payment);
 
-        logUseCase.saveLog("USER", "order cancel", "Payment#" + payment.getId() + " canceled by event handler (order#" + orderId + " cancel)");
+        logUseCase.saveLog("USER", ActivityCategory.PAYMENT, "order cancel", "Payment#" + payment.getId() + " canceled by event handler (order#" + orderId + " cancel)");
     }
 
     private Optional<DomainEvent> completeAttempt(Payment payment, PaymentResult result) {
@@ -165,7 +166,7 @@ public class PaymentCommandService implements CreatePaymentUseCase, CancelPaymen
             try {
                 newPaymentMethodUseCase.save(command.userId(), method, result.token());
             } catch (Exception e) {
-                logUseCase.saveLog("USER", "pay", "Payment method save failed...");
+                logUseCase.saveLog("USER", ActivityCategory.PAYMENT, "pay", "Payment method save failed...");
             }
         }
     }

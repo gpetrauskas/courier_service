@@ -6,6 +6,7 @@ import gytis.courier.application.port.in.notification.NotificationCommandUseCase
 import gytis.courier.application.port.out.notification.NotificationDeliveryPort;
 import gytis.courier.application.port.out.notification.NotificationCommandPort;
 import gytis.courier.application.port.out.personnotification.PersonNotificationCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.notification.Notification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         Notification saved = port.create(notification);
         deliveryPort.deliver(saved);
 
-        logUseCase.saveLog("ADMIN", "create notification", "Notification was delivered to " + command.target());
+        logUseCase.saveLog("ADMIN", ActivityCategory.NOTIFICATION, "create notification", "Notification was delivered to " + command.target());
     }
 
     @Override
@@ -40,7 +41,7 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         int deleted = pnPort.deleteAsAdmin(id);
         port.delete(id);
 
-        logUseCase.saveLog("ADMIN", "delete notification", "Notification #" + id + " deleted for " + deleted + " recipients");
+        logUseCase.saveLog("ADMIN", ActivityCategory.NOTIFICATION, "delete notification", "Notification #" + id + " deleted for " + deleted + " recipients");
         return deleted;
     }
 }

@@ -6,13 +6,15 @@ public class ActivityLog {
     private Long id;
     private final String email;
     private final String role;
+    private final ActivityCategory category;
     private final String action;
     private final String description;
     private final LocalDateTime createdAt;
 
-    public ActivityLog(String email, String role, String action, String description) {
+    public ActivityLog(String email, String role, ActivityCategory category, String action, String description) {
         this.email = email;
         this.role = role;
+        this.category = category;
         this.action = action;
         this.description = description;
         this.createdAt = LocalDateTime.now();
@@ -35,4 +37,5 @@ public class ActivityLog {
         return createdAt;
     }
     public String getEmail() { return email; }
+    public ActivityCategory getCategory() { return category; }
 }

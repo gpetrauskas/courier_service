@@ -1,12 +1,6 @@
 package gytis.courier.adapter.out.persistence.task.projections;
 
-import gytis.courier.application.readmodel.task.CTaskListReadModel;
-import gytis.courier.application.readmodel.task.CTaskReadModel;
-import gytis.courier.application.readmodel.task.TaskListReadModel;
-import gytis.courier.application.readmodel.task.AdminTaskItemReadModel;
-import gytis.courier.application.readmodel.task.CTaskHistoryReadModel;
-import gytis.courier.application.readmodel.task.AdminTaskReadModel;
-import gytis.courier.application.readmodel.task.CTaskItemReadModel;
+import gytis.courier.application.readmodel.task.*;
 import gytis.courier.domain.order.ParcelStatus;
 import gytis.courier.domain.task.TaskType;
 import org.mapstruct.Mapper;
@@ -21,6 +15,8 @@ public interface TaskReadModelMapper {
     @Mapping(target = "address",expression = "java(resolveTargetAddress(p.getSenderAddress(), p.getRecipientAddress(), p.getStatus()))")
     @Mapping(target = "parcelStatus", source = "status")
     AdminTaskItemReadModel toItemAdmin(AdminTaskItemProjection p);
+    AdminTaskStatsReadModel toReadModel(AdminTaskStatsProjection projection);
+
 
     default String resolveTargetAddress(String sender, String recipient, ParcelStatus parcelStatus) {
         return parcelStatus == ParcelStatus.PICKING_UP

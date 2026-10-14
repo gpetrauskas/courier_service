@@ -5,6 +5,7 @@ import gytis.courier.application.port.out.person.BanHistoryPort;
 import gytis.courier.application.port.out.person.PersonCommandPort;
 import gytis.courier.application.readmodel.person.BanHistoryReadModel;
 import gytis.courier.application.service.activitylog.ActivityLogService;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.banhistory.BanHistory;
 import gytis.courier.domain.person.Person;
 import gytis.courier.exception.ResourceNotFoundException;
@@ -34,9 +35,9 @@ public class BanPersonService implements BanPersonUseCase {
         banPort.save(BanHistory.of(p.getId(), p.isBlocked(), adminEmail, reason));
 
         if (p.isBlocked()) {
-            logService.saveLog("ADMIN", "banned", "Person #" + p.getId() + " was banned - " + reason);
+            logService.saveLog("ADMIN", ActivityCategory.ACCOUNT, "banned", "Person #" + p.getId() + " was banned - " + reason);
         } else {
-            logService.saveLog("ADMIN", "unbanned", "Person #" + p.getId() + " was unbanned");
+            logService.saveLog("ADMIN", ActivityCategory.ACCOUNT, "unbanned", "Person #" + p.getId() + " was unbanned");
         }
 
         return "Person successfully " + (p.isBlocked() ? "banned" : "unbanned");

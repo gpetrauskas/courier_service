@@ -8,6 +8,7 @@ import gytis.courier.application.port.out.delivery.DeliveryOptionCommandPort;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.order.OrderCommandPort;
 import gytis.courier.application.service.address.AddressResolver;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.delivery.DeliveryOption;
 import gytis.courier.domain.event.OrderCanceledEvent;
 import gytis.courier.domain.order.Order;
@@ -53,7 +54,7 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
 
         createPaymentUseCase.create(order.getId(), order.calculateShippingCost());
 
-        logUseCase.saveLog("USER", "order created", "Order #" + order.getId() + " - " + order.getDeliveryMethodName() + " delivery, " +
+        logUseCase.saveLog("USER", ActivityCategory.ORDER, "order created", "Order #" + order.getId() + " - " + order.getDeliveryMethodName() + " delivery, " +
                 order.getParcel().getWeightDisplayName() + " weight, " + order.getParcel().getDimensionsDisplayName() + " size");
 
         return order.getId();
@@ -69,6 +70,6 @@ public class OrderCommandService implements PlaceOrderUseCase, CancelOrderUseCas
 
         publisher.publish(canceledEvent);
 
-        logUseCase.saveLog("USER", "order cancel", "Order #" + order.getId() + " was canceled");
+        logUseCase.saveLog("USER", ActivityCategory.ORDER, "order cancel", "Order #" + order.getId() + " was canceled");
     }
 }

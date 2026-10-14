@@ -173,7 +173,7 @@ public class PaymentIntegrationTest {
 
 
     private User createUser() {
-        User user = new User(2L, "user", new Email("user@example.com"), "encodedPass");
+        User user = new User(4L, "user", new Email("user2@example.com"), "encodedPass");
         userCommandPort.create(user);
 
         return user;

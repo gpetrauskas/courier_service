@@ -2,6 +2,7 @@ package gytis.courier.application.service.payment;
 
 import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.out.payment.PaymentCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.payment.Payment;
 import gytis.courier.domain.payment.ProviderType;
 import gytis.courier.exception.ResourceNotFoundException;
@@ -30,7 +31,7 @@ public class PaymentAttemptStarter {
         System.out.println("Thread " + Thread.currentThread().getName() + " " + payment.getId() + " " + payment.getStatus());
         System.out.println(TransactionSynchronizationManager.isActualTransactionActive());
 
-        logUseCase.saveLog("USER", "pay", "Payment attempt started for order#" + orderId);
+        logUseCase.saveLog("USER", ActivityCategory.PAYMENT, "pay", "Payment attempt started for order#" + orderId);
         return port.update(payment);
     }
 }

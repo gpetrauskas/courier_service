@@ -7,4 +7,5 @@ import gytis.courier.application.readmodel.activitylog.ActivityLogReadModel;
 
 public interface ActivityLogQueryUseCase {
     PageResult<ActivityLogReadModel> getAll(PageQuery pageQuery, ActivityLogQuery logQuery);
+    PageResult<ActivityLogReadModel> getForTasks(PageQuery query);
 }

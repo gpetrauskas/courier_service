@@ -10,6 +10,7 @@ import gytis.courier.application.port.out.order.OrderQueryPort;
 import gytis.courier.application.port.out.task.TaskCommandPort;
 import gytis.courier.application.service.activitylog.ActivityLogService;
 import gytis.courier.application.service.person.CourierCommandService;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.task.*;
 import gytis.courier.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -64,7 +65,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         Task taskWithId = commandPort.create(task);
         publisher.publish(task.pullEvents());
 
-        logService.saveLog("ADMIN", "task created", "Task #" + taskWithId.getId() + " with " + task.getTaskItems().size() + " items, created and assigned to courier #" + taskWithId.getCourierId());
+        logService.saveLog("ADMIN", ActivityCategory.TASK, "task created", "Task #" + taskWithId.getId() + " with " + task.getTaskItems().size() + " items, created and assigned to courier #" + taskWithId.getCourierId());
     }
 
     @Override
@@ -90,7 +91,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
 
-        logService.saveLog("ADMIN", "cancel", "Task #" + task.getId() + " canceled");
+        logService.saveLog("ADMIN", ActivityCategory.TASK, "cancel", "Task #" + task.getId() + " canceled");
     }
 
     @Override
@@ -104,7 +105,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
 
-        logService.saveLog("COURIER", "update item", "Task Item #" + command.taskItemId() + " status in Task #" + task.getId() + " was updated to " + command.status());
+        logService.saveLog("COURIER", ActivityCategory.TASK, "update item", "Task Item #" + command.taskItemId() + " status in Task #" + task.getId() + " was updated to " + command.status());
     }
 
     @Override
@@ -117,7 +118,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.updateWithItems(task);
 
-        logService.saveLog("COURIER", "note add", "Courier #" + task.getCourierId() + " added note for item " + command.itemId() + " in Task #" + task.getId());
+        logService.saveLog("COURIER", ActivityCategory.TASK, "note add", "Courier #" + task.getCourierId() + " added note for item " + command.itemId() + " in Task #" + task.getId());
     }
 
     @Override
@@ -130,7 +131,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
 
-        logService.saveLog("ADMIN", "task complete", "Task #" + task.getId() + " was completed");
+        logService.saveLog("ADMIN", ActivityCategory.TASK, "task complete", "Task #" + task.getId() + " was completed");
     }
 
 
@@ -158,7 +159,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
 
         commandPort.update(task);
 
-        logService.saveLog("ADMIN", "courier change", "Task #" + task.getId() + " new courier assigned");
+        logService.saveLog("ADMIN", ActivityCategory.TASK, "courier change", "Task #" + task.getId() + " new courier assigned");
     }
 
     @Override
@@ -172,7 +173,7 @@ public class TaskCommandService implements AdminTaskCommandUseCase, CourierTaskC
         commandPort.updateWithItems(task);
         publisher.publish(task.pullEvents());
 
-        logService.saveLog("COURIER", "check-in", "Courier #" + task.getCourierId() + " checked in with Task #" + task.getId() + " size of " + task.getTaskItems().size());
+        logService.saveLog("COURIER", ActivityCategory.TASK, "check-in", "Courier #" + task.getCourierId() + " checked in with Task #" + task.getId() + " size of " + task.getTaskItems().size());
     }
 
     private Task findWithItemsById(Long id) {

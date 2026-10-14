@@ -9,6 +9,7 @@ import gytis.courier.application.port.in.ticket.TicketCommandUseCase;
 import gytis.courier.application.port.out.ticket.TicketCommandPort;
 import gytis.courier.application.port.out.ticket.TicketCommentCommandPort;
 import gytis.courier.application.port.out.websocket.WebSocketPublisherPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.ticket.Ticket;
 import gytis.courier.domain.ticket.TicketComment;
 import gytis.courier.exception.ResourceNotFoundException;
@@ -33,7 +34,7 @@ public class TicketCommandService implements TicketCommandUseCase {
         Ticket ticket = Ticket.create(command);
         Ticket withIdTicket = port.create(ticket);
 
-        logUseCase.saveLog("USER", "ticket created", "User #" + command.personId() + " created new Ticket #" + withIdTicket.getId() + " priority " + ticket.getPriority());
+        logUseCase.saveLog("USER", ActivityCategory.TICKET, "ticket created", "User #" + command.personId() + " created new Ticket #" + withIdTicket.getId() + " priority " + ticket.getPriority());
     }
 
     public void addComment(AddTicketCommentCommand command) {
@@ -49,7 +50,7 @@ public class TicketCommandService implements TicketCommandUseCase {
 
         port.updateTimestamp(ticket.getId(), ticket.getUpdatedAt());
 
-        logUseCase.saveLog(command.role(), "comment added", "New comment added to a Ticket #" + ticket.getId());
+        logUseCase.saveLog(command.role(), ActivityCategory.TICKET, "comment added", "New comment added to a Ticket #" + ticket.getId());
     }
 
     @Override
@@ -62,7 +63,7 @@ public class TicketCommandService implements TicketCommandUseCase {
 
         port.save(ticket);
 
-        logUseCase.saveLog("ADMIN", "ticket update", "");
+        logUseCase.saveLog("ADMIN", ActivityCategory.TICKET, "ticket update", "");
     }
 
     @Override
@@ -74,6 +75,6 @@ public class TicketCommandService implements TicketCommandUseCase {
 
         port.save(ticket);
 
-        logUseCase.saveLog("USER", "close ticket", "Ticket #" + ticket.getId() + " was closed");
+        logUseCase.saveLog("USER", ActivityCategory.TICKET, "close ticket", "Ticket #" + ticket.getId() + " was closed");
     }
 }

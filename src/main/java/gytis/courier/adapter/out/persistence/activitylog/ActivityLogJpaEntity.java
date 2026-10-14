@@ -1,9 +1,7 @@
 package gytis.courier.adapter.out.persistence.activitylog;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import gytis.courier.domain.activitylog.ActivityCategory;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +14,8 @@ public class ActivityLogJpaEntity {
     private String role;
     private String action;
     private String description;
+    @Enumerated(EnumType.STRING)
+    private ActivityCategory category;
     private LocalDateTime createdAt;
 
     public ActivityLogJpaEntity() {}
@@ -44,6 +44,8 @@ public class ActivityLogJpaEntity {
         return userEmail;
     }
 
+    public ActivityCategory getCategory() { return category; }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -65,4 +67,6 @@ public class ActivityLogJpaEntity {
     }
 
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+
+    public void setCategory(ActivityCategory category) { this.category = category; }
 }

@@ -3,6 +3,7 @@ package gytis.courier.application.service.person;
 import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.person.CourierCommandUseCase;
 import gytis.courier.application.port.out.person.CourierCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.person.Courier;
 import gytis.courier.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class CourierCommandService implements CourierCommandUseCase {
         courier.activateTask();
         update(courier);
 
-        logUseCase.saveLog("ADMIN", "courier assign", "Courier#" + courierId + " was assigned to a new task");
+        logUseCase.saveLog("ADMIN", ActivityCategory.COURIER, "courier assign", "Courier#" + courierId + " was assigned to a new task");
     }
 
     @Override
@@ -44,6 +45,6 @@ public class CourierCommandService implements CourierCommandUseCase {
         courier.completeTask();
         update(courier);
 
-        logUseCase.saveLog("ADMIN", "courier assign", "Courier#" + courierId + " was unassigned from a task");
+        logUseCase.saveLog("ADMIN", ActivityCategory.COURIER, "courier assign", "Courier#" + courierId + " was unassigned from a task");
     }
 }

@@ -11,6 +11,7 @@ import gytis.courier.application.query.filter.AdminTaskQueryFilter;
 import gytis.courier.application.readmodel.task.AdminTaskCardReadModel;
 import gytis.courier.application.readmodel.task.TaskListReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskReadModel;
+import gytis.courier.domain.task.StatsPeriod;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,5 +43,10 @@ public class AdminTaskQueryController {
     @GetMapping("/cards")
     public AdminTaskCardReadModel getCards() {
         return useCase.getCards();
+    }
+
+    @GetMapping("/stats")
+    public Object getStats(@RequestParam StatsPeriod period) {
+        return useCase.getStats(period);
     }
 }

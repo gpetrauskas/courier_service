@@ -5,6 +5,7 @@ import gytis.courier.application.port.in.order.AdminOrderUpdateUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.delivery.DeliveryOptionCommandPort;
 import gytis.courier.application.port.out.order.OrderCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.delivery.DeliveryOption;
 import gytis.courier.domain.order.Order;
 import gytis.courier.domain.order.OrderAddressSectionUpdateCommand;
@@ -46,7 +47,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
 
         commandPort.save(order);
 
-        logUseCase.saveLog("ADMIN", "order update", "Order#" + id + " updated");
+        logUseCase.saveLog("ADMIN", ActivityCategory.ORDER, "order update", "Order#" + id + " updated");
     }
 
     @Override
@@ -57,7 +58,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         order.updateParcelSection(command);
         commandPort.save(order);
 
-        logUseCase.saveLog("ADMIN", "parcel update", "Order#" + id + " parcel data updated");
+        logUseCase.saveLog("ADMIN",ActivityCategory.ORDER,  "parcel update", "Order#" + id + " parcel data updated");
     }
 
     @Override
@@ -70,7 +71,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
 
         commandPort.save(order);
 
-        logUseCase.saveLog("ADMIN", "order address update", "Order#" + id + " address updated");
+        logUseCase.saveLog("ADMIN", ActivityCategory.ORDER, "order address update", "Order#" + id + " address updated");
     }
 
     @Override
@@ -81,7 +82,7 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         order.markConfirmed();
         commandPort.save(order);
 
-        logUseCase.saveLog("SYSTEM", "SYSTEM", "pay", "Order#" + orderId + " was marked as paid by event handler");
+        logUseCase.saveLog("SYSTEM", "SYSTEM", ActivityCategory.ORDER, "pay", "Order#" + orderId + " was marked as paid by event handler");
     }
 
     @Override
@@ -92,6 +93,6 @@ public class AdminOrderUpdateService implements AdminOrderUpdateUseCase {
         order.cancel();
         commandPort.save(order);
 
-        logUseCase.saveLog("SYSTEM", "pay", "Order# " + orderId + " was canceled by event handler");
+        logUseCase.saveLog("SYSTEM", ActivityCategory.ORDER, "pay", "Order# " + orderId + " was canceled by event handler");
     }
 }

@@ -4,6 +4,7 @@ import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.parcel.ParcelCommandUseCase;
 import gytis.courier.application.port.out.DomainEventPublisher;
 import gytis.courier.application.port.out.parcel.ParcelCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.order.ParcelStatus;
 import gytis.courier.domain.order.Parcel;
 import gytis.courier.domain.task.ParcelStatusUpdate;
@@ -48,7 +49,7 @@ public class ParcelCommandService implements ParcelCommandUseCase {
 
         port.changeStatuses(groupParcels(successes));
 
-        logUseCase.saveLog("SYSTEM", "task completed", parcelIds.size() + " parcels was unassigned. Failed parcels: " + failures.size());
+        logUseCase.saveLog("SYSTEM", ActivityCategory.ORDER, "task completed", parcelIds.size() + " parcels was unassigned. Failed parcels: " + failures.size());
     }
 
     private Map<ParcelStatus, List<Long>> groupParcels(List<ParcelStatusUpdate> parcelStatusUpdates) {
@@ -64,7 +65,7 @@ public class ParcelCommandService implements ParcelCommandUseCase {
 
         parcel.failedDeliveryAttemptAdd();
 
-        logUseCase.saveLog("SYSTEM", "task completed", "Parcel#" + parcelId + " pickup/delivery failed " + parcel.getFailuresCount() + " times");
+        logUseCase.saveLog("SYSTEM", ActivityCategory.ORDER, "task completed", "Parcel#" + parcelId + " pickup/delivery failed " + parcel.getFailuresCount() + " times");
         return port.update(parcel);
     }
 }

@@ -13,16 +13,15 @@ import gytis.courier.application.common.PageQuery;
 import gytis.courier.application.common.PageResult;
 import gytis.courier.application.port.out.task.AdminTaskQueryPort;
 import gytis.courier.application.query.filter.AdminTaskQueryFilter;
-import gytis.courier.application.readmodel.task.AdminTaskCardReadModel;
-import gytis.courier.application.readmodel.task.TaskListReadModel;
-import gytis.courier.application.readmodel.task.AdminTaskItemReadModel;
-import gytis.courier.application.readmodel.task.AdminTaskReadModel;
+import gytis.courier.application.readmodel.task.*;
 import gytis.courier.application.result.AdminTaskCardResult;
 import gytis.courier.domain.task.DeliveryStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -50,6 +49,11 @@ public class AdminTaskQueryAdapter implements AdminTaskQueryPort {
         return repository.findCards().stream()
                 .map(resultMapper::toCardResult)
                 .toList();
+    }
+
+    @Override
+    public AdminTaskStatsReadModel getStats(LocalDateTime from) {
+        return mapper.toReadModel(repository.findStats(from));
     }
 
     @Override

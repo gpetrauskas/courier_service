@@ -5,6 +5,7 @@ import gytis.courier.application.port.in.activityLog.ActivityLogUseCase;
 import gytis.courier.application.port.in.address.DeleteAddressUseCase;
 import gytis.courier.application.port.in.address.UpdateAddressUseCase;
 import gytis.courier.application.port.out.address.AddressPersistencePort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.address.Address;
 import gytis.courier.exception.AddressNotFoundException;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ public class AddressCommandService implements UpdateAddressUseCase, DeleteAddres
 
         port.save(address);
         logger.info("updated address with id: {}", addressId);
-        logUseCase.saveLog("USER", "address update", "Address #" + address.getId() + " was updated");
+        logUseCase.saveLog("USER", ActivityCategory.ACCOUNT, "address update", "Address #" + address.getId() + " was updated");
     }
 
     @Override
@@ -40,7 +41,7 @@ public class AddressCommandService implements UpdateAddressUseCase, DeleteAddres
         findAddressForCurrentPerson(addressId, userId);
         port.deleteById(addressId);
         logger.info("Deleted address with id: {}", addressId);
-        logUseCase.saveLog("USER", "address delete", "Address #" + addressId + " was deleted");
+        logUseCase.saveLog("USER", ActivityCategory.ACCOUNT, "address delete", "Address #" + addressId + " was deleted");
 
     }
 

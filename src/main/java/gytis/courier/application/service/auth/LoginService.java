@@ -6,6 +6,7 @@ import gytis.courier.application.port.in.auth.AuthTokens;
 import gytis.courier.application.port.in.auth.LoginUseCase;
 import gytis.courier.application.port.out.person.PersonCommandPort;
 import gytis.courier.application.port.out.auth.PasswordHashingPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.person.Person;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -42,7 +43,7 @@ public class LoginService implements LoginUseCase {
 
         AuthTokens result = authTokenIssuer.issue(person.getId(), person.getEmail().email(), person.getRole(), person.getName());
 
-        logUseCase.saveLog(person.getEmail().email(), person.getRole(), "Logged In", "Person logs in");
+        logUseCase.saveLog(person.getEmail().email(), person.getRole(), ActivityCategory.AUTH, "Logged In", "Person logs in");
         return result;
     }
 }

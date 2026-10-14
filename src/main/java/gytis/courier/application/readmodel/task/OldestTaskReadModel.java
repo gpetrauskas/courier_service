@@ -1,4 +1,9 @@
 package gytis.courier.application.readmodel.task;
 
-public record OldestTaskReadModel() {
+import java.time.LocalDateTime;
+
+public record OldestTaskReadModel(
+        long id,
+        LocalDateTime createdAt
+) {
 }

@@ -20,4 +20,9 @@ public class ActivityLogQueryService implements ActivityLogQueryUseCase {
     public PageResult<ActivityLogReadModel> getAll(PageQuery pageQuery, ActivityLogQuery logQuery) {
         return port.getAll(pageQuery, logQuery);
     }
+
+    @Override
+    public PageResult<ActivityLogReadModel> getForTasks(PageQuery pageQuery) {
+        return port.getForTasks(pageQuery);
+    }
 }

@@ -5,6 +5,7 @@ import gytis.courier.application.port.in.delivery.AddDeliveryOptionUseCase;
 import gytis.courier.application.port.in.delivery.DeleteDeliveryOptionUseCase;
 import gytis.courier.application.port.in.delivery.UpdateDeliveryOptionUseCase;
 import gytis.courier.application.port.out.delivery.DeliveryOptionCommandPort;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.delivery.DeliveryOption;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class DeliveryOptionCommandService implements AddDeliveryOptionUseCase, U
 
         port.save(updated);
 
-        logUseCase.saveLog("ADMIN", "option update", "#" + updated.id() + " option updated");
+        logUseCase.saveLog("ADMIN", ActivityCategory.SETTINGS, "option update", "#" + updated.id() + " option updated");
     }
 
     @Override
@@ -37,12 +38,12 @@ public class DeliveryOptionCommandService implements AddDeliveryOptionUseCase, U
         DeliveryOption newOption = DeliveryOption.create(command);
         port.create(newOption);
 
-        logUseCase.saveLog("ADMIN", "option added", newOption.name() + " option added");
+        logUseCase.saveLog("ADMIN", ActivityCategory.SETTINGS, "option added", newOption.name() + " option added");
     }
 
     @Override
     public void delete(Long id) {
         port.delete(id);
-        logUseCase.saveLog("ADMIN", "option delete", "#" + id + " option deleted");
+        logUseCase.saveLog("ADMIN", ActivityCategory.SETTINGS, "option delete", "#" + id + " option deleted");
     }
 }

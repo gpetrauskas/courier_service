@@ -8,6 +8,7 @@ import gytis.courier.application.port.out.activitylog.ActivityLogPort;
 import gytis.courier.application.port.out.activitylog.ActivityLogQueryPort;
 import gytis.courier.application.query.filter.ActivityLogQuery;
 import gytis.courier.application.readmodel.activitylog.ActivityLogReadModel;
+import gytis.courier.domain.activitylog.ActivityCategory;
 import gytis.courier.domain.activitylog.ActivityLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class ActivityLogAdapter implements ActivityLogPort, ActivityLogQueryPort
         entity.setUserEmail(activityLog.getEmail());
         entity.setRole(activityLog.getRole());
         entity.setAction(activityLog.getAction());
+        entity.setCategory(activityLog.getCategory());
         entity.setDescription(activityLog.getDescription());
         entity.setCreatedAt(activityLog.getCreatedAt());
 
@@ -43,6 +45,16 @@ public class ActivityLogAdapter implements ActivityLogPort, ActivityLogQueryPort
 
 
         System.out.println("role: " + logQuery.role());
+        Page<ActivityLogJpaEntity> page = repository.findAll(specification, pageable);
+
+        return PageResultMapper.from(page, mapper::toReadModel);
+    }
+
+    @Override
+    public PageResult<ActivityLogReadModel> getForTasks(PageQuery pageQuery) {
+        Specification<ActivityLogJpaEntity> specification = ActivityLogSpecification.byCategory(ActivityCategory.TASK);
+        Pageable pageable = PageableFactory.from(pageQuery);
+
         Page<ActivityLogJpaEntity> page = repository.findAll(specification, pageable);
 
         return PageResultMapper.from(page, mapper::toReadModel);

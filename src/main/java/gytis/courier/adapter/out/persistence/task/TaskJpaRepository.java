@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -159,6 +160,16 @@ public interface TaskJpaRepository extends JpaRepository<TaskJpaEntity, Long>, J
     WHERE i.parcelId = :parcelId
 """)
     Optional<CourierInfoProjection> findCourierInfoByParcelId(@Param("parcelId") Long parcelId);
+
+    @Query("""
+    SELECT
+        SUM(CASE WHEN t.createdAt >= :from THEN 1 ELSE 0 END) AS createdToday,
+        SUM(CASE WHEN t.completedAt >= :from THEN 1 ELSE 0 END) AS completedToday,
+        AVG(timestampdiff(MINUTE, t.createdAt,
+                CASE WHEN t.completedAt >= :from THEN t.completedAt ELSE NULL END)) AS averageDurationInMinutes
+        FROM TaskJpaEntity t
+""")
+    AdminTaskStatsProjection findStats(@Param("from") LocalDateTime from);
 
     CourierTaskHeaderProjection findCourierTaskHeaderByIdAndCourierId(Long taskId, Long courierId);
     TaskHeaderProjection findProjectedHeaderById(Long id);
