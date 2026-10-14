@@ -27,7 +27,16 @@
 
 <div class="main">
   <div class="list-container">
-    <label class="all-orders-label">All orders</label>
+    <div class="list-header">
+      <label class="all-orders-label">All orders</label>
+      <button class="create-btn" (click)="openCreate()">Create</button>
+      <button class="refresh-btn"
+        [disabled]="!taskRefreshAvailable"
+        (click)="refresh()"
+        [class.active]="taskRefreshAvailable">
+        Refresh
+      </button>
+    </div>
     <app-filter
       [showTaskListFilter]="true"
       (filterChange)="onFilterChange($event)"
@@ -66,10 +75,10 @@
     </table>
     <div class="pagination-control">
       <app-pagination *ngIf="allLists.length > 0"
-        [currentPage]="currentPage"
-        [totalItems]="totalItems"
-        [pageSize]="pageSize"
-        [totalPages]="totalPages"
+        [currentPage]="taskPageState.currentPage"
+        [totalItems]="taskPageState.totalItems"
+        [pageSize]="taskPageState.pageSize"
+        [totalPages]="taskPageState.totalPages"
         (pageChange)="onPageChange($event)"
       ></app-pagination>
     </div>
@@ -77,24 +86,33 @@
 
   <div class="sub-main">
     <div class="activity">
-      <label class="sub-title">Activity</label>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-
+      <app-activity-log
+        scope="task"
+        [compact]="true"
+        [pageSize]="3"
+      ></app-activity-log>
     </div>
 
     <div class="stats">
+      <div class="stats-header">
       <label class="sub-title">Statistics</label>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-      <p>test</p>
-
+      <div class="period-selector">
+        <button
+          *ngFor="let period of [PeriodEnum.DAY, PeriodEnum.WEEK, PeriodEnum.MONTH]"
+          [class.active]="statsPeriod === period"
+          (click)="onStatsPeriodChange(period)">
+          {{ period === PeriodEnum.DAY ? 'Day' : period === PeriodEnum.WEEK ? 'Week' : 'Month' }}
+        </button>
+      </div>
+      </div>
+      <div class="stat-main">
+          <span class="stat-label">Created:</span>
+          <span class="stat-value">{{ stats.createdToday }}</span>
+          <span class="stat-label">Completed:</span>
+          <span class="stat-value">{{ stats.completedToday }}</span>
+          <span class="stat-label">Average Complete Time:</span>
+          <span class="stat-value">{{ stats.averageDurationInMinutes | durationLabel }}</span>
+      </div>
     </div>
   </div>
 

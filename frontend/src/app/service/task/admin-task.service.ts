@@ -8,6 +8,7 @@ import { PaginatedResponse } from "../../models/paginated-response.model";
 import { AdminTaskSummary } from "../../models/task/admin-task-summary.model";
 import { AdminTaskDetailed } from "../../models/task/admin-task-detailed.model";
 import {AdminTaskCardModel} from "../../models/task/admin-task-card.model";
+import {PeriodEnum} from "../../enums/period.enum";
 
 @Injectable({
   providedIn: 'root'
@@ -62,5 +63,10 @@ export class AdminTaskService {
   complete(taskId: number) {
     return this.http.patch<ApiResponse>(`${this.taskUrl}/${taskId}/complete`, { withCredentials: true });
   }
+
+  getTaskStats(period: PeriodEnum) {
+    return this.http.get<any>(`${this.taskUrl}/stats`, {params: {period}});
+  }
+
 
 }

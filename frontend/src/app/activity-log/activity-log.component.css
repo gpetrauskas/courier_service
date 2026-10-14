@@ -1,3 +1,31 @@
+.activity-time {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-dark);
+  margin: 0;
+  background: var(--background-light-gray);
+}
+
+.activity-item {
+  border-bottom: 1px solid var(--border-dark-grey);
+  margin-top: 2px;
+  padding: 2px;
+}
+
+.activity-text {
+  margin: 0;
+}
+
+.sub-title {
+  display: flex;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.title-pag {
+  border-bottom: 1px solid var(--border-light);
+}
+
 .mobile {
   display: none;
 }

@@ -55,6 +55,19 @@
   border-color: #666;
 }
 
+.compact {
+  font-size: 12px;
+  gap: 10px;
+}
+
+.compact button {
+  padding: 2px 6px;
+}
+
+.compact input {
+  width: 40px;
+}
+
 @media all and (max-width: 500px) {
   .pagination-control {
     flex-wrap: wrap;

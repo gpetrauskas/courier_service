@@ -23,4 +23,8 @@ export class ActivityLogService {
 
     return this.http.get<PaginatedResponse<ActivityModel>>(`${this.apiUrl}`, { params });
   }
+
+  getForTasks(pageSize: number, pageIndex: number) {
+    return this.http.get<PaginatedResponse<ActivityModel>>(`${this.apiUrl}/task`, { params: {size: pageSize, page: pageIndex}});
+  }
 }

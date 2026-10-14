@@ -21,6 +21,37 @@ app-root {
   min-height: 100vh;
 }
 
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.styled-table thead th {
+  background-color: var(--background-white);
+  color: var(--text-light);
+  padding: 8px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.styled-table tbody td {
+  padding: 8px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #2f2f2f;
+  font-size: 0.72rem;
+}
+
+.styled-table tbody tr:nth-child(even) {
+  background-color: #f7f4f1;
+}
+
+.styled-table tbody tr:hover {
+  background-color: #efefef;
+}
+
 :root {
   --primary: #4169E1;
   --secondary: #FF7F50;

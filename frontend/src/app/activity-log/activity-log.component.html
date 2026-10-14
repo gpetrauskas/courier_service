@@ -1,3 +1,4 @@
+@if (!compact) {
 <app-pagination
   [currentPage]="pageIndex"
   [totalPages]="totalPages"
@@ -36,23 +37,44 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+} @else {
+      <div class="title-pag">
+      <label class="sub-title">Activity</label>
+        <app-pagination
+          [compact]="true"
+          [currentPage]="pageIndex"
+          [totalPages]="totalPages"
+          [totalItems]="totalItems"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        ></app-pagination>
+      </div>
+    @for (log of logs.data; track log.id) {
+    <div class="activity-item">
+      <p class="activity-text">{{ log.description }}</p>
+      <p class="activity-time">{{ log.createdAt | dateLabel }}</p>
+    </div>
+    } @empty {
+      <li>There are no logs</li>
+  }
+}
 
 <div class="mobile">
 @for (log of logs.data; track log.id) {
-  <div class="mobile-view">
-    <div class="first">
-      {{ log.createdAt | date: 'short' }}
-      -
-      {{ log.action }}
-    </div>
-    <div class="second">
-      {{ log.role }}
-      -
-      {{ log.userEmail }}
-    </div>
-    <div class="third">
-      {{ log.description }}
-    </div>
+<div class="mobile-view">
+  <div class="first">
+    {{ log.createdAt | date: 'short' }}
+    -
+    {{ log.action }}
   </div>
+  <div class="second">
+    {{ log.role }}
+    -
+    {{ log.userEmail }}
+  </div>
+  <div class="third">
+    {{ log.description }}
+  </div>
+</div>
 }
 </div>

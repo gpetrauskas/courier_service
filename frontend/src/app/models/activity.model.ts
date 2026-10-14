@@ -4,5 +4,5 @@ export interface ActivityModel {
   userEmail: string,
   action: string,
   description: string,
-  createdAt: Date
+  createdAt: string
 }

@@ -1,54 +1,95 @@
-import { Component, OnInit } from '@angular/core';
-import { AdminTaskService } from '../../../service/task/admin-task.service';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { FilterComponent } from '../../../shared/filter/filter.component';
-import { PaginationComponent } from '../../../shared/pagination/pagination.component';
-import { AdminTaskSummary } from '../../../models/task/admin-task-summary.model';
-import { PaginatedResponse } from '../../../models/paginated-response.model';
-import { ErrorHandlerService } from "../../../service/error-handler.service";
-import { PageEventModel } from "../../../models/page-event.model";
-import { FilterEventModel } from "../../../models/filter/filter-event.model";
+import {Component, OnInit} from '@angular/core';
+import {AdminTaskService} from '../../../service/task/admin-task.service';
+import {CommonModule} from '@angular/common';
+import {Router, RouterModule} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+import {FilterComponent} from '../../../shared/filter/filter.component';
+import {PaginationComponent} from '../../../shared/pagination/pagination.component';
+import {AdminTaskSummary} from '../../../models/task/admin-task-summary.model';
+import {PaginatedResponse} from '../../../models/paginated-response.model';
+import {ErrorHandlerService} from "../../../service/error-handler.service";
+import {PageEventModel} from "../../../models/page-event.model";
+import {FilterEventModel} from "../../../models/filter/filter-event.model";
 import {AdminTaskCardModel} from "../../../models/task/admin-task-card.model";
 import {WebsocketService} from "../../../service/websocket.service";
+import {ActivityModel} from "../../../models/activity.model";
+import {DateLabelPipe} from "../../../shared/pipes/date-label.pipe";
+import {PeriodEnum} from "../../../enums/period.enum";
+import {PageStateModel} from "../../../models/page-state.model";
+import {ActivityLogComponent} from "../../../activity-log/activity-log.component";
+import {CreateNewListComponent} from "../create-new-list/create-new-list.component";
+import {MatDialog} from "@angular/material/dialog";
+import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
+import {DurationLabelPipe} from "../../../shared/pipes/duration-label.pipe";
 
 @Component({
   selector: 'app-all-lists',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, FilterComponent, PaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, FilterComponent, PaginationComponent, DateLabelPipe, ActivityLogComponent,
+  CreateNewListComponent, MatButtonToggleGroup, MatButtonToggle, DurationLabelPipe],
   templateUrl: './all-lists.component.html',
   styleUrl: './all-lists.component.css'
 })
 export class AllListsComponent implements OnInit {
   allLists: AdminTaskSummary[] = [];
+  activityList: ActivityModel[] = [];
   cards: AdminTaskCardModel | null = null;
-  pageSize: number = 10;
-  currentPage: number = 0;
-  totalPages: number = 0;
-  totalItems: number = 0;
+  stats:any = [];
+  taskPageState: PageStateModel = {currentPage: 0, totalPages: 0, totalItems: 0,  pageSize: 5};
   sortBy: string = 'createdAt';
   sortDirection: string = 'DESC';
-  inputPageSize: number = this.pageSize;
+  inputPageSize: number = this.taskPageState.pageSize;
   tType: string = '';
   deliveryStatus: string = '';
   courierId: number | null = null;
   taskListId: number | null = null;
+  taskRefreshAvailable = false;
+  statsPeriod: PeriodEnum = PeriodEnum.DAY;
+  PeriodEnum = PeriodEnum;
 
   constructor(
     private taskService: AdminTaskService,
     private router: Router,
     private errorHandler: ErrorHandlerService,
-    private ws: WebsocketService
+    private ws: WebsocketService,
+    private matDialog: MatDialog
   ) {}
 
   ngOnInit() {
-    this.loadAllLists(this.currentPage, this.pageSize);
+    this.loadAllLists(this.taskPageState.currentPage, this.taskPageState.pageSize);
     this.loadCards();
-    this.ws.watchTaskCards().subscribe(msg => this.loadCards());
+    this.loadStats();
+    this.ws.watchTaskCards().subscribe(() => {
+      this.taskRefreshAvailable = true;
+      this.loadCards();
+      this.loadStats();
+    });
+  }
+
+  refresh() {
+    this.loadAllLists(this.taskPageState.currentPage, this.taskPageState.pageSize);
+  }
+
+  loadStats() {
+    this.taskService.getTaskStats(this.statsPeriod).subscribe({
+      next: (data) => {
+        this.stats = data;
+      }
+    });
+  }
+
+  openCreate() {
+    this.matDialog
+      .open(CreateNewListComponent, {width: "90%", maxWidth: "90vw", height: "auto", maxHeight: "90vh"})
+      .componentInstance.createdAny.subscribe(() => {
+        this.loadStats();
+        this.loadCards();
+        this.refresh();
+    });
   }
 
   private loadAllLists(page: number, size: number) {
+    this.taskRefreshAvailable = false;
     this.taskService.getAllDeliveryTaskLists({
       page,
       size,
@@ -60,18 +101,28 @@ export class AllListsComponent implements OnInit {
       direction: this.sortDirection
     }).subscribe({
       next: (data: PaginatedResponse<AdminTaskSummary>) => {
-      this.allLists = data.data;
-      this.currentPage = data.currentPage;
-      this.totalItems = data.totalItems;
-      this.totalPages = data.totalPages;
+        this.allLists = data.data;
+        this.taskPageState = {
+          currentPage: data.currentPage,
+          totalPages: data.totalPages,
+          totalItems: data.totalItems,
+          pageSize: this.taskPageState.pageSize
+
+        }
       },
-      error: (err) => this.errorHandler.handleError(err)
+      error: (err) => {
+        this.errorHandler.handleError(err);
+        this.taskRefreshAvailable = true;
+      }
     });
   }
 
   private loadCards() {
     this.taskService.getCards().subscribe({
-      next: (data: AdminTaskCardModel) => {this.cards = data;     console.log(this.cards)},
+      next: (data: AdminTaskCardModel) => {
+        this.cards = data;
+        console.log(this.cards)
+      },
       error: (err) => this.errorHandler.handleError(err)
     });
   }
@@ -97,13 +148,22 @@ export class AllListsComponent implements OnInit {
     this.deliveryStatus = event.deliveryStatus;
     this.taskListId = event.taskId;
     this.courierId = event.courierId;
-    this.currentPage = 0;
-    this.loadAllLists(this.currentPage, this.pageSize);
+    this.taskPageState.currentPage = 0;
+    this.loadAllLists(this.taskPageState.currentPage, this.taskPageState.pageSize);
   }
 
   onPageChange(event: PageEventModel) {
-    this.currentPage = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadAllLists(this.currentPage, this.pageSize);
+    this.taskPageState.currentPage = event.pageIndex;
+    this.taskPageState.pageSize = event.pageSize;
+    this.loadAllLists(this.taskPageState.currentPage, this.taskPageState.pageSize);
+  }
+
+  onStatsPeriodChange(event: PeriodEnum) {
+    if (event === this.statsPeriod) {
+      return;
+    }
+
+    this.statsPeriod = event;
+    this.loadStats();
   }
 }

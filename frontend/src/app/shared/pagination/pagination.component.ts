@@ -15,6 +15,7 @@ export class PaginationComponent {
   @Input() totalPages: number = 0;
   @Input() totalItems: number = 0;
   @Input() pageSize: number = 10;
+  @Input() compact: boolean = false;
   inputPageSize: number = this.pageSize;
 
   @Output() pageChange = new EventEmitter<PageEventModel>();

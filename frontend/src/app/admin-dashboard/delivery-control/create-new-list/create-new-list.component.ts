@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParcelService } from '../../../service/order/parcel.service';
 import { OrderService } from '../../../service/order/order.service';
-import { Router } from '@angular/router';
 import { Courier } from "../../../models/person/courier.model";
 import { CourierService } from "../../../service/person/courier.service";
 import { TaskType } from "../../../enums/task-type.enum";
@@ -13,11 +12,12 @@ import { AdminOrderTask } from "../../../models/order/admin-order-task.model";
 import { ErrorHandlerService } from "../../../service/error-handler.service";
 import { PaginationComponent } from "../../../shared/pagination/pagination.component";
 import { PageEventModel } from "../../../models/page-event.model";
+import { MatDialogModule } from "@angular/material/dialog";
 
 @Component({
   selector: 'app-create-new-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, MatDialogModule],
   templateUrl: './create-new-list.component.html',
   styleUrl: './create-new-list.component.css'
 })
@@ -39,8 +39,11 @@ export class CreateNewListComponent implements OnInit {
   itemsToDeliverCount: number = 0;
   itemsFailedCount: number = 0;
 
+  @Output() createdAny: EventEmitter<boolean> = new EventEmitter();
+
+
+
   constructor(
-    private router: Router,
     private taskService: AdminTaskService,
     private orderService: OrderService,
     private courierService: CourierService,
@@ -137,8 +140,19 @@ export class CreateNewListComponent implements OnInit {
     };
 
     this.errorHandler.handleRequest(this.taskService.create(task), "Successfully created task.",
-      () => this.router.navigate(['/admin-dashboard/delivery-control'])
+      () => this.onTaskCreated()
     );
+  }
+
+  onTaskCreated() {
+    this.selectedItems = [];
+    this.selectedCourierId = null;
+    this.currentStep = 2;
+    this.currentPage = 0;
+    this.loadItemsByTaskType();
+    this.loadItemsCount();
+
+    this.createdAny.emit(true);
   }
 
   goToReview() {

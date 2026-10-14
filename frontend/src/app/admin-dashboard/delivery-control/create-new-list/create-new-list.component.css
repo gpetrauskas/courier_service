@@ -42,48 +42,13 @@
   color: #666;
 }
 
-.styled-table {
-  table-layout: fixed;
-  width: 100%;
-  border-collapse: collapse;
-  margin: 25px 0;
-  font-size: 0.9em;
-  font-family: 'Arial', sans-serif;
-  min-width: 400px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-}
-
-.styled-table thead tr {
-  background-color: #009879;
-  color: #ffffff;
-  text-align: left;
-}
-
-.styled-table th,
-.styled-table td {
-  padding: 12px 15px;
-}
-
 .styled-table tbody tr {
   border-bottom: 1px solid #dddddd;
   cursor: pointer;
 }
 
-.styled-table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
-}
-
-.styled-table tbody tr:last-of-type {
-  border-bottom: 2px solid #009879;
-}
-
-.styled-table tbody tr.active-row {
-  color: #009879;
-}
-
 .styled-table tbody tr.selected {
   background-color: #e0f7fa;
-  font-weight: bold;
   transition: background-color, font-weight;
 }
 
@@ -95,45 +60,16 @@
   background-color: lightsteelblue;
 }
 
-.styled-table td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .styled-table td.actionsSection {
     text-align: center;
 }
 
-.back-btn {
-  background-color: #009879;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  font-size: 1em;
-  margin-top: 20px;
-}
-
-.back-btn:hover {
-  background-color: #007f5f;
-}
-
-.add-btn,
-.remove-btn {
+.styled-table th:last-child,
+.styled-table td:last-child {
   width: 90px;
-  padding: 5px 10px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #009879;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-.add-btn:hover,
-.remove-btn:hover {
-  background-color: #007f5f;
+  text-align: center;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .pagination-control {
@@ -145,41 +81,28 @@
   font-family: 'Arial', sans-serif;
 }
 
-.pagination-control button {
-  background-color: #009879;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  font-size: 1em;
+.actions-container button,
+.styled-table td.actionsSection button {
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: var(--background-white);
+  color: var(--text-dark);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.pagination-control button:disabled {
-  background-color: #cccccc;
-  color: #666666;
-  cursor: not-allowed;
+.actions-container button:hover,
+.styled-table td.actionsSection button:hover {
+  background: var(--background-white);
 }
 
-.pagination-control button:hover:not(:disabled) {
-  background-color: #007f5f;
-  transform: translateY(-2px);
-}
-
-.pagination-control input {
-  width: 60px;
-  text-align: center;
-  font-size: 1em;
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.pagination-control p {
-  margin: 0;
-  font-size: 1em;
-  color: #333;
+.actions-container {
+  display: flex;
+  gap: 10px;
+  padding-top: 16px;
 }
 
 @media (max-width: 760px) {
@@ -230,13 +153,6 @@
 
   .styled-table td.actionsSection {
     text-align: left;
-  }
-
-  .back-btn, .add-btn, .remove-btn, .submit-btn, .next-btn {
-    width: 100%;
-    max-width: 300px;
-    margin: 10px auto;
-    display: block;
   }
 
   select#courier {

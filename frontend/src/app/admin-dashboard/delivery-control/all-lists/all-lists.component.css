@@ -58,10 +58,6 @@
   background: linear-gradient(#d5daf1, white);
 }
 
-app-filter {
-
-}
-
 .main {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -72,7 +68,6 @@ app-filter {
 
 .sub-title {
   font-weight: bold;
-  border-bottom: 1px solid var(--border-light);
 }
 
 .sub-main {
@@ -86,43 +81,29 @@ app-filter {
   padding: 10px;
 }
 
-.styled-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: hidden;
-}
-
-.styled-table thead th {
-  background-color: var(--background-white);
-  color: var(--text-light);
-  padding: 8px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.75rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.styled-table tbody td {
-  padding: 8px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  color: #2f2f2f;
-  font-size: 0.72rem;
-}
-
-.styled-table tbody tr:nth-child(even) {
-  background-color: #f7f4f1;
-}
-
-.styled-table tbody tr:hover {
-  background-color: #efefef;
-}
-
 .status {
   font-size: 0.9em;
   padding: 2px 8px;
   border-radius: 10px;
   background: var(--background-light-gray);
+}
+
+.activity-time {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-dark);
+  margin: 0;
+  background: var(--background-light-gray);
+}
+
+.activity-item {
+  border-bottom: 1px solid var(--border-dark-grey);
+  margin-top: 2px;
+  padding: 2px;
+}
+
+.activity-text {
+  margin: 0;
 }
 
 .IN_PROGRESS, .AT_CHECKPOINT {
@@ -148,7 +129,7 @@ app-filter {
   padding: 6px;
 }
 
-.details-btn, .cancel-btn {
+.details-btn, .cancel-btn, .create-btn {
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 500;
@@ -159,6 +140,27 @@ app-filter {
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.refresh-btn {
+  width: 130px;
+  margin-right: 50px;
+  border: 1px solid var(--btn-default-bg);
+  background: var(--btn-disabled-bg);
+  cursor: not-allowed;
+}
+
+.refresh-btn.active {
+  cursor: pointer;
+  border-color: var(--btn-default-bg);
+  background: var(--background-hover-gray);
 }
 
 .cancel-btn {
@@ -188,11 +190,50 @@ app-filter {
   color: #666;
 }
 
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
 
+}
 
+.stat-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
 
+.period-selector {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--background-hover-gray);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+}
 
+.period-selector button {
+  padding: 6px 11px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
 
+.period-selector button:hover {
+  color: #222;
+}
+
+.period-selector button.active {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
 
 @media (max-width: 768px) {
   .list-container {
