@@ -4,13 +4,14 @@
   (filterChange)="onFilterChange($event)"
 ></app-filter>
 
-<app-pagination
-  [currentPage]="currentPage"
-  [totalPages]="totalPages"
-  [totalItems]="totalItems"
-  [pageSize]="pageSize"
-  (pageChange)="pageChange($event)"
-></app-pagination>
+@if (isAdmin) {
+<div class="cards">
+  <app-info-cards [label]="'OPEN'" [value]="cards?.open" [color]="'picked'"></app-info-cards>
+  <app-info-cards [label]="'IN PROGRESS'" [value]="cards?.inProgress" [color]="'returned'"></app-info-cards>
+  <app-info-cards [label]="'RESOLVED'" [value]="cards?.resolved" [color]="'returning'"></app-info-cards>
+</div>
+}
+
 
 <div class="ticket-grid">
   @for (ticket of tickets; track ticket.id) {
@@ -35,9 +36,9 @@
       </div>
     </mat-card-content>
 
+    @if (!isAdmin) {
     <mat-card-actions class="actions">
 
-      @if (!isAdmin) {
         @if (ticket.status != 'CLOSED') {
       <button mat-stroked-button color="warn"
               (click)="openDialog(ticket); $event.stopPropagation()"
@@ -50,13 +51,23 @@
             <mat-icon>lock</mat-icon> Closed
           </button>
         }
-      }
+
 
     </mat-card-actions>
+    }
 
   </mat-card>
   }
 </div>
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="pageChange($event)"
+></app-pagination>
+
 
 <app-confirmation-dialog
   [isVisible]="isDialogVisible"

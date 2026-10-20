@@ -29,6 +29,7 @@ import { NotificationsComponent } from './shared/notifications/notifications.com
 import { TicketComponent } from './dashboard/ticket/ticket.component';
 import { CreateTicketComponent } from './dashboard/ticket/create-ticket/create-ticket.component';
 import { ActivityLogComponent } from "./activity-log/activity-log.component";
+import {InfoCardsComponent} from "./info-cards/info-cards.component";
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },

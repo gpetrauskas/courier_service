@@ -1,29 +1,12 @@
 <div class="cards">
-  <div class="card picked">
-    <span class="label">Picked Up</span>
-    <span class="value">{{ cards?.pickedUp }}</span>
-  </div>
-  <div class="card delivered">
-    <span class="label">Delivered</span>
-    <span class="value">{{ cards?.delivered }}</span>
-  </div>
-  <div class="card picking">
-    <span class="label">Picking Up</span>
-    <span class="value">{{ cards?.pickingUp }}</span>
-  </div>
-  <div class="card delivering">
-    <span class="label">Delivering</span>
-    <span class="value">{{ cards?.delivering }}</span>
-  </div>
-  <div class="card returning">
-    <span class="label">Returning</span>
-    <span class="value">{{ cards?.returning }}</span>
-  </div>
-  <div class="card returned">
-    <span class="label">Awaiting confirmation</span>
-    <span class="value">{{ cards?.awaitingConfirmation }}</span>
-  </div>
+  <app-info-cards [label]="'Picked Up'" [value]="cards?.pickedUp" [color]="'picked'">  </app-info-cards>
+  <app-info-cards [label]="'Delivered'" [value]="cards?.delivered" [color]="'delivered'">  </app-info-cards>
+  <app-info-cards [label]="'Picking Up'" [value]="cards?.pickingUp" [color]="'picking'">  </app-info-cards>
+  <app-info-cards [label]="'Delivering'" [value]="cards?.delivering" [color]="'delivering'">  </app-info-cards>
+  <app-info-cards [label]="'Returning'" [value]="cards?.returning" [color]="'returning'">  </app-info-cards>
+  <app-info-cards [label]="'Awaiting confirmation'" [value]="cards?.awaitingConfirmation" [color]="'returned'">  </app-info-cards>
 </div>
+
 
 <div class="main">
   <div class="list-container">

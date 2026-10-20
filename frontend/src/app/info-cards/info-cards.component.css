@@ -1,0 +1,42 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.picked {
+  background: linear-gradient(#b4d1b4, white);
+}
+
+.delivered {
+  background: linear-gradient(#b4d1b4, white);
+}
+
+.picking {
+  background: linear-gradient(#99afbf, white);
+}
+
+.delivering {
+  background: linear-gradient(#99afbf, white);
+}
+
+.returned {
+  background: linear-gradient(#f6e4bb, white);
+}
+
+.returning {
+  background: linear-gradient(#d5daf1, white);
+}
+
+.value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--text-light);
+}

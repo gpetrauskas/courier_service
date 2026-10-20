@@ -37,6 +37,10 @@ export class TicketService {
     return this.http.patch<ApiResponse>(`${this.baseURL}/${request.id}`, request.partTarget, { withCredentials: true });
   }
 
+  getStatusCounts() {
+    return this.http.get<any>(`${this.adminUrl}/cards`);
+  }
+
   getAllForAdmin(page: number, size: number, status?: string, personId?: number): Observable<PaginatedResponse<Ticket>> {
     let params = new HttpParams()
       .set('page', page.toString())

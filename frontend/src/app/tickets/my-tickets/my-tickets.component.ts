@@ -13,12 +13,13 @@ import { AuthService } from '../../auth/auth.service';
 import { Router } from '@angular/router';
 import { ErrorHandlerService } from "../../service/error-handler.service";
 import { PageEventModel } from "../../models/page-event.model";
+import {InfoCardsComponent} from "../../info-cards/info-cards.component";
 
 @Component({
   selector: 'app-my-tickets',
   standalone: true,
   imports: [MatCardModule, CommonModule, MatIconModule, MatButtonModule, PaginationComponent,
-    ConfirmationDialogComponent, FilterComponent],
+    ConfirmationDialogComponent, FilterComponent, InfoCardsComponent],
   templateUrl: './my-tickets.component.html',
   styleUrl: './my-tickets.component.css'
 })
@@ -39,14 +40,24 @@ export class MyTicketsComponent implements OnInit {
   itemType = '';
   actionType = '';
   currentPage = 0;
-  pageSize = 5;
+  pageSize = 8;
   totalItems = 0;
   totalPages = 0;
+  cards: any = [];
 
 
   ngOnInit() {
     this.isAdmin = this.authService.isAdminSync();
     this.loadAllTickets(this.currentPage, this.pageSize);
+    if (this.isAdmin) {
+      this.loadStatusCounts();
+    }
+  }
+
+  loadStatusCounts() {
+    this.ticketService.getStatusCounts().subscribe({
+      next: (data) => this.cards = data
+    });
   }
 
   loadAllTickets(currentPage: number, pageSize: number, status?: string, personId?: number) {

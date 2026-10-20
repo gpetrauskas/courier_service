@@ -21,16 +21,25 @@ import {CreateNewListComponent} from "../create-new-list/create-new-list.compone
 import {MatDialog} from "@angular/material/dialog";
 import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
 import {DurationLabelPipe} from "../../../shared/pipes/duration-label.pipe";
+import {InfoCardsComponent} from "../../../info-cards/info-cards.component";
 
 @Component({
   selector: 'app-all-lists',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, FilterComponent, PaginationComponent, DateLabelPipe, ActivityLogComponent,
-  CreateNewListComponent, MatButtonToggleGroup, MatButtonToggle, DurationLabelPipe],
+  CreateNewListComponent, MatButtonToggleGroup, MatButtonToggle, DurationLabelPipe, InfoCardsComponent],
   templateUrl: './all-lists.component.html',
   styleUrl: './all-lists.component.css'
 })
 export class AllListsComponent implements OnInit {
+  infoCards = [
+    { label: 'Picked Up', value: 10, color: 'picked' },
+    { label: 'Delivered', value: 20, color: 'delivered' },
+    { label: 'Picking Up', value: 5, color: 'picking' },
+    { label: 'Delivering', value: 7, color: 'delivering' },
+    { label: 'Returning', value: 3, color: 'returning' },
+    { label: 'Awaiting confirmation', value: 2, color: 'returned' }
+  ];
   allLists: AdminTaskSummary[] = [];
   activityList: ActivityModel[] = [];
   cards: AdminTaskCardModel | null = null;

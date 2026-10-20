@@ -1,5 +1,4 @@
 <div class="person-info-container" *ngIf="user">
-
   <mat-toolbar class="header">
     <span>Person Information</span>
   </mat-toolbar>
@@ -42,7 +41,7 @@
     <form *ngIf="isEditMode"
           [formGroup]="profileForm"
           (ngSubmit)="saveUser()"
-          class="info-block">
+          class="info-block edit-mode">
 
       <div class="row edit-row">
         <span class="label">Name:</span>
@@ -59,8 +58,10 @@
         <input class="edit-input" formControlName="phoneNumber"/>
       </div>
 
-      <button class="info-btn save" [disabled]="profileForm.invalid" type="submit">Save</button>
-      <button class="info-btn cancel" (click)="cancelEditMode()">Cancel</button>
+      <div class="form-actions">
+        <button class="info-btn save" [disabled]="profileForm.invalid" type="submit">Save</button>
+        <button class="info-btn cancel" (click)="cancelEditMode()">Cancel</button>
+      </div>
     </form>
   </mat-card>
 

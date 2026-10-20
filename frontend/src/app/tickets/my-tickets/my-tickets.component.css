@@ -1,3 +1,8 @@
+app-filter {
+  display: block;
+  padding: 1rem 1rem 0;
+}
+
 .ticket-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -8,6 +13,8 @@
 .ticket-card {
   width: 100%;
   transition: background 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .ticket-card:hover {
@@ -33,26 +40,32 @@
   background-color: #fff9c4; color: #f57f17;
 }
 .priority-badge.high {
-  background-color: #ffcdd2; color: #b71c1c;
+  background-color: #ffcdd2; color: #230d1a;
+}
+.priority-badge.urgent {
+  background-color: #ea8484; color: #731313;
 }
 
 .status-badge.open {
   background: #e3f2fd; color: #1565c0;
 }
 .status-badge.closed {
-  background: #e0f2f1; color: #00897b;
+  background: #c5c0c0; color: #2e2d2d;
+}
+.status-badge.in_progress {
+  background-color: #fff9c4; color: #bc6921;
+}
+.status-badge.resolved {
+  background-color: #99afbf; color: #03192c;
 }
 
 .ticket-card.closed {
   background-color: #eff7fb
 }
 
-.status-badge {
-  background: #e3f2fd;
-}
-
 .ticket-content {
   padding: 0 18px 16px;
+  flex: 1;
 }
 
 .meta-info {
@@ -79,4 +92,11 @@ mat-icon {
   margin: 0.5rem 0;
   border-radius: 4px;
   font-style: italic;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 1rem;
 }

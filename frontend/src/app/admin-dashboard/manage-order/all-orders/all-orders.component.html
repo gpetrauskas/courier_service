@@ -1,18 +1,10 @@
-<app-filter
-  (filterChange)="onFilterChange($event)"
-  [showOrderFilter]="true"
-  [isAdmin]="true"
-></app-filter>
+<div class="users-table-container">
+  <app-filter
+    (filterChange)="onFilterChange($event)"
+    [showOrderFilter]="true"
+    [isAdmin]="true"
+  ></app-filter>
 
-<app-pagination
-  [currentPage]="currentPage"
-  [totalPages]="totalPages"
-  [totalItems]="totalItems"
-  [pageSize]="pageSize"
-  (pageChange)="onPageChange($event)"
-></app-pagination>
-
-<div class="user-table-container">
 <div *ngIf="orders.length > 0; else noOrders">
 
   <table>
@@ -45,3 +37,11 @@
 <ng-template #noOrders>
   <p>No orders available</p>
 </ng-template>
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalPages]="totalPages"
+  [totalItems]="totalItems"
+  [pageSize]="pageSize"
+  (pageChange)="onPageChange($event)"
+></app-pagination>

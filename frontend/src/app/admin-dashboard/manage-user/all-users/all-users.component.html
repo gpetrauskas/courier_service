@@ -1,49 +1,72 @@
-<app-filter
-  (filterChange)="onFilterChange($event)"
-  [showUserFilter]="true"
-></app-filter>
+<div class="main">
 
-<app-pagination
-  [currentPage]="currentPage"
-  [totalItems]="totalItems"
-  [totalPages]="totalPages"
-  [pageSize]="pageSize"
-  (pageChange)="onPageChange($event)"
-></app-pagination>
+  <div class="list-container">
+    <label class="sub-title">All users</label>
+    <app-filter
+      (filterChange)="onFilterChange($event)"
+      [showUserFilter]="true"
+    ></app-filter>
 
-<div *ngIf="users.length > 0; else noUsers">
-  <table>
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Email</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let user of users" [ngClass]="{'blocked-row': user.isBlocked}">
-      <td data-label="ID">{{ user.id }}</td>
-      <td data-label="Name">{{ user.name }}</td>
-      <td data-label="Email">{{ user.email }}</td>
-      <td>
-        <div class="action-buttons">
-          <button (click)="viewUser(user.id)">View</button>
-          <button (click)="editUser(user.id)">Edit</button>
-          <button id="delete-user-btn" (click)="openConfirmDialog(user.id, 'DELETE')">Delete</button>
-          <button *ngIf="!user.isBlocked" id="block-user-btn" class="action-btn" (click)="openConfirmDialog(user.id, 'BAN')">Block</button>
-          <button *ngIf="user.isBlocked" id="unblock-user-btn" class="action-btn" (click)="openConfirmDialog(user.id, 'UNBAN')">Unblock</button>
+    <div *ngIf="users.length > 0; else noUsers">
+      <table>
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let user of users" [ngClass]="{'blocked-row': user.isBlocked}">
+          <td data-label="ID">{{ user.id }}</td>
+          <td data-label="Name">{{ user.name }}</td>
+          <td data-label="Email">{{ user.email }}</td>
+          <td>
+            <div class="action-buttons">
+              <button (click)="viewUser(user.id)">View</button>
+              <button (click)="editUser(user.id)">Edit</button>
+              <button id="delete-user-btn" (click)="openConfirmDialog(user.id, 'DELETE')">Delete</button>
+              <button *ngIf="!user.isBlocked" id="block-user-btn" class="action-btn" (click)="openConfirmDialog(user.id, 'BAN')">Block</button>
+              <button *ngIf="user.isBlocked" id="unblock-user-btn" class="action-btn" (click)="openConfirmDialog(user.id, 'UNBAN')">Unblock</button>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noUsers>
+      <p>No users found.</p>
+    </ng-template>
+
+
+    <div class="pagination-control">
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [totalPages]="totalPages"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+      ></app-pagination>
+    </div>
+  </div>
+
+  <div class="sub-main">
+    <div class="stats">
+      <div class="stats-sub">
+        <label class="sub-title">Statistics</label>
+        <div class="period-selector">
+
         </div>
-      </td>
-    </tr>
-    </tbody>
+      </div>
 
-  </table>
-</div>
+      <div class="stats-content">
 
-<ng-template #noUsers>
-  <p>No users found.</p>
-</ng-template>
+      </div>
+
+    </div>
+  </div>
 
 <app-confirmation-dialog
   [isVisible]="isDialogVisible"
@@ -56,3 +79,4 @@
   (confirmWithReason)="setReason($event)"
   >
 </app-confirmation-dialog>
+</div>

@@ -4,6 +4,8 @@
   font-weight: 600;
   border-radius: 8px;
   margin-bottom: 24px;
+  grid-column: span 3;
+  justify-content: center;
 }
 
 mat-card {
@@ -67,46 +69,80 @@ mat-card {
 }
 
 .person-info-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   padding: 24px;
   margin: 0 auto;
   max-width: 900px;
 }
 
 .info-btn {
-  background-color: #2f4e32;
-  border: none;
-  color: white;
+  background-color: #f6f6f6;
+  border: 1px solid black;
+  color: #000000;
   padding: 8px 20px;
   text-align: center;
   display: inline-block;
   cursor: pointer;
   border-radius: 5px;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .info-btn:hover {
-  background-color: #2e7d32;
+  background-color: #c1c5c1;
 }
 
 .info-btn.save {
-  background-color: #004080;
+  background-color: #f4f3f3;
 }
 
 .info-btn.save:hover {
-  background-color: #2b6cb0;
+  background-color: #d2d8d1;
 }
 
 .info-btn.cancel {
-  background-color: #5e2612;
+  background-color: #efd3c7;
 }
 
 .info-btn.cancel:hover {
-  background-color: #a93226;
+  background-color: #e3c5c1;
 }
 
 .info-btn.save:disabled {
   background-color: grey;
   cursor: not-allowed;
+}
+
+.edit-mode {
+  display: flex;
+  flex-direction: column;
+  color: #1b1414;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+}
+
+.edit-row .label {
+  width: 120px;
+  min-width: 120px;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid black;
+  border-radius: 4px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 @media (max-width: 480px) {

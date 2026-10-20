@@ -95,9 +95,9 @@
   border-bottom: 2px solid #007bff;
 }
 
-.main-content {
+/*.main-content {
   padding: 16px;
-}
+}*/
 
 @media (max-width: 600px) {
   .nav-links {
