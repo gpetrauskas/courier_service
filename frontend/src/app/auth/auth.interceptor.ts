@@ -7,8 +7,17 @@ import { AuthService} from "./auth.service";
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
+  const token = document.cookie.split("; ").find(c => c.startsWith('XSRF-TOKEN'))?.split('=')[1];
+
+  console.log("yra csrf tokenas? " + token);
+
+  const allowCalls = ['POST', "PUT", "DELETE", 'PATCH'].includes(req.method);
+
+  console.log("allowed calls? " + allowCalls);
+
   const authReq = req.clone({
-    withCredentials: true
+    withCredentials: true,
+    setHeaders: allowCalls && token ? { 'X-XSRF-TOKEN': token } : {}
   });
   return next(authReq).pipe(
     catchError((err) => {

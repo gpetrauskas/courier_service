@@ -42,6 +42,7 @@ public class AuthController {
     @PostMapping
     public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         setCookies(loginUseCase.login(mapper.toCommand(request)), response);
+        response.addCookie(CookieUtil.createCsrfCookie(refreshExpiry));
 
         return ResponseEntity.ok(new ApiResponse("success", "You have successfully logged in"));
     }
@@ -55,8 +56,8 @@ public class AuthController {
     }
 
     private void setCookies(AuthTokens tokens, HttpServletResponse response) {
-        Cookie jwt = CookieUtil.createCookie(refreshExpiry, "jwt", tokens.jwt());
-        Cookie refresh = CookieUtil.createCookie(refreshExpiry, "refresh", tokens.refresh());
+        Cookie jwt = CookieUtil.createAuthCookie(CookieUtil.JWT, tokens.jwt(), refreshExpiry);
+        Cookie refresh = CookieUtil.createAuthCookie(CookieUtil.REFRESH, tokens.refresh(), refreshExpiry);
 
         response.addCookie(jwt);
         response.addCookie(refresh);

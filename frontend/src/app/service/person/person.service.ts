@@ -6,6 +6,7 @@ import { PersonDetailsDTO } from "../../models/person/person-details.model";
 import { PersonResponseDTO } from "../../models/person/person-basic.model";
 import { AdminPersonUpdate } from "../../models/person/admin-person-update.dto";
 import { PaginatedResponse } from "../../models/paginated-response.model";
+import {PeriodEnum} from "../../enums/period.enum";
 
 @Injectable({
   providedIn: 'root'
@@ -45,5 +46,9 @@ export class PersonService {
     return new HttpParams()
       .set("page", page.toString())
       .set("size", size.toString());
+  }
+
+  getStats(period: PeriodEnum) {
+    return this.http.get<any>(`${this.apiUrl}/stats`, { params: {period} });
   }
 }

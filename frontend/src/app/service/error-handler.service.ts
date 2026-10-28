@@ -17,7 +17,17 @@ export class ErrorHandlerService {
   alert$ = this.alertFieldsBehaviorSubject.asObservable();
 
   handleError(err: HttpErrorResponse) {
-    return (err.status === 0) ? err.message : err.error.message;
+    console.log("cia " + err.error + " " + err.status);
+    if (err.error === 0) return err.message;
+
+    let body = err.error;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {}
+    }
+
+    return body?.message ?? 'Access denied';
   }
 
   handleRequest(obs: Observable<any>, message: string, onSuccess?: () => void, onFailure?: () => void) {
