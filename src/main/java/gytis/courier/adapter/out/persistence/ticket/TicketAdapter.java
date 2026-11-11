@@ -2,11 +2,13 @@ package gytis.courier.adapter.out.persistence.ticket;
 
 import gytis.courier.adapter.out.persistence.common.PageResultMapper;
 import gytis.courier.adapter.out.persistence.common.PageableFactory;
+import gytis.courier.adapter.out.persistence.ticket.projection.StatusCountsProjection;
 import gytis.courier.adapter.out.persistence.ticket.projection.TicketProjection;
 import gytis.courier.application.common.PageQuery;
 import gytis.courier.application.common.PageResult;
 import gytis.courier.application.port.out.ticket.TicketCommandPort;
 import gytis.courier.application.port.out.ticket.TicketQueryPort;
+import gytis.courier.application.readmodel.ticket.AdminTicketCardReadModel;
 import gytis.courier.application.readmodel.ticket.AdminTicketReadModel;
 import gytis.courier.application.readmodel.ticket.TicketReadModel;
 import gytis.courier.domain.ticket.Ticket;
@@ -50,6 +52,16 @@ public class TicketAdapter implements TicketQueryPort, TicketCommandPort {
         return PageResultMapper.from(
                 repository.findAllProjectedBy(pageable),
                 queryMapper::toAdminReadModel
+        );
+    }
+
+    @Override
+    public AdminTicketCardReadModel getStatusCounts() {
+        StatusCountsProjection projection = repository.findStatusCounts();
+        return new AdminTicketCardReadModel(
+                projection.getOpenStatus(),
+                projection.getInProgressStatus(),
+                projection.getResolvedStatus()
         );
     }
 

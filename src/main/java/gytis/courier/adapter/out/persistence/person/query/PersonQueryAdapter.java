@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -84,6 +85,16 @@ public class PersonQueryAdapter implements PersonQueryPort {
     @Override
     public Optional<AdminAdminDetailsReadModel> getAdminAdminDetailed(Long id) {
         return adminRepo.getAdminDetailedById(id).map(mapper::toAdminDetailed);
+    }
+
+    @Override
+    public AdminUserStatsReadModel getStats(LocalDateTime from) {
+        var projection = userRepo.getStats(from);
+        return new AdminUserStatsReadModel(
+                projection.getNewUsers(),
+                projection.getActiveUsers(),
+                projection.getBlockedUsers()
+        );
     }
 
     @Override

@@ -1,5 +1,6 @@
 package gytis.courier.adapter.out.persistence.ticket;
 
+import gytis.courier.adapter.out.persistence.ticket.projection.StatusCountsProjection;
 import gytis.courier.adapter.out.persistence.ticket.projection.TicketProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,5 +30,20 @@ public interface TicketJpaRepository extends JpaRepository<TicketJpaEntity, Long
 
     @EntityGraph(attributePaths = "createdBy")
     Page<TicketProjection> findAllProjectedBy(Pageable pageable);
+
+    @Query("""
+    SELECT
+         COALESCE(SUM(CASE
+            WHEN t.status = 'OPEN' THEN 1
+            ELSE 0 END), 0) AS openStatus,
+         COALESCE(SUM(CASE
+            WHEN t.status = 'IN_PROGRESS' THEN 1
+            ELSE 0 END), 0) AS inProgressStatus,
+         COALESCE(SUM(CASE
+            WHEN t.status = 'RESOLVED' THEN 1
+            ELSE 0 END), 0) AS resolvedStatus
+    FROM TicketJpaEntity t
+""")
+    StatusCountsProjection findStatusCounts();
 
 }

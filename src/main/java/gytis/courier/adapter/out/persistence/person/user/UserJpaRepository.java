@@ -1,12 +1,15 @@
 package gytis.courier.adapter.out.persistence.person.user;
 
+import gytis.courier.adapter.out.persistence.person.projection.AdminUserStatsProjection;
 import gytis.courier.adapter.out.persistence.person.projection.AdminViewUserProjection;
 import gytis.courier.adapter.out.persistence.person.projection.UserInfoProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,4 +60,13 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
     WHERE u.id = :id
 """)
     Optional<AdminViewUserProjection> getAdminUserDetailsById(Long id);
+
+    @Query("""
+    SELECT
+        COALESCE(SUM(CASE WHEN u.createdDate >= :from THEN 1 ELSE 0 END), 0) as newUsers,
+        0 as activeUsers,
+        COALESCE(SUM(CASE WHEN u.blocked = true THEN 1 ELSE 0 END), 0) as blockedUsers
+    FROM UserJpaEntity u
+""")
+    AdminUserStatsProjection getStats(@Param("from") LocalDateTime from);
 }

@@ -1,4 +1,4 @@
-package gytis.courier.domain.task;
+package gytis.courier.domain.common;
 
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;

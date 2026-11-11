@@ -7,6 +7,7 @@ import gytis.courier.application.port.in.ticket.TicketCommentQueryUseCase;
 import gytis.courier.application.port.in.ticket.UserTicketQueryUseCase;
 import gytis.courier.application.port.out.ticket.TicketCommentQueryPort;
 import gytis.courier.application.port.out.ticket.TicketQueryPort;
+import gytis.courier.application.readmodel.ticket.AdminTicketCardReadModel;
 import gytis.courier.application.readmodel.ticket.AdminTicketReadModel;
 import gytis.courier.application.readmodel.ticket.TicketReadModel;
 import gytis.courier.application.readmodel.ticket.TicketCommentReadModel;
@@ -24,14 +25,22 @@ public class TicketQueryService implements AdminTicketQueryUseCase, UserTicketQu
         this.commentQueryPort = commentQueryPort;
     }
 
+    @Override
     public PageResult<TicketReadModel> myTickets(Long myId, PageQuery pageQuery) {
         return queryPort.myTickets(myId, pageQuery);
     }
 
+    @Override
     public PageResult<AdminTicketReadModel> allTickets(PageQuery pageQuery) {
         return queryPort.getAll(pageQuery);
     }
 
+    @Override
+    public AdminTicketCardReadModel getCards() {
+        return queryPort.getStatusCounts();
+    }
+
+    @Override
     public PageResult<TicketCommentReadModel> getComments(Long ticketId, Long personId, String role, PageQuery pageQuery) {
         if (!canAccessTicket(ticketId, personId, role)) {
             throw new ForbiddenException("Access denied");

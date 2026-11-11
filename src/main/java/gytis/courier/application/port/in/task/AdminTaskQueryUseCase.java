@@ -7,7 +7,7 @@ import gytis.courier.application.readmodel.task.AdminTaskCardReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskStatsReadModel;
 import gytis.courier.application.readmodel.task.TaskListReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskReadModel;
-import gytis.courier.domain.task.StatsPeriod;
+import gytis.courier.domain.common.StatsPeriod;
 
 public interface AdminTaskQueryUseCase {
     PageResult<TaskListReadModel> getAll(AdminTaskQueryFilter filter, PageQuery pageQuery);

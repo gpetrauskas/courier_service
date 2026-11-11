@@ -6,6 +6,7 @@ import gytis.courier.application.query.filter.PersonQuery;
 import gytis.courier.application.readmodel.person.*;
 import gytis.courier.domain.person.Role;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,7 @@ public interface PersonQueryPort {
     Optional<AdminUserDetailsReadModel> getAdminUserDetailed(Long id);
     Optional<AdminCourierDetailsReadModel> getAdminCourierDetailed(Long id);
     Optional<AdminAdminDetailsReadModel> getAdminAdminDetailed(Long id);
+    AdminUserStatsReadModel getStats(LocalDateTime from);
 
     List<Long> getAllActiveUserIds(int page, int size);
     List<Long> getAllActiveCourierIds(int page, int size);

@@ -11,13 +11,12 @@ import gytis.courier.application.readmodel.task.TaskListReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskReadModel;
 import gytis.courier.application.result.AdminTaskCardResult;
 import gytis.courier.domain.task.DeliveryStatus;
-import gytis.courier.domain.task.StatsPeriod;
+import gytis.courier.domain.common.StatsPeriod;
 import gytis.courier.domain.task.TaskType;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.function.Predicate;
 
