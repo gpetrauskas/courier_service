@@ -12,6 +12,8 @@ import gytis.courier.application.query.filter.PersonQuery;
 import gytis.courier.application.readmodel.person.AdminPersonDetailsReadModel;
 import gytis.courier.application.readmodel.person.AdminPersonListReadModel;
 import gytis.courier.adapter.in.rest.common.ApiResponse;
+import gytis.courier.application.readmodel.person.AdminUserStatsReadModel;
+import gytis.courier.domain.common.StatsPeriod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -56,5 +58,11 @@ public class PersonController {
     public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
         personCommandUseCase.deletePerson(id);
         return ResponseEntity.ok(new ApiResponse("success", "Person was successfully deleted."));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/stats")
+    public AdminUserStatsReadModel stats(@RequestParam StatsPeriod period) {
+        return queryUseCase.getStats(period);
     }
 }

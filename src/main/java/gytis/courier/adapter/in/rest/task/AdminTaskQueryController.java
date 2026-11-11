@@ -11,7 +11,7 @@ import gytis.courier.application.query.filter.AdminTaskQueryFilter;
 import gytis.courier.application.readmodel.task.AdminTaskCardReadModel;
 import gytis.courier.application.readmodel.task.TaskListReadModel;
 import gytis.courier.application.readmodel.task.AdminTaskReadModel;
-import gytis.courier.domain.task.StatsPeriod;
+import gytis.courier.domain.common.StatsPeriod;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
