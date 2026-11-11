@@ -1,62 +1,118 @@
 .delivery-option-details {
-  padding: 20px;
-  background-color: #fafafa;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  max-width: 600px;
-  margin: 20px auto;
+  max-width: 440px;
+  margin: 24px auto;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
 }
 
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
+.option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px;
 }
 
 .option-info h4 {
-  margin-bottom: 10px;
-  color: #333;
+  margin: 0 0 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.option-info p {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
 }
 
 .option-info label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-  color: #555;
+  flex: 0 0 90px;
 }
 
 .option-info input {
+  flex: 1;
+}
+
+.option-info button {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/*
+.delivery-option-details {
+  background-color: var(--background-white);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: auto;
+  max-width: 400px;
+}
+.option-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.option-info h4 {
+  margin: 20px;
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
+  padding: 20px;
+}
+
+.option-info p {
+  width: 100%;
+  margin: 10px;
+  display: flex;
+  gap: 32px;
+}
+
+.option-info label {
+  width: 90px;
+  color: black;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.option-info input {
+  width: 220px;
+  padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  margin-left: 20px;
 }
 
-button.save-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  margin-top: 15px;
-  cursor: pointer;
+.option-info input:focus {
+  outline: none;
+  border-color: black;
+}
+
+.option-info button {
+  padding: 8px 16px;
   border-radius: 4px;
-  font-size: 14px;
-}
-
-button.cancel-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  margin-top: 15px;
-  margin-left: 10px;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
+  margin-top: 12px;
+  font-weight: 600;
 }
 
-button:hover {
-  opacity: 0.9;
+.save-btn {
+  background: black;
+  color: white;
+  border: 1px solid black;
 }
+
+.cancel-btn {
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+}
+
+.save-btn, .cancel-btn {
+  display: flex;
+  margin: 10px;
+}
+
+.option-info button:hover {
+  opacity: 0.8;
+}
+*/

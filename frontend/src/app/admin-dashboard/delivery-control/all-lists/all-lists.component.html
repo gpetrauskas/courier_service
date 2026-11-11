@@ -78,15 +78,15 @@
 
     <div class="stats">
       <div class="stats-header">
-      <label class="sub-title">Statistics</label>
-      <div class="period-selector">
-        <button
-          *ngFor="let period of [PeriodEnum.DAY, PeriodEnum.WEEK, PeriodEnum.MONTH]"
-          [class.active]="statsPeriod === period"
-          (click)="onStatsPeriodChange(period)">
-          {{ period === PeriodEnum.DAY ? 'Day' : period === PeriodEnum.WEEK ? 'Week' : 'Month' }}
-        </button>
-      </div>
+        <label class="sub-title">Statistics</label>
+        <div class="period-selector">
+          <button
+            *ngFor="let period of [PeriodEnum.DAY, PeriodEnum.WEEK, PeriodEnum.MONTH]"
+            [class.active]="statsPeriod === period"
+            (click)="onStatsPeriodChange(period)">
+            {{ period === PeriodEnum.DAY ? 'Day' : period === PeriodEnum.WEEK ? 'Week' : 'Month' }}
+          </button>
+        </div>
       </div>
       <div class="stat-main">
           <span class="stat-label">Created:</span>

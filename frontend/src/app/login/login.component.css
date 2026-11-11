@@ -1,40 +1,37 @@
+:host {
+  display: block;
+  padding: 48px 16px;
+}
+
 h1 {
-  color: #2c3e50;
+  max-width: 360px;
+  margin: 0 auto 20px;
 }
 
 form {
-  max-width: 300px;
+  max-width: 360px;
   margin: 0 auto;
+  padding: 24px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
 }
 
-div {
-  margin-bottom: 15px;
+form > div {
+  margin-bottom: 16px;
 }
 
 label {
   display: block;
-  margin-bottom: 5px;
-}
-
-input {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
+  margin-bottom: 6px;
 }
 
 button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #2980b9;
+  width: 100%;
 }
 
 .error {
-  color: red;
+  color: var(--danger);
   text-align: center;
 }

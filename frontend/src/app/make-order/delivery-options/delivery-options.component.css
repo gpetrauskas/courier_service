@@ -1,48 +1,24 @@
-div.delivery-options select, div.delivery-options textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+div.delivery-options select,
+div.delivery-options textarea {
+  margin: 4px 0 12px;
 }
 
 div.delivery-options textarea {
-    resize: vertical;
+  resize: vertical;
 }
 
 div.delivery-options button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    background-color: #4d7298;
-    color: #fff;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-div.delivery-options button:hover {
-    background-color: #0056b3;
-}
-
-@media (max-width: 768px) {
-
+  width: 100%;
+  margin: 4px 0 12px;
 }
 
 .error {
-  color: red;
-  font-size: 15px;
-  border: 1px solid black;
-  border-radius: 3px;
-  background-color: silver;
-  padding: 14px;
   display: flex;
   justify-content: center;
-  margin-left: 25%;
-  margin-right: 25%;
+  margin: 8px 0;
+  padding: 12px 16px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid #efc4be;
+  border-radius: var(--radius-md);
 }

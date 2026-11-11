@@ -18,6 +18,8 @@
           </div>
         </mat-card-content>
 
+        <mat-divider class="content-divider"></mat-divider>
+
         <div class="ticket-meta-grid">
           <div class="meta-item">
             <div class="meta-label">Created at:</div>
@@ -30,12 +32,15 @@
         </div>
       </mat-card-header>
 
-      <div class="admin-controls-section" *ngIf="isAdmin">
+      @if (isAdmin) {
+      <div class="admin-controls-section">
         <mat-divider class="section-divider"></mat-divider>
-        <h4 class="controls-heading">Ticket Administration</h4>
+        <div>
+          <h4 class="controls-heading">Administration View</h4>
+        </div>
         <div class="action-controls">
           <div class="control-group">
-            <mat-form-field appearance="outline" class="control-field">
+            <mat-form-field appearance="outline" class="control-field" subscriptSizing="dynamic">
               <mat-label>Status</mat-label>
               <mat-select [(ngModel)]="tempStatus" #statusSelect>
                 @for (status of statusOptions; track status) {
@@ -54,7 +59,7 @@
           </div>
 
           <div class="control-group">
-            <mat-form-field appearance="outline" class="control-field">
+            <mat-form-field appearance="outline" class="control-field" subscriptSizing="dynamic">
               <mat-label>Priority</mat-label>
               <mat-select [(ngModel)]="tempPriority" #prioritySelect>
                 @for (priority of priorityOptions; track priority) {
@@ -71,9 +76,8 @@
             </button>
           </div>
         </div>
-      </div>
 
-      @if (isAdmin) {
+
         <mat-card-subtitle class="user-summary">
           <div class="summary-label">Created by:</div>
           <div class="user-info">
@@ -88,6 +92,7 @@
             View Full User Data
           </button>
         </mat-card-subtitle>
+      </div>
       }
     </mat-card>
 
@@ -98,14 +103,15 @@
       </div>
       <mat-divider class="section-divider"></mat-divider>
 
-      <div class="comments-lists" *ngIf="comments.length; else noComments">
+      <div class="comments-body">
+      <div class="comments-lists" #commentsList (scroll)="onCommentScroll()" *ngIf="comments.length; else noComments">
         <div *ngFor="let comment of comments" class="comment"
              [ngClass]="{'my-comment': comment.authorName === currentUsername, 'other-comment': comment.authorName !== currentUsername}">
           <mat-card class="comment-card">
-            <mat-card-header class="comment-header">
+            <div class="comment-header">
               <div class="comment-author">{{ comment.authorName }}</div>
               <div class="comment-date">{{ comment.createdAt | date: 'medium' }}</div>
-            </mat-card-header>
+            </div>
             <mat-card-content class="comment-content">
               <p>{{ comment.message }}</p>
             </mat-card-content>
@@ -122,10 +128,10 @@
 
       @if (ticket.status !== 'CLOSED') {
         <form [formGroup]="commentForm" (ngSubmit)="addComment(ticket)" class="comment-form">
-          <mat-divider class="section-divider"></mat-divider>
-          <h4 class="add-comment-titte">Addd a comment</h4>
+<!--          <mat-divider class="section-divider"></mat-divider>
+          <h4 class="add-comment-titte">Addd a comment</h4>-->
           <mat-form-field appearance="outline" class="comment-field">
-            <textarea matInput formControlName="message" rows="3" placeholder="Write your comment here..."></textarea>
+            <textarea matInput formControlName="message" rows="2" placeholder="Write your comment here..."></textarea>
           </mat-form-field>
           <button mat-raised-button color="primary" type="submit" class="submit-comment" [disabled]="commentForm.invalid">
             Post Comment
@@ -137,6 +143,7 @@
           <span>This ticket is closed and no longer accepting comments</span>
         </div>
       }
+      </div>
     </mat-card>
 
   </ng-container>

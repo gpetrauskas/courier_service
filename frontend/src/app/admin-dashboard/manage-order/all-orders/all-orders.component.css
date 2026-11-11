@@ -1,3 +1,91 @@
+/* table, button and field basics comes from the global styles.css */
+
+.users-table-container {
+  display: flex;
+  flex-direction: column;
+  margin: 16px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.users-table-container table {
+  border: 0;
+  border-radius: 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.action-buttons button {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+app-pagination {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-light);
+}
+
+.no-users-message {
+  padding: 24px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+/*
+!* Table, button and field basics come from the global styles.css *!
+
+.users-table-container {
+  display: flex;
+  flex-direction: column;
+  margin: 16px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.users-table-container table {
+  border: 0;
+  border-radius: 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.action-buttons button {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+app-pagination {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-light);
+}
+
+.no-users-message {
+  padding: 24px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+*/
+
+/*
 .users-table-container {
   display: flex;
   flex-direction: column;
@@ -144,3 +232,4 @@ button:hover {
     margin: 4px 0;
   }
 }
+*/

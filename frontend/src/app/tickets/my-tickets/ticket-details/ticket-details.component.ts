@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, Validators, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -40,6 +40,9 @@ export class TicketDetailsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private wsService = inject(WebsocketService);
 
+  @ViewChild('commentsList') commentsList!: ElementRef;
+  isNearBottom = true;
+
   ticket: Ticket | null = null;
   comments: TicketComment[] = [];
   statusOptions = Object.values(TicketStatus).slice(1, 99);
@@ -77,12 +80,14 @@ export class TicketDetailsComponent implements OnInit {
 
   addIncomingComment(msg: IMessage) {
     this.comments.push(JSON.parse(msg.body));
+    this.scrollToLastComment();
   }
 
   getTicketComments(ticketId: number) {
     this.ticketService.getComments(ticketId, 0, 10).subscribe({
       next: (data) => {
         this.comments = data.data;
+        this.scrollToLastComment();
         console.log("veikia ???" + data);
       }
     });
@@ -123,6 +128,27 @@ export class TicketDetailsComponent implements OnInit {
         history.replaceState({ ticket: this.ticket }, '');
         this.commentForm.reset();
         //this.getTicketComments(ticket.id);
+      }
+    });
+  }
+
+  onCommentScroll() {
+    const element = this.commentsList?.nativeElement;
+
+    if (element) {
+      const threshold = 100;
+      this.isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+    }
+  }
+
+  scrollToLastComment() {
+    if (!this.isNearBottom) return;
+
+    setTimeout(() => {
+      const element = this.commentsList?.nativeElement;
+
+      if (element) {
+        element.scrollTop = element.scrollHeight;
       }
     });
   }

@@ -53,17 +53,32 @@
   </div>
 
   <div class="sub-main">
+    <label class="sub-title">Statistics</label>
     <div class="stats">
-      <div class="stats-sub">
-        <label class="sub-title">Statistics</label>
-        <div class="period-selector">
 
-        </div>
+    <div class="stats-content">
+      <div class="label-val">
+        <span class="stat-label">Total:</span>
+        <span class="stat-value">{{ stats.blockedUsersCount }}</span>
       </div>
-
-      <div class="stats-content">
-
+      <div class="label-val">
+        <span class="stat-label">Blocked:</span>
+        <span class="stat-value">{{ stats.blockedUsersCount }}</span>
       </div>
+      <div class="period-selector">
+
+        <button
+          *ngFor="let period of [Period.DAY, Period.WEEK, Period.MONTH]"
+          [class.active]="statsPeriod === period"
+          (click)="onPeriodChange(period)">
+          {{ period === Period.DAY ? 'Day' : period === Period.WEEK ? 'Week' : 'Month' }}
+        </button>
+      </div>
+      <div class="label-val">
+        <span class="stat-label">Created:</span>
+        <span class="stat-value">{{ stats.newUsersCount }}</span>
+      </div>
+    </div>
 
     </div>
   </div>

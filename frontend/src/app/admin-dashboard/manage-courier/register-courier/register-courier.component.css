@@ -1,4 +1,26 @@
 .courier-register {
+  max-width: 520px;
+  margin: 24px auto;
+  padding: 24px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.courier-register form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.courier-register label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/*
+.courier-register {
   max-width: 600px;
   margin: 20px auto;
   background: #ffffff;
@@ -55,3 +77,4 @@
   background-color: lightgrey;
   border: 1px solid grey;
 }
+*/

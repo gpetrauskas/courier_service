@@ -1,91 +1,71 @@
-:root {
-  --primary: #4361ee;
-  --success: #4cc9f0;
-  --danger: #f72585;
-  --light: #f8f9fa;
-  --dark: #212529;
-}
-
 .user-order-detail {
-  background: white;
-  border: 1px solid #e9ecef;
-  padding: 1rem;
-  margin: 0 auto;
   max-width: 100%;
-  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 16px;
   text-align: left;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
 }
 
 .order-info {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  background: #f9f9f9;
-  border-radius: 8px;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--background);
+  border-radius: var(--radius-md);
 }
 
 .pay-button-container {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 12px;
 }
 
 .pay-button {
-  padding: 0.75rem 1.5rem;
+  padding: 8px 20px;
+  color: #fff;
   background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-color: var(--primary);
 }
 
 .pay-button:hover {
-  background: #3a56d4;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .button-group {
   display: flex;
-  gap: 0.75rem;
-  margin: 1.5rem 0;
   flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
 }
 
 .button-group button {
   flex: 1;
   min-width: 120px;
-  padding: 0.75rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 .addresses {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-top: 2rem;
+  gap: 16px;
+  margin-top: 24px;
 }
 
 .address-column {
-  padding: 1.25rem;
-  background: #f9f9f9;
-  border-radius: 8px;
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
 }
 
 @media (min-width: 768px) {
   .user-order-detail {
-    padding: 1.5rem;
     max-width: 800px;
+    padding: 24px;
   }
 
   .order-info {
@@ -100,19 +80,4 @@
   .addresses {
     grid-template-columns: 1fr 1fr;
   }
-}
-
-.button-group button {
-  background: var(--primary);
-  transition: all 0.2s ease;
-}
-
-.button-group button:hover {
-  background: #3a56d4;
-  transform: translateY(-1px);
-}
-
-.address-column {
-  background: var(--light);
-  border: 1px solid #e9ecef;
 }

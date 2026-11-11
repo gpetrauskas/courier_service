@@ -1,26 +1,114 @@
 .details-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
   padding: 16px;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
 }
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  grid-gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  width: 100%;
 }
 
 .section-card {
-  background-color: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  padding: 16px 20px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+
+h4 {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.form-group,
+.info-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+}
+
+p {
+  margin: 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.save-btn {
+  color: #fff;
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.save-btn:hover {
+  background: #165f3d;
+  border-color: #165f3d;
+}
+
+.no-data-message {
+  margin-top: 24px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group,
+  .info-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  label {
+    flex: 0 0 120px;
+    margin: 0;
+  }
+
+  .button-group {
+    justify-content: flex-end;
+  }
+}
+
+/*
+.details-container {
+  padding: 10px;
+  background-color: var(--background-white);
+  display: flex;
+  justify-content: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  width: 100%;
+}
+
+.section-card {
+  border: 1px solid #dad8d8;
+  background: #fff;
+  border-radius: 6px;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 h4 {
@@ -41,14 +129,12 @@ label {
   font-weight: 500;
   font-size: 0.9rem;
   color: #555;
-  margin-bottom: 4px;
 }
 
 p {
   margin: 0;
   font-size: 0.92rem;
   color: #2f2f2f;
-  padding: 6px 0;
 }
 
 input, select {
@@ -176,3 +262,4 @@ input:focus, select:focus {
     padding-top: 6px;
   }
 }
+*/

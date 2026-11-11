@@ -1,5 +1,136 @@
 .modal-overlay {
   position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 33, 47, 0.55);
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  background: var(--background-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+}
+
+.modal h2 {
+  margin-bottom: 8px;
+}
+
+pre {
+  margin: 8px 0 16px;
+  padding: 8px 12px;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  white-space: pre-wrap;
+  background: var(--background-hover-gray);
+  border-radius: var(--radius-sm);
+}
+
+.reason-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.reason-input textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* first button confirms, second cancels */
+.modal-buttons button:first-child {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.modal-buttons button:first-child:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/*.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 33, 47, 0.55);
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  background: var(--background-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+}
+
+.modal h2 {
+  margin-bottom: 8px;
+}
+
+pre {
+  margin: 8px 0 16px;
+  padding: 8px 12px;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  white-space: pre-wrap;
+  background: var(--background-hover-gray);
+  border-radius: var(--radius-sm);
+}
+
+.reason-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.reason-input textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+!* first button confirms, second cancels *!
+.modal-buttons button:first-child {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.modal-buttons button:first-child:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}*/
+
+/*
+.modal-overlay {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -59,3 +190,4 @@ pre {
   border-radius: 2px;
   padding: 5px;
 }
+*/

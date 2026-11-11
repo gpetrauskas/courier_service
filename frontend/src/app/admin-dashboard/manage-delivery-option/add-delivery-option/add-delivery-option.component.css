@@ -1,6 +1,40 @@
 .add-delivery-option {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 24px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.add-delivery-option h4 {
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.add-delivery-option label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.add-delivery-option input[type="text"] {
+  margin-bottom: 14px;
+}
+
+.add-delivery-option p {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.add-delivery-option button + button {
+  margin-left: 8px;
+}
+
+/*
+.add-delivery-option {
   font-family: 'Roboto', sans-serif;
-  background-color: rgb(235 227 237 / 0.39);
   padding: 20px;
   border-radius: 8px;
   max-width: 500px;
@@ -10,8 +44,8 @@
 
 .add-delivery-option h4 {
   font-family: 'Playfair Display', serif;
-  color: #333333;
-  border-bottom: 2px solid #b8a89e;
+  color: #000000;
+  border-bottom: 2px solid #d8d0ce;
   padding-bottom: 10px;
   margin-bottom: 20px;
 }
@@ -61,14 +95,15 @@
 
 .add-delivery-option .save-btn {
   margin-right: 10px;
-  color: #333;
-  background-color: #fff;
+  background-color: black;
+  color: white;
   border: 1px solid #b0b0b0;
   cursor: pointer;
 }
 
 .add-delivery-option .save-btn:hover {
-  background-color: #c0af9e;
+  background-color: #171616;
+  color: white;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -87,6 +122,15 @@
 
 .add-delivery-option button:disabled {
   background-color: #fff;
+  color: black;
   cursor: not-allowed;
   border: 2px solid #b8a89e;
 }
+
+.add-delivery-option button:hover:disabled {
+  background-color: #8f1c1c;
+  color: black;
+  cursor: not-allowed;
+  border: 2px solid #b8a89e;
+}
+*/

@@ -1,3 +1,330 @@
+/* tables, buttons and field basics comes from the global styles.css */
+
+.main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 16px;
+}
+
+.list-container,
+.sub-main {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sub-title {
+  padding: 14px 16px 6px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* the table sits flat inside its card */
+.list-container table {
+  border: 0;
+  border-radius: 0;
+}
+
+.blocked-row {
+  background: var(--background-blocked);
+}
+
+tbody tr.blocked-row:hover {
+  background: var(--background-blocked-hover);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.action-buttons button {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+#delete-user-btn {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+#delete-user-btn:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+#block-user-btn {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: #ecd08a;
+}
+
+#unblock-user-btn {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: #a9d9c2;
+}
+
+.action-btn {
+  min-width: 76px;
+}
+
+.list-container > p,
+ng-template p {
+  padding: 24px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.pagination-control {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ---------- Statistics ---------- */
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 16px 16px;
+}
+
+.label-val {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--background);
+  border-radius: var(--radius-md);
+}
+
+.stat-label {
+  color: var(--text-medium);
+}
+
+.stat-value {
+  color: var(--ink);
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.period-selector {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--background-hover-gray);
+  border-radius: var(--radius-md);
+}
+
+.period-selector button {
+  flex: 1;
+  min-height: 28px;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+}
+
+.period-selector button:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.period-selector button.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--background-white);
+  box-shadow: var(--shadow-mobile);
+}
+
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+  }
+}
+
+/*
+!* Table, button and field basics come from the global styles.css *!
+
+.main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 16px;
+}
+
+.list-container,
+.sub-main {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sub-title {
+  padding: 14px 16px 6px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+!* the table sits flat inside its card *!
+.list-container table {
+  border: 0;
+  border-radius: 0;
+}
+
+.blocked-row {
+  background: var(--background-blocked);
+}
+
+tbody tr.blocked-row:hover {
+  background: var(--background-blocked-hover);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.action-buttons button {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+#delete-user-btn {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+#delete-user-btn:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+#block-user-btn {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: #ecd08a;
+}
+
+#unblock-user-btn {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: #a9d9c2;
+}
+
+.action-btn {
+  min-width: 76px;
+}
+
+.list-container > p,
+ng-template p {
+  padding: 24px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.pagination-control {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-light);
+}
+
+!* ---------- Statistics ---------- *!
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 16px 16px;
+}
+
+.label-val {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--background);
+  border-radius: var(--radius-md);
+}
+
+.stat-label {
+  color: var(--text-medium);
+}
+
+.stat-value {
+  color: var(--ink);
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.period-selector {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--background-hover-gray);
+  border-radius: var(--radius-md);
+}
+
+.period-selector button {
+  flex: 1;
+  min-height: 28px;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+}
+
+.period-selector button:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.period-selector button.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--background-white);
+  box-shadow: var(--shadow-mobile);
+}
+
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+  }
+}
+*/
+
+
+
+/*
 .users-table-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -111,8 +438,8 @@ button:disabled {
 }
 
 .sub-title {
-  font-weight: bold;
   padding: 6px;
+  padding-bottom: 12px;
 }
 
 .main {
@@ -131,17 +458,64 @@ button:disabled {
 }
 
 .sub-main {
-  display: grid;
-  gap: 5px;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 5px;
 }
 
 .stats {
+  background-color: #fff;
+}
+
+.stats-content {
   display: flex;
   flex-direction: column;
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px;
+  gap: 12px;
+}
+
+.label-val {
+  display: flex;
+  justify-content: space-evenly;
+  border: 1px solid #ddd;
+  padding: 6px;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 350;
+}
+
+.period-selector {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.period-selector button {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.period-selector button.active {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .pagination-control {
@@ -202,3 +576,4 @@ button:disabled {
   gap: 8px;
   align-items: center;
 }
+*/

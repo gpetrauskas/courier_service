@@ -1,3 +1,118 @@
+.person-info-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.header {
+  grid-column: 1 / -1;
+  padding: 12px 16px;
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+
+mat-card {
+  padding: 20px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.section-title {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.info-block {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.label {
+  color: var(--text-medium);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.data {
+  flex: 1;
+  color: var(--text-dark);
+  text-align: right;
+  word-break: break-word;
+}
+
+.edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-row .label {
+  flex: 0 0 110px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.info-btn.save {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.info-btn.save:disabled {
+  color: var(--text-button-muted);
+  background: var(--background-hover-gray);
+  border-color: var(--border-light);
+}
+
+.info-btn.cancel {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: #efc4be;
+}
+
+@media (max-width: 480px) {
+  .edit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+}
+
+/*
 .header {
   background: #f3f4f6;
   color: #111827;
@@ -161,3 +276,4 @@ mat-card {
     flex-direction: column;
   }
 }
+*/

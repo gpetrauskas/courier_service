@@ -1,6 +1,52 @@
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.notification-card {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  transition: background-color 120ms ease;
+}
+
+.notification-card:hover {
+  background: var(--primary-soft);
+  cursor: pointer;
+}
+
+.xx,
+.xx:hover {
+  background: var(--signal-soft);
+}
+
+mat-card-header {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.delete-btn {
+  align-self: flex-end;
+  margin: 12px;
+}
+
+/*
 .notification-card {
   margin-bottom: 1rem;
   transition: background-color 0.3s ease;
+}
+
+mat-card-header {
+  border-bottom: 1px solid #989393;
+  margin-bottom: 10px;
+}
+
+mat-card-title {
+  border-bottom: 1px solid #cac2c2;
+  margin-bottom: 5px;
 }
 
 .notification-card:hover {
@@ -14,10 +60,10 @@
 }
 
 .delete-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
+  background-color: white;
+  color: black;
   padding: 6px 12px;
+  border: 1px solid black;
   margin: 12px;
   border-radius: 4px;
   font-size: 0.875rem;
@@ -28,9 +74,13 @@
 }
 
 .delete-btn:hover {
-  background-color: #c82333;
+  background-color: #e1e1e1;
 }
 
 .card-container {
   padding: 16px;
+  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
 }
+*/

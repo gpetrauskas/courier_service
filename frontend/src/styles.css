@@ -1,18 +1,104 @@
-html {
-  --mat-sidenav-content-background-color: var(--background-light-gray);
+:root {
+  color-scheme: light;
+
+  /* core */
+  --ink: #14212f;
+  --ink-soft: #22364a;
+  --primary: #2a5d84;
+  --primary-hover: #214c6c;
+  --primary-soft: #e6f0f7;
+  --signal: #f2a900;
+  --signal-soft: #fdf1d6;
+
+  /* status */
+  --ok: #1d7a4f;
+  --ok-soft: #e3f4ec;
+  --warn: #8a5a00;
+  --warn-soft: #fdf1d6;
+  --danger: #b3382c;
+  --danger-hover: #962d23;
+  --danger-soft: #fbe9e6;
+
+  /* surfaces */
+  --background: #f2f4f6;
+  --background-white: #ffffff;
+  --background-hover-gray: #eaeef2;
+  --background-blocked: #fbe9e6;
+  --background-blocked-hover: #f6d9d4;
+  --border-light: #dde3e9;
+  --border-strong: #c3ccd6;
+
+  /* text */
+  --text-dark: #1b2733;
+  --text-medium: #4d5d70;
+  --text-light: #7a8899;
+  --text-button-inverse: #ffffff;
+  --text-button-muted: #9aa6b3;
+
+  /* header */
+  --header-bg-dark: var(--ink);
+  --header-text: #ffffff;
+  --header-height: 64px;
+
+  /* shape, depth, type */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-soft: 0 1px 2px rgba(20, 33, 47, 0.06), 0 2px 8px rgba(20, 33, 47, 0.04);
+  --shadow-hover: 0 4px 14px rgba(20, 33, 47, 0.10);
+  --shadow-mobile: 0 1px 3px rgba(20, 33, 47, 0.08);
+  --content-max-width: 1600px;
+  --font: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* old. some components may use it. will sort later */
+  --secondary: var(--signal);
+  --third: var(--signal-soft);
+  --highlight: var(--signal);
+  --background-lght-gray: var(--background);
+  --card-bg: var(--background-white);
+  --bg-light: var(--background-white);
+  --light: var(--background-white);
+  --bg-accent: var(--primary-soft);
+  --neutral: var(--text-dark);
+  --text-main: var(--text-dark);
+  --text-button: var(--text-dark);
+  --text-unblock: var(--text-dark);
+  --primary-light: var(--text-medium);
+  --border-mobile: var(--border-light);
+  --border-dark-grey: var(--ink-soft);
+  --btn-default-bg: var(--background-white);
+  --btn-default-hover: var(--background-hover-gray);
+  --btn-disabled-bg: var(--background-hover-gray);
+  --btn-delete-bg: var(--danger);
+  --btn-block-bg: var(--warn);
+  --btn-block-hover: #6f4800;
+  --btn-unlock-bg: var(--ok);
+  --btn-unlock-hover: #165f3d;
+
+  --mat-sidenav-content-background-color: var(--background);
+}
+
+/* base */
+
+* {
+  box-sizing: border-box;
 }
 
 html, body {
- height: 100%;
- margin: 0;
- padding: 0;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
   font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dark);
+  background: var(--background);
 }
 
-:host {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+body.mat-typography,
+body {
+  font-family: var(--font);
+  min-width: 320px;
+  -webkit-font-smoothing: antialiased;
 }
 
 app-root {
@@ -21,88 +107,341 @@ app-root {
   min-height: 100vh;
 }
 
-.styled-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Segoe UI', sans-serif;
+:where(h1, h2, h3, h4) {
+  margin: 0 0 0.5em;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
-.styled-table thead th {
-  background-color: var(--background-white);
+:where(h1) { font-size: 1.7rem; }
+:where(h2) { font-size: 1.3rem; }
+:where(h3) { font-size: 1.1rem; }
+:where(h4) { font-size: 1rem; }
+
+:where(p) {
+  margin: 0 0 0.75em;
+}
+
+:where(a) {
+  color: var(--primary);
+}
+
+:where(a:hover) {
+  color: var(--primary-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+/* button (no material) */
+
+:where(button:not([class*="mat-"]):not([class*="mdc-"])) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 12px;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--background-white);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+:where(button:not([class*="mat-"]):not([class*="mdc-"]):hover) {
+  background: var(--background-hover-gray);
+  border-color: var(--text-light);
+}
+
+:where(button:not([class*="mat-"]):not([class*="mdc-"]):disabled) {
+  color: var(--text-button-muted);
+  background: var(--background-hover-gray);
+  border-color: var(--border-light);
+}
+
+/* primary actions */
+:where(button[type="submit"], .btn, .btn-primary, .save-btn) {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+:where(button[type="submit"]:hover, .btn:hover, .btn-primary:hover, .save-btn:hover) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* destrct actions */
+:where(.btn-danger, .delete-btn) {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+:where(.btn-danger:hover, .delete-btn:hover) {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+/* secondary actions  */
+:where(.cancel-btn, .edit-btn, .info-btn) {
+  color: var(--text-dark);
+  background: var(--background-white);
+  border-color: var(--border-strong);
+}
+
+:where(.cancel-btn:hover, .edit-btn:hover, .info-btn:hover) {
+  color: var(--text-dark);
+  background: var(--background-hover-gray);
+  border-color: var(--text-light);
+}
+
+/* form fields (not material) */
+
+:where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="mat-"]),
+  select:not([class*="mat-"]),
+  textarea:not([class*="mat-"])
+) {
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 10px;
+  color: var(--text-dark);
+  background: var(--background-white);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+:where(label) {
+  color: var(--text-medium);
+  font-weight: 500;
+}
+
+:where(::placeholder) {
   color: var(--text-light);
-  padding: 8px 16px;
-  text-align: left;
+}
+
+/* tables */
+
+:where(table) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+:where(thead th) {
+  padding: 8px 14px;
+  color: var(--text-medium);
+  font-size: 0.8rem;
   font-weight: 600;
-  font-size: 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  background: #f7f9fb;
   border-bottom: 1px solid var(--border-light);
 }
 
-.styled-table tbody td {
-  padding: 8px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  color: #2f2f2f;
-  font-size: 0.72rem;
+:where(tbody td) {
+  padding: 8px 14px;
+  color: var(--text-dark);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-light);
 }
 
-.styled-table tbody tr:nth-child(even) {
-  background-color: #f7f4f1;
+:where(tbody tr:last-child td) {
+  border-bottom: 0;
 }
 
-.styled-table tbody tr:hover {
-  background-color: #efefef;
+:where(tbody tr:hover) {
+  background: #f7f9fb;
 }
 
-:root {
-  --primary: #4169E1;
-  --secondary: #FF7F50;
-  --third: #F7E7CE;
-  --neutral: #2F2F2F;
-  --highlight: #FFE900;
-  --background: #FFFFFF;
-  --card-bg: #FCFCFC;
+/* old */
+.styled-table {
+  width: 100%;
+}
 
+/* tables with data-label cells turn into stacked cards on phones */
+@media (max-width: 768px) {
+  :where(table:has(td[data-label])) {
+    display: block;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
 
-  /* test */
-  --background-white: #fff;
-  --background-light-gray: #f9f9f9;
-  --background-hover-gray: #efefef;
-  --background-blocked: #ffe6e6;
-  --background-blocked-hover: #ffcccc;
+  :where(table:has(td[data-label]) thead) { display: none; }
+  :where(table:has(td[data-label]) tbody) { display: block; }
 
-  --border-light: #e0e0e0;
-  --border-dark-grey: #191919;
-  --border-mobile: #ddd;
+  :where(table:has(td[data-label]) tr) {
+    display: block;
+    margin-bottom: 12px;
+    background: var(--background-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
 
-  --text-dark: #2f2f2f;
-  --text-medium: #555;
-  --text-light: #777;
-  --text-button: #333;
-  --text-button-inverse: #fff;
-  --text-button-muted: #aaa;
-  --text-unblock: #2e2e2e;
+  :where(table:has(td[data-label]) td) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 9px 14px;
+    text-align: right;
+  }
 
-  --header-bg-dark: #3e3e3e;
-  --header-text: #ffffff;
+  :where(table:has(td[data-label]) td::before) {
+    content: attr(data-label);
+    color: var(--text-medium);
+    font-weight: 600;
+    text-align: left;
+  }
+}
 
-  --btn-default-bg: #dcdcdc;
-  --btn-default-hover: #cfcfcf;
-  --btn-disabled-bg: #eaeaea;
+/* small reusable peices */
 
-  --btn-delete-bg: #a93226;
-  --btn-delete-hover: #922b21;
+.card {
+  padding: 16px 20px;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
 
-  --btn-block-bg: #5d4037;
-  --btn-block-hover: #4e342e;
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--primary-soft);
+  border-radius: 999px;
+}
 
-  --btn-unblock-bg: #c2b280;
-  --btn-unblock-hover: #b4a068;
+.badge-ok     { color: var(--ok);     background: var(--ok-soft); }
+.badge-warn   { color: var(--warn);   background: var(--warn-soft); }
+.badge-danger { color: var(--danger); background: var(--danger-soft); }
 
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.08);
-  --shadow-mobile: 0 1px 4px rgba(0, 0, 0, 0.05);
+.mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
 
-  --bg-light: #ffffff;
-  --primary-light: #575757;
-  --text-main: #2f2f2f;
-  --bg-accent: #f1f1f1;
+/* status pills (used by lists, tickets, tasks) */
+
+:where(.status, .status-badge) {
+  display: inline-block;
+  padding: 2px 10px;
+  color: var(--text-medium);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-transform: none;
+  background: var(--background-hover-gray);
+  border-radius: 999px;
+}
+
+:is(.status, .status-badge):is(.IN_PROGRESS, .in_progress, .open, .status-processing, .status-pending) {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+:is(.status, .status-badge):is(.AT_CHECKPOINT, .at_checkpoint, .RETURNING_TO_STATION) {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+:is(.status, .status-badge):is(.COMPLETED, .completed, .resolved, .status-completed) {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+:is(.status, .status-badge):is(.CANCELED, .canceled) {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+:is(.status, .status-badge).closed {
+  color: var(--text-medium);
+  background: var(--background-hover-gray);
+}
+
+/* section sub-navigation (manage-user-nav, delivery-control-nav, ...) */
+
+:where([class$="-nav"]) ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+  background: var(--background-white);
+  border-bottom: 1px solid var(--border-light);
+}
+
+:where([class$="-nav"]) a {
+  display: block;
+  margin-bottom: -1px;
+  padding: 10px 14px;
+  color: var(--text-medium);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+:where([class$="-nav"]) a:hover {
+  color: var(--ink);
+}
+
+:where([class$="-nav"]) a.active {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--signal);
+}
+
+/* form helpers */
+:where(.form-group) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+:where(.error, .error-message) {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* notification dropdown panel lives in the overlay, outside the header component */
+.mat-mdc-menu-panel.notifications-menu {
+  width: 360px;
+  max-width: 92vw;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

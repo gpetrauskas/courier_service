@@ -13,6 +13,7 @@ import { BanService } from "../../../service/person/ban.service";
 import { ErrorHandlerService } from "../../../service/error-handler.service";
 import { PageEventModel } from "../../../models/page-event.model";
 import { FilterEventModel } from "../../../models/filter/filter-event.model";
+import {PeriodEnum} from "../../../enums/period.enum";
 
 type NoUserAction = {
   isUserActionPending: false;
@@ -37,6 +38,8 @@ type UserActionState = NoUserAction | UserActionPending;
 export class AllUsersComponent implements OnInit {
   users: PersonResponseDTO[] = [];
   action: 'DELETE' | 'BAN' | 'UNBAN' | '' = 'DELETE';
+  Period = PeriodEnum;
+  statsPeriod: PeriodEnum = PeriodEnum.DAY;
   userActionState: UserActionState = { isUserActionPending: false };
   isDialogVisible: boolean = false;
   showReasonInput: boolean = false;
@@ -44,6 +47,7 @@ export class AllUsersComponent implements OnInit {
   totalPages: number = 0;
   totalItems: number = 0;
   pageSize: number = 10;
+  stats: any = [];
   inputPageSize: number = this.pageSize;
   userRole: string = '';
   itemName: string = '';
@@ -59,6 +63,7 @@ export class AllUsersComponent implements OnInit {
 
   ngOnInit() {
     this.loadUsers(this.currentPage, this.pageSize);
+    this.loadStats(this.statsPeriod);
   }
 
   loadUsers(page: number, size: number, searchKeyword?: string) {
@@ -90,6 +95,11 @@ export class AllUsersComponent implements OnInit {
   setReason(reason: string) {
     this.reason = reason;
     this.onConfirmAction();
+  }
+
+  onPeriodChange(period: PeriodEnum) {
+    this.statsPeriod = period;
+    this.loadStats(this.statsPeriod);
   }
 
   onFilterChange(filterData: FilterEventModel) {
@@ -138,6 +148,12 @@ export class AllUsersComponent implements OnInit {
     }
 
     this.closeDialog();
+  }
+
+  loadStats(period: PeriodEnum) {
+    this.personServiceImpl.getStats(period).subscribe({
+    next: data => this.stats = data
+    });
   }
 
   private handleDelete(userId: number): void {
