@@ -1,16 +1,12 @@
 package gytis.courier.config;
 
 import gytis.courier.adapter.out.persistence.person.admin.AdminJpaEntity;
-import gytis.courier.adapter.out.persistence.person.common.PersonJpaEntity;
 import gytis.courier.adapter.out.persistence.person.common.PersonJpaRepository;
 import gytis.courier.adapter.out.persistence.person.courier.CourierJpaEntity;
 import gytis.courier.adapter.out.persistence.person.admin.AdminJpaRepository;
 import gytis.courier.adapter.out.persistence.person.courier.CourierJpaRepository;
 import gytis.courier.adapter.out.persistence.person.user.UserJpaEntity;
 import gytis.courier.adapter.out.persistence.person.user.UserJpaRepository;
-import gytis.courier.domain.person.Admin;
-import gytis.courier.domain.person.Email;
-import gytis.courier.domain.person.Person;
 import gytis.courier.domain.person.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -35,7 +31,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         String encodedPassword = passwordEncoder.encode("pass123");
         if (adminRepository.count() == 0) {
-            createPerson("Administrator X", "admin@example.com", encodedPassword, Role.ADMIN);
 
             System.out.println("Initial admin created");
         } if (courierRepository.count() == 0) {
@@ -57,5 +52,4 @@ public class DataInitializer implements CommandLineRunner {
             case COURIER -> new CourierJpaEntity(name, email, encodedPass);
         });
     }
-
 }

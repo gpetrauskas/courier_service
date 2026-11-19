@@ -18,6 +18,7 @@ import gytis.courier.domain.payment.PaymentStatus;
 import gytis.courier.domain.payment.method.PaymentMethod;
 import gytis.courier.domain.person.Email;
 import gytis.courier.domain.person.User;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -79,8 +81,12 @@ public class PaymentIntegrationTest {
 
         PaymentRequest paymentRequest = creditCardPaymentRequest(false, "123");
 
+        String csrfToken = "test-csrf-token";
+
         mockMvc.perform(post("/api/payment/{orderId}/pay", order.getId())
                 .with(authentication(authenticateAs(user)))
+                        .cookie(new Cookie("XSRF-TOKEN", csrfToken))
+                        .header("X-XSRF-TOKEN", csrfToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isOk())
@@ -100,8 +106,12 @@ public class PaymentIntegrationTest {
 
         PaymentRequest paymentRequest = creditCardPaymentRequest(true, "123");
 
+        String csrfToken = "test-csrf-token";
+
         mockMvc.perform(post("/api/payment/{orderId}/pay", order.getId())
                 .with(authentication(authenticateAs(user)))
+                        .cookie(new Cookie("XSRF-TOKEN", csrfToken))
+                        .header("X-XSRF-TOKEN", csrfToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isOk())
@@ -124,8 +134,12 @@ public class PaymentIntegrationTest {
 
         PaymentRequest paymentRequest = creditCardPaymentRequest(false, "000");
 
+        String csrfToken = "test-csrf-token";
+
         mockMvc.perform(post("/api/payment/{orderId}/pay", order.getId())
                         .with(authentication(authenticateAs(user)))
+                        .cookie(new Cookie("XSRF-TOKEN", csrfToken))
+                        .header("X-XSRF-TOKEN", csrfToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(paymentRequest)))
                 .andExpect(status().isOk())
@@ -141,6 +155,7 @@ public class PaymentIntegrationTest {
         Payment payment = Payment.create(order.getId(), order.calculateShippingCost());
         paymentCommandPort.create(payment);
 
+        String csrfToken = "test-csrf-token";
         int numberOfTries = 2;
         List<Integer> statuses = Collections.synchronizedList(new ArrayList<>());
         executorService = Executors.newFixedThreadPool(2);
@@ -150,6 +165,8 @@ public class PaymentIntegrationTest {
                 try {
                     MvcResult result = mockMvc.perform(post("/api/payment/{orderId}/pay", order.getId())
                             .with(authentication(authenticateAs(user)))
+                                    .cookie(new Cookie("XSRF-TOKEN", csrfToken))
+                                    .header("X-XSRF-TOKEN", csrfToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                             .andReturn();

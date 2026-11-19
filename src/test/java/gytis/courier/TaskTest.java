@@ -83,7 +83,7 @@ public class TaskTest {
 
         assertEquals(DeliveryStatus.CANCELED, task.getDeliveryStatus());
         assertEquals(ParcelStatus.CANCELED, task.getTaskItems().getFirst().getParcelStatus());
-        assertEquals(1, task.pullEvents().size());
+        assertEquals(2, task.pullEvents().size());
         assertEquals(task.getTaskItems().getFirst().getParcelId(), parcelIds.getFirst());
     }
 
@@ -93,7 +93,7 @@ public class TaskTest {
 
         assertEquals(DeliveryStatus.RETURNING_TO_STATION, task.getDeliveryStatus());
         assertEquals(ParcelStatus.PICKED_UP, task.getTaskItems().getFirst().getParcelStatus());
-        assertEquals(1, task.pullEvents().size());
+        assertEquals(2, task.pullEvents().size());
     }
 
     @Test
